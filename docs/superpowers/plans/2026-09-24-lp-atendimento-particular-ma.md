@@ -1735,6 +1735,102 @@ git add src/lib src/content/whatsapp.ts src/context src/components/CtaWhatsApp.t
 git commit -m "feat: adiciona link do WhatsApp com origem sanitizada, cidade escolhida e CTA"
 ```
 
+### Tarefa 5c (Dev · Floor Dev · `feat/whatsapp`): Correções do parecer R5
+
+**Files:**
+- Modify: `src/lib/origem.ts`, `src/lib/origem.test.ts`, `src/components/CtaWhatsApp.tsx`, `src/components/CtaWhatsApp.test.tsx`
+
+**Interfaces:** mesmas da Tarefa 5. `sanitizar(chave, valor)` passa a aplicar a convenção fechada da spec §20 (R5).
+
+- [ ] **Step 1: Testes que falham**
+
+Em `src/lib/origem.test.ts`, trocar os valores de exemplo pela convenção (`utm_campaign=c01`, `utm_content=a01`, `utm_source=google` ou `facebook`) e acrescentar:
+
+```ts
+  it("aplica a convenção fechada de UTMs (spec §20, R5)", () => {
+    expect(sanitizar("utm_campaign", "dor_joelho")).toBeUndefined();
+    expect(sanitizar("utm_content", "artrose")).toBeUndefined();
+    expect(sanitizar("utm_source", "joao")).toBeUndefined();
+    expect(sanitizar("utm_medium", "dor")).toBeUndefined();
+    expect(sanitizar("utm_campaign", "c01")).toBe("c01");
+    expect(sanitizar("utm_content", "a0412")).toBe("a0412");
+    expect(sanitizar("utm_source", "facebook")).toBe("facebook");
+    expect(sanitizar("utm_medium", "cpc")).toBe("cpc");
+  });
+
+  it("aceita gclid com ponto", () => {
+    expect(sanitizar("gclid", "Cj0.KCQ_a-1")).toBe("Cj0.KCQ_a-1");
+  });
+
+  it("URL com UTM clínico não leva o valor para page_location", () => {
+    expect(urlLimpa("https://lp-dr-santos.vercel.app/?utm_campaign=dor_joelho&utm_source=google")).toBe(
+      "https://lp-dr-santos.vercel.app/?utm_source=google",
+    );
+  });
+```
+
+Em `src/components/CtaWhatsApp.test.tsx`, acrescentar:
+
+```tsx
+  it("com resumo, o href do DOM continua o link base e a navegação usa a URL completa", () => {
+    render(
+      <CidadeProvider>
+        <CtaWhatsApp localCta="autoavaliacao" resumo="Meu resumo: joelho.">
+          Agendar
+        </CtaWhatsApp>
+      </CidadeProvider>,
+    );
+    const link = screen.getByRole("link", { name: "Agendar" });
+    fireEvent.click(link, { ctrlKey: true });
+    expect(link.getAttribute("href")).toBe(LINK_WHATSAPP_BASE);
+    vi.advanceTimersByTime(800);
+    expect(navegacao.ir).toHaveBeenCalledTimes(1);
+    expect(textoDe(vi.mocked(navegacao.ir).mock.calls[0][0])).toContain("Meu resumo: joelho.");
+    expect(document.body.innerHTML).not.toContain("joelho");
+  });
+```
+
+(importar `LINK_WHATSAPP_BASE` de `@/lib/whatsapp`).
+
+- [ ] **Step 2: Rodar e ver falhar** → `npm test` com FAIL nos testes novos.
+
+- [ ] **Step 3: Implementar**
+
+Em `src/lib/origem.ts`, trocar `PADRAO_UTM`, `PADRAO_GCLID` e `sanitizar` por:
+
+```ts
+const FONTES = ["google", "bing", "facebook", "instagram", "whatsapp", "email", "organico"];
+const MEIOS = ["cpc", "pago", "social", "organico", "email", "referencia"];
+
+/** Convenção fechada (spec §20, R5): nomes livres podem carregar condição de saúde. */
+const REGRAS: Record<(typeof CAMPOS)[number], (valor: string) => boolean> = {
+  utm_source: (v) => FONTES.includes(v),
+  utm_medium: (v) => MEIOS.includes(v),
+  utm_campaign: (v) => /^c\d{2,4}$/.test(v),
+  utm_content: (v) => /^a\d{2,4}$/.test(v),
+  gclid: (v) => /^[A-Za-z0-9_.-]{1,200}$/.test(v),
+};
+
+export function sanitizar(chave: string, valor: string | null): string | undefined {
+  if (!valor) return undefined;
+  const regra = REGRAS[chave as keyof typeof REGRAS];
+  return regra && regra(valor) ? valor : undefined;
+}
+```
+
+Em `src/components/CtaWhatsApp.tsx`: com `resumo`, não gravar a URL completa no `href`; todo clique (simples ou com modificador) faz `preventDefault` e navega por `navegacao.ir(url)` depois do `eventCallback` ou do tempo-limite; o botão do meio segue o navegador com o link base. Sem `resumo`, o comportamento da Tarefa 5 continua igual.
+
+- [ ] **Step 4:** `npm test` e `npm run build` verdes.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/lib/origem.ts src/lib/origem.test.ts src/components/CtaWhatsApp.tsx src/components/CtaWhatsApp.test.tsx
+git commit -m "fix: fecha a convencao de UTMs e tira o resumo de saude do href"
+```
+
+- [ ] **Step 6:** atualizar a Tarefa 6 sobre a correção: `git switch feat/onde-atende`, `git rebase feat/whatsapp` (branch local, sem push), `npm test` e `npm run build` verdes.
+
 ### Tarefa 6 (Dev · Floor Dev · `feat/onde-atende`): Abas por cidade com mapas sob demanda
 
 **Files:**
@@ -3448,7 +3544,8 @@ Com os acessos da nota "Credenciais, instruções e acessos" (seguir as instruç
 - Tags: Google tag (GA4) na inicialização; um evento GA4 por evento acima com os parâmetros da spec §8; Vinculador de conversões; conversão do Google Ads em `clique_whatsapp` (ID e rótulo da ação: criada só depois da confirmação do André). Configurações de consentimento nativas das tags do Google.
 - Google tag do GA4: `page_location` = variável de camada de dados `pagina_limpa` (sem `utm_term`, sem texto livre, sem âncora); não criar variável nem parâmetro para `utm_term`. Conferir que nenhum evento leva região do corpo, limitação ou tratamento.
 - Validar no modo de visualização (Tag Assistant) com `npm run preview` do Floor e `VITE_GTM_ID` em `.env.local` (fora do git): todos os eventos, com consentimento aceito e recusado. **Critério de aceite da conversão:** com a aba de rede do Chrome aberta e "Preserve log" ligado, carregar a página e clicar no CTA do hero em até 1 segundo; a requisição de conversão do Google Ads (e o `collect?v=2` do GA4 com `gcs`/`gcd`) precisa aparecer **antes** da navegação para `wa.me`, com consentimento aceito e com recusado. Repetir 5 vezes; anotar quantas passaram. Registrar a lacuna conhecida: sem JavaScript o link abre o WhatsApp e nenhuma conversão é medida. **Não publicar.**
-- Mandar ao Maestro a lista do que seria publicado (versão do contêiner com tags, acionadores e variáveis; ação de conversão no Google Ads com nome, categoria e contagem "uma"). O Maestro pede ao André a confirmação única.
+- Nenhuma tag, acionador ou variável usa `Click URL`, `Click Text` ou a URL de destino dos links. A medição otimizada de "cliques de saída" do stream do GA4 fica desligada (parecer R5).
+- Mandar ao Maestro a lista do que seria publicado ou alterado em conta real (versão do contêiner com tags, acionadores e variáveis; ação de conversão no Google Ads com nome, categoria e contagem "uma"; retenção de dados do GA4 em 14 meses, como diz a política de privacidade; medição otimizada de cliques de saída desligada no stream). O Maestro pede ao André a confirmação única.
 
 - [ ] **Step 7: Commit**
 
