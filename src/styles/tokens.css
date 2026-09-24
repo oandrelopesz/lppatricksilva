@@ -1,0 +1,52 @@
+@theme {
+  --color-grafite: #15171b;
+  --color-creme: #f8f4ec;
+  --color-bege: #ede3d2;
+  --color-dourado: #b98f4e;
+  --color-dourado-claro: #d4b06a;
+  --color-cta: #1e7f4f;
+  --color-cta-escuro: #17663f;
+  --font-titulo: "Lora", "Lora Fallback", Georgia, serif;
+  --font-corpo: "Figtree", "Figtree Fallback", system-ui, sans-serif;
+}
+
+@font-face {
+  font-family: "Figtree";
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/figtree-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Figtree";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/figtree-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Lora";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/lora-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Lora";
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/lora-latin-700-normal.woff2") format("woff2");
+}
+
+/* Médias de avanço medidas contra Arial e Georgia em texto representativo pt-BR. */
+@font-face {
+  font-family: "Figtree Fallback";
+  src: local("Arial");
+  size-adjust: 99.90%;
+}
+
+@font-face {
+  font-family: "Lora Fallback";
+  src: local("Georgia");
+  size-adjust: 107.79%;
+}
