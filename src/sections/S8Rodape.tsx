@@ -6,14 +6,14 @@ import { REGIOES, cidadesDaRegiao } from "@/data/locais";
 
 export function S8Rodape() {
   return (
-    <footer id="rodape" className="bg-grafite px-4 py-16 text-creme">
-      <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-2">
+    <footer id="rodape" className="premium-texture bg-grafite px-4 py-20 text-creme md:py-28">
+      <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2">
         <div>
           <h2 className="text-2xl font-semibold">{T.ctaTitulo}</h2>
           <p className="mt-3">{T.ctaTexto}</p>
           <CtaWhatsApp
             localCta="rodape"
-            className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-cta px-5 py-3 text-center font-semibold text-white sm:w-auto"
+            className="premium-cta mt-5 inline-flex min-h-12 w-full items-center justify-center bg-cta px-5 py-3 text-center font-semibold text-white sm:w-auto"
           >
             {T.ctaBotao}
           </CtaWhatsApp>
@@ -22,7 +22,7 @@ export function S8Rodape() {
           <p className="mt-3">{T.whatsapp}</p>
         </div>
         <figure className="mx-auto w-full max-w-sm">
-          <Foto nome="cta-final" alt={T.altFoto} sizes="(min-width: 768px) 384px, 100vw" className="aspect-[4/5] h-auto w-full rounded-2xl object-cover" />
+          <Foto nome="cta-final" alt={T.altFoto} sizes="(min-width: 768px) 384px, 100vw" className="premium-photo aspect-[4/5] h-auto w-full object-cover" />
         </figure>
         <div className="md:col-span-2">
           <h3 className="text-xl font-semibold">{T.cidadesRotulo}</h3>

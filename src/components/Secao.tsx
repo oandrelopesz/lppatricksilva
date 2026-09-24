@@ -15,8 +15,8 @@ interface Props {
 
 export function Secao({ id, tituloId, fundo = "creme", children }: Props) {
   return (
-    <section id={id} aria-labelledby={tituloId} className={`${FUNDOS[fundo]} px-4 py-16 md:py-24`}>
-      <div className="mx-auto max-w-5xl">{children}</div>
+    <section id={id} aria-labelledby={tituloId} className={`${FUNDOS[fundo]} px-4 py-20 md:py-28`}>
+      <div className="mx-auto max-w-6xl">{children}</div>
     </section>
   );
 }

@@ -221,6 +221,9 @@ Opcional. O Designer pode propor um elemento que ajude a conversão (não decora
 | Asset gerado | Onde entrou | O que representa |
 |---|---|---|
 | `public/favicon.svg` (Tarefa 7a, commit 8503e3e) | Favicon da página | Monograma "PS" provisório em traço fino, dourado `#B98F4E` sobre grafite `#15171B`, até chegar o logo oficial |
+| `src/components/icones/Icone.tsx`: joelho, quadril, ombro, coluna, pé e calcanhar, cotovelo, tendão e treino | Identificação e autoavaliação | Sinais anatômicos neutros em SVG de linha, sem diagnóstico nem representação de paciente |
+| `src/components/icones/Icone.tsx`: calendário, alfinete de mapa, conversa e ultrassom | Como funciona | Etapas e recursos da consulta em SVG de linha; ícones decorativos ocultos da árvore de acessibilidade |
+| `public/textura-linhas.svg` | Fundos amplos do Sobre e rodapé | Linhas abstratas douradas de baixa opacidade, sem imagem clínica ou marca de terceiros |
 
 ## 13. Compliance
 

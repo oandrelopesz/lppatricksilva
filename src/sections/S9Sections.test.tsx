@@ -4,6 +4,7 @@ import { CidadeProvider } from "@/context/CidadeContext";
 import { PENDENCIAS, ASSINATURA } from "@/config";
 import { TEXTOS_COMO_FUNCIONA } from "@/content/comoFunciona";
 import { TEXTOS_FAQ } from "@/content/faq";
+import { TEXTOS_RODAPE } from "@/content/rodape";
 import { S4ComoFunciona } from "./S4ComoFunciona";
 import { S5Sobre } from "./S5Sobre";
 import { S7Faq } from "./S7Faq";
@@ -40,7 +41,7 @@ describe("seções finais", () => {
     expect(container.querySelector("#rodape")).not.toBeNull();
     expect(screen.getByText(ASSINATURA)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Política de privacidade" })).toHaveAttribute("href", "/politica-de-privacidade.html");
-    expect(screen.getByRole("img", { name: "Dr. Patrick Santos de pé na sala de ultrassom" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: TEXTOS_RODAPE.altFoto })).toBeInTheDocument();
     expect(container.querySelector("#rodape-extra")).toBeEmptyDOMElement();
   });
 });

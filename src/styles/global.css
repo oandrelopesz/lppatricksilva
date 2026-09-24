@@ -20,6 +20,19 @@
     line-height: 1.2;
   }
 
+  h2 {
+    letter-spacing: -0.025em;
+  }
+
+  section h2 {
+    font-size: clamp(2.15rem, 4vw, 3.5rem);
+    line-height: 1.12;
+  }
+
+  section h3 {
+    line-height: 1.25;
+  }
+
   :focus-visible {
     outline: 3px solid var(--color-grafite);
     outline-offset: 3px;
@@ -29,11 +42,170 @@
     outline-color: var(--color-creme);
   }
 
+  a.bg-cta:focus-visible {
+    outline: 3px solid var(--color-dourado-claro);
+    outline-offset: 4px;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
     }
+  }
+}
+
+@layer components {
+  .premium-texture {
+    background-image: url("/textura-linhas.svg");
+    background-size: 320px 320px;
+  }
+
+  .premium-card {
+    border: 1px solid rgb(185 143 78 / 32%);
+    border-radius: 1.25rem;
+    box-shadow: 0 14px 38px rgb(21 23 27 / 5%);
+  }
+
+  .premium-photo {
+    border: 1px solid rgb(185 143 78 / 65%);
+    border-radius: 1.5rem;
+    box-shadow: 0 22px 50px rgb(21 23 27 / 12%);
+    overflow: hidden;
+  }
+
+  a.premium-cta {
+    min-height: 3rem;
+    border-radius: .875rem;
+    box-shadow: 0 7px 18px rgb(17 88 52 / 16%);
+    transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  }
+
+  a.premium-cta:hover {
+    background-color: var(--color-cta-escuro);
+    box-shadow: 0 10px 24px rgb(17 88 52 / 22%);
+    transform: translateY(-2px);
+  }
+
+  .premium-topbar {
+    border-bottom: 1px solid rgb(21 23 27 / 18%);
+    box-shadow: 0 4px 14px rgb(21 23 27 / 5%);
+  }
+
+  .premium-timeline {
+    position: relative;
+  }
+
+  .premium-timeline::before {
+    content: "";
+    position: absolute;
+    top: 1.5rem;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    width: 1px;
+    background: rgb(185 143 78 / 40%);
+  }
+
+  #sobre {
+    background-image: url("/textura-linhas.svg");
+    background-size: 320px 320px;
+  }
+
+  #onde-atende {
+    background: var(--color-bege);
+    padding: 5rem 1rem;
+  }
+
+  #onde-atende > * {
+    max-width: 72rem;
+    margin-inline: auto;
+  }
+
+  #onde-atende > h2 {
+    font-size: clamp(2.15rem, 4vw, 3.5rem);
+    line-height: 1.12;
+    font-weight: 600;
+  }
+
+  #onde-atende > p {
+    margin-top: 1.25rem;
+  }
+
+  .abas-cidades__regiao {
+    margin-top: 2.5rem;
+  }
+
+  .abas-cidades__regiao h3 {
+    font-size: 1.4rem;
+    margin-bottom: .75rem;
+  }
+
+  .abas-cidades__lista {
+    display: flex;
+    gap: .65rem;
+    overflow-x: auto;
+    padding: .25rem .125rem .75rem;
+  }
+
+  .abas-cidades__lista button {
+    flex: none;
+    min-height: 3rem;
+    padding: .6rem 1rem;
+    border: 1px solid rgb(21 23 27 / 22%);
+    border-radius: 999px;
+    background: var(--color-creme);
+  }
+
+  .abas-cidades__lista button[aria-selected="true"] {
+    color: var(--color-creme);
+    background: var(--color-grafite);
+    border-color: var(--color-grafite);
+  }
+
+  .abas-cidades__geral {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .abas-cidades__geral > div,
+  .cartao-local {
+    border: 1px solid rgb(185 143 78 / 32%);
+    border-radius: 1.25rem;
+    background: var(--color-creme);
+    padding: 1.5rem;
+    box-shadow: 0 14px 38px rgb(21 23 27 / 5%);
+  }
+
+  .abas-cidades__geral h4,
+  .cartao-local h4 {
+    font-size: 1.25rem;
+    font-family: var(--font-titulo);
+    font-weight: 600;
+  }
+
+  .abas-cidades__geral ul { margin-top: .75rem; }
+  .abas-cidades__geral li + li { margin-top: 1rem; }
+  .abas-cidades__geral a,
+  .cartao-local > a { display: inline-flex; min-height: 3rem; align-items: center; color: #705021; font-weight: 600; text-decoration: underline; text-underline-offset: .2em; }
+  .cartao-local { margin-top: 1.5rem; }
+  .cartao-local > p { margin-top: .75rem; }
+  .cartao-local > a { margin-right: 1rem; }
+  .cartao-local > a[href^="https://wa.me/"] { color: white; background: var(--color-cta); padding: .75rem 1.25rem; text-decoration: none; }
+  .cartao-local__mapa { overflow: hidden; border-radius: .875rem; margin-top: 1rem; background: rgb(185 143 78 / 10%); }
+  [role="tabpanel"] > button { min-height: 3rem; margin-top: 1.5rem; padding: .65rem 1rem; border: 1px solid rgb(21 23 27 / 30%); border-radius: .75rem; }
+
+  #duvidas .accordion { max-width: 58rem; }
+  #duvidas .accordion button:hover { background: rgb(237 227 210 / 55%); }
+
+  @media (min-width: 768px) {
+    #onde-atende { padding-block: 7rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    a.premium-cta { transition: none; }
+    a.premium-cta:hover { transform: none; }
   }
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CtaWhatsApp } from "@/components/CtaWhatsApp";
+import { Icone } from "@/components/icones/Icone";
 import { TEXTOS_AUTOAVALIACAO as T } from "@/content/autoavaliacao";
 import { track } from "@/lib/analytics";
 
@@ -62,7 +63,7 @@ export function Autoavaliacao() {
     const resumo = montarResumo(respostas);
     const haRespostas = Object.values(respostas).some(Boolean);
     return (
-      <div className="rounded-2xl border border-grafite/15 bg-creme p-5 sm:p-8">
+      <div className="premium-card bg-creme p-5 sm:p-8">
         <h3 ref={refPergunta as React.RefObject<HTMLHeadingElement>} tabIndex={-1} className="text-2xl font-semibold">
           {T.tituloResultado}
         </h3>
@@ -81,7 +82,7 @@ export function Autoavaliacao() {
         <CtaWhatsApp
           localCta="autoavaliacao"
           resumo={haRespostas && incluir ? resumo : undefined}
-          className={`${classeAcao} mt-6 w-full bg-cta text-center text-white hover:bg-cta-escuro sm:w-auto`}
+          className={`${classeAcao} premium-cta mt-6 w-full bg-cta text-center text-white hover:bg-cta-escuro sm:w-auto`}
         >
           {T.cta}
         </CtaWhatsApp>
@@ -102,7 +103,7 @@ export function Autoavaliacao() {
 
   const atual = T.etapas[etapa];
   return (
-    <div className="rounded-2xl border border-grafite/15 bg-creme p-5 sm:p-8">
+    <div className="premium-card bg-creme p-5 sm:p-8">
       <h3 className="text-2xl font-semibold">{T.titulo}</h3>
       <p className="mt-3">{T.introducao}</p>
       <p className="mt-5 font-semibold" aria-live="polite">{T.progresso(etapa + 1, T.etapas.length)}</p>
@@ -112,13 +113,14 @@ export function Autoavaliacao() {
         </legend>
         {respostas[atual.chave] ? <p className="mt-2">{T.respostaAnterior(respostas[atual.chave]!)}</p> : null}
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {atual.opcoes.map((opcao) => (
+          {atual.opcoes.map((opcao, indice) => (
             <button
               key={opcao}
               type="button"
               className="min-h-12 rounded-lg border border-grafite/25 bg-white px-4 py-3 text-left hover:border-grafite focus-visible:outline-cta"
               onClick={() => responder(atual.chave, opcao)}
             >
+              {etapa === 0 ? <Icone nome={(["joelho", "quadril", "ombro", "coluna", "coluna", "peCalcanhar", "cotovelo"] as const)[indice]} className="mr-3 inline-block h-7 w-7 align-middle text-dourado" /> : null}
               {opcao}
             </button>
           ))}

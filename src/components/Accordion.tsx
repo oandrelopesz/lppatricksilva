@@ -18,7 +18,7 @@ export function Accordion({ itens }: { itens: ItemAccordion[] }) {
   }
 
   return (
-    <div className="divide-y divide-grafite/20 rounded-2xl border border-grafite/20">
+    <div className="premium-card divide-y divide-grafite/20 bg-white">
       {itens.map((item) => {
         const expandido = aberto === item.id;
         return (

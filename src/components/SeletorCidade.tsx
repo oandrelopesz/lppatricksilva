@@ -19,7 +19,7 @@ export function SeletorCidade() {
   }
 
   return (
-    <div className="rounded-2xl bg-bege p-5">
+    <div className="premium-card bg-bege p-5">
       <label className="block font-semibold" htmlFor="seletor-cidade">{T.rotuloSeletor}</label>
       <p className="mt-2" id="apoio-seletor-cidade">{T.apoioSeletor}</p>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row">
