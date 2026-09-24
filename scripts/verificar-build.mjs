@@ -9,6 +9,8 @@ const html = fs.readFileSync(new URL("../dist/index.html", import.meta.url), "ut
 const EXIGIDOS = [
   ["HTML pré-renderizado dentro do #root", /<div id="root"><[a-z]/],
   ["CSS embutido no head", /<style>/],
+  ["JSON-LD no HTML inicial", /<script type="application\/ld\+json">/],
+  ["14 locais ligados ao médico no JSON-LD", (h) => (h.match(/#local-/g) || []).length === 28],
 ];
 
 const PROIBIDOS = [
