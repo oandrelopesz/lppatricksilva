@@ -70,6 +70,36 @@ describe("CtaWhatsApp", () => {
     expect(JSON.stringify(evento)).not.toContain("Cj0abc_1");
   });
 
+  it("dois cliques seguidos: o segundo (com resumo e sem local) não herda ref nem local do primeiro", () => {
+    render(
+      <CidadeProvider>
+        <CtaWhatsApp localCta="onde_atende" cidadeFixa="Balsas" local="Hospital São José">
+          Local
+        </CtaWhatsApp>
+        <CtaWhatsApp localCta="autoavaliacao" resumo="Marquei no site: joelho.">
+          Resumo
+        </CtaWhatsApp>
+      </CidadeProvider>,
+    );
+    fireEvent.click(screen.getByRole("link", { name: "Local" }));
+    fireEvent.click(screen.getByRole("link", { name: "Resumo" }));
+    // Modelo de dados do GTM: cada push mescla as chaves, inclusive as com valor undefined.
+    const modelo: Record<string, unknown> = {};
+    const noSegundoClique: Record<string, unknown>[] = [];
+    for (const item of window.dataLayer!) {
+      if (!("event" in item) && !("local_cta" in item) && !("ref" in item)) continue;
+      Object.assign(modelo, item);
+      if (item.event === "clique_whatsapp") noSegundoClique.push({ ...modelo });
+    }
+    expect(noSegundoClique).toHaveLength(2);
+    expect(noSegundoClique[0]).toMatchObject({ local: "Hospital São José", cidade: "Balsas" });
+    expect(noSegundoClique[0].ref).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
+    expect(noSegundoClique[1].local_cta).toBe("autoavaliacao");
+    expect(noSegundoClique[1].ref).toBeUndefined();
+    expect(noSegundoClique[1].local).toBeUndefined();
+    expect(noSegundoClique[1].cidade).toBeUndefined();
+  });
+
   it("sem GTM, navega depois do tempo-limite", () => {
     render(
       <CidadeProvider>

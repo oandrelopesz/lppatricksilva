@@ -60,6 +60,24 @@ describe("analytics", () => {
     window.history.replaceState(null, "", "/");
   });
 
+  it("antes de cada clique_whatsapp zera todos os campos opcionais no dataLayer", async () => {
+    const { CAMPOS_CLIQUE, track } = await import("./analytics");
+    track("clique_whatsapp", { local_cta: "hero", ref: "ABC234" });
+    const i = window.dataLayer!.findIndex((e) => e.event === "clique_whatsapp");
+    const zerado = window.dataLayer![i - 1];
+    expect(Object.keys(zerado).sort()).toEqual([...CAMPOS_CLIQUE].sort());
+    expect(Object.values(zerado).every((v) => v === undefined)).toBe(true);
+    expect(CAMPOS_CLIQUE).toEqual(
+      expect.arrayContaining(["local_cta", "intencao", "cidade", "local", "ref", "utm_source", "utm_medium", "utm_campaign", "utm_content"]),
+    );
+  });
+
+  it("outros eventos não zeram nada", async () => {
+    const { track } = await import("./analytics");
+    track("faq_aberta", { pergunta: "valor" });
+    expect(window.dataLayer).toEqual([{ event: "faq_aberta", pergunta: "valor" }]);
+  });
+
   it("track com aoConcluir chama uma vez só (callback do GTM e tempo-limite)", async () => {
     vi.useFakeTimers();
     const { track } = await import("./analytics");

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { CAMPOS_CLIQUE } from "@/lib/analytics";
 
 const arquivo = path.resolve(import.meta.dirname, "../../tracking/gtm-container-lp-dr-santos.json");
 const bruto = fs.readFileSync(arquivo, "utf8");
@@ -95,6 +96,10 @@ describe("contêiner do GTM", () => {
     expect(Object.keys(enviados).sort()).toEqual([...params, "page_location"].sort());
     for (const p of params) expect(enviados[p]).toBe(`{{DLV - ${p}}}`);
     expect(enviados.page_location).toBe("{{DLV - pagina_limpa}}");
+  });
+
+  it("todo parâmetro do clique_whatsapp é zerado antes de cada clique", () => {
+    for (const p of EVENTOS.clique_whatsapp) expect(CAMPOS_CLIQUE).toContain(p);
   });
 
   it("não há tag GA4 para evento fora da spec", () => {

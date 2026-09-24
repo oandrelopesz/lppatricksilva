@@ -15,6 +15,19 @@ declare global {
   }
 }
 
+/** Campos opcionais do clique_whatsapp, zerados antes de cada clique (parecer R17). */
+export const CAMPOS_CLIQUE = [
+  "local_cta",
+  "intencao",
+  "cidade",
+  "local",
+  "ref",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+] as const;
+
 let gtmCarregado = false;
 
 /**
@@ -52,8 +65,12 @@ export function track(evento: string, params: ParametrosEvento = {}, opcoes: Opc
   if (typeof window === "undefined") return;
   const limpo = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ""));
   window.dataLayer = window.dataLayer || [];
-  // O clique pode vir antes do carregamento agendado: carrega o GTM na hora.
-  if (evento === "clique_whatsapp") carregarGtm();
+  if (evento === "clique_whatsapp") {
+    // O clique pode vir antes do carregamento agendado: carrega o GTM na hora.
+    carregarGtm();
+    // O modelo do GTM guarda o último valor de cada chave: sem zerar, ref e local de um clique vazariam para o próximo.
+    window.dataLayer.push(Object.fromEntries(CAMPOS_CLIQUE.map((campo) => [campo, undefined])));
+  }
   const { aoConcluir, tempoLimiteMs = 800 } = opcoes;
   if (!aoConcluir) {
     window.dataLayer.push({ event: evento, ...limpo });
