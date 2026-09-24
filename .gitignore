@@ -1,0 +1,16 @@
+node_modules/
+dist/
+dist-ssr/
+.vercel/
+.env
+.env.*
+*.local
+.maestri/
+fotos-originais/
+*.zip
+Sobre o Patrick/
+public/__preview.html
+coverage/
+.DS_Store
+Thumbs.db
+*.log
