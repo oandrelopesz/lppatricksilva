@@ -19,7 +19,8 @@
 - Nenhuma cidade é presumida: sem escolha do usuário ou `?cidade=` válido, a mensagem do WhatsApp é a base.
 - Origem: só `utm_source`, `utm_medium`, `utm_campaign`, `utm_content` e `gclid`, sanitizados; `utm_term` nunca é lido. `page_location` do GA4 = `pagina_limpa`.
 - Mapa só no painel aberto e só depois de ação real do usuário; iframe com `referrerPolicy="no-referrer"`.
-- Deploy: preview até o marco de produção (Tarefas 8 a 10, C1 e C2 aprovadas, QA sem falha crítica); produção depois.
+- Deploy: preview até o marco de produção (Tarefas 8 a 10, C1 e C2 aprovadas, QA sem falha crítica, fatos da política confirmados pelo André); produção depois.
+- O marcador `(ref XXXXXX)` é anexado só por `montarMensagem` em `src/lib/whatsapp.ts`; os textos de `src/content/whatsapp.ts` nunca trazem o marcador.
 - Nenhum `[PREENCHER]` visível. Dado ausente = `null` em `src/config.ts` e texto que orienta a perguntar no WhatsApp.
 - Texto visível só da nota `copy-lp` (aprovada pelo Revisor). Sem travessão (—) em nenhum texto visível.
 - Componentes renderizam no servidor: nada de `window`, `document` ou storage durante o render.
@@ -494,7 +495,7 @@ console.log(`verificar-build: ${EXIGIDOS.length + PROIBIDOS.length + 1} checagen
 - [ ] **Step 9: Rodar testes e build**
 
 Run: `npm test` → Expected: 2 testes PASS.
-Run: `npm run build` → Expected: `prerender: ... KB` e `verificar-build: 9 checagens OK` (2 exigidos + 6 proibidos + arquivo de preview).
+Run: `npm run build` → Expected: `prerender: ... KB` e `verificar-build: 8 checagens OK` (2 exigidos + 5 proibidos + arquivo de preview).
 
 - [ ] **Step 10: Conferir o servidor de desenvolvimento**
 
@@ -1512,7 +1513,7 @@ export function reiniciarOrigemParaTestes(): void {
 }
 ```
 
-`src/content/whatsapp.ts` (texto aprovado da nota `copy-lp`, IDs `wa.*`, se a C1 já tiver OK do Revisor; senão, o texto abaixo com o comentário `// PROVISORIO`, que a Tarefa 7 remove):
+`src/content/whatsapp.ts` (texto aprovado da nota `copy-lp`, IDs `wa.*`, **sem** o marcador `(ref ...)`, que o código anexa; se a C1 ainda não tiver OK do Revisor, use o texto abaixo com o comentário `// PROVISORIO`, que a Tarefa 7 remove):
 
 ```ts
 // PROVISORIO: trocar pelo texto aprovado da nota copy-lp (IDs wa.*) na Tarefa 7.
@@ -2531,8 +2532,17 @@ export const TEXTOS_AUTOAVALIACAO: {
   voltar: string;
   refazer: string;
   tituloResultado: string;
-  /** Resumo em primeira pessoa com as respostas dadas; recebe só as respostas preenchidas. */
-  resumo: (r: { regiao?: string; limitacao?: string; tentativa?: string }) => string;
+  /** Texto acessível mostrado ao voltar para uma etapa já respondida. */
+  respostaAnterior: (resposta: string) => string;
+  /** Fragmentos do resumo; cada um só entra quando a etapa foi respondida (spec §5.3). */
+  resumo: {
+    inicio: string;
+    regiao: (valor: string) => string;
+    limitacao: (valor: string) => string;
+    tentativa: (valor: string) => string;
+    /** Quando a pessoa pulou as três etapas. */
+    semRespostas: string;
+  };
   oQueAConsultaAvalia: string;
   aviso: string;
   incluirResumo: string;
@@ -2554,7 +2564,7 @@ import { navegacao } from "@/components/CtaWhatsApp";
 import { TEXTOS_AUTOAVALIACAO as T } from "@/content/autoavaliacao";
 import { CidadeProvider } from "@/context/CidadeContext";
 import { reiniciarOrigemParaTestes } from "@/lib/origem";
-import { Autoavaliacao } from "./Autoavaliacao";
+import { Autoavaliacao, montarResumo } from "./Autoavaliacao";
 
 function renderizar() {
   return render(
@@ -2635,6 +2645,20 @@ describe("Autoavaliacao", () => {
     expect(new URL(cta.getAttribute("href")!).searchParams.get("text")).not.toContain(regiao.opcoes[0]);
   });
 
+  it("o resumo omite etapas puladas sem deixar buraco no texto", () => {
+    expect(montarResumo({ limitacao: limitacao.opcoes[0] })).toBe(`${T.resumo.inicio} ${T.resumo.limitacao(limitacao.opcoes[0])}.`);
+    expect(montarResumo({})).toBe(T.resumo.semRespostas);
+    expect(montarResumo({ regiao: regiao.opcoes[0], tentativa: tentativa.opcoes[0] })).not.toMatch(/\s{2}|;\s*;/);
+  });
+
+  it("ao voltar, mostra a resposta anterior em texto e nenhum botão usa aria-pressed", () => {
+    renderizar();
+    fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: T.voltar }));
+    expect(screen.getByText(T.respostaAnterior(regiao.opcoes[0]))).toBeInTheDocument();
+    expect(document.querySelector("[aria-pressed]")).toBeNull();
+  });
+
   it("anuncia o progresso para leitor de tela", () => {
     renderizar();
     expect(screen.getByText(T.progresso(1, 3))).toHaveAttribute("aria-live", "polite");
@@ -2652,7 +2676,7 @@ describe("Autoavaliacao", () => {
 
 Run: `npx vitest run src/interativos/Autoavaliacao.test.tsx` → Expected: FAIL.
 
-Padrão de acessibilidade escolhido (parecer R2, achado 7): cada etapa é um `<fieldset>` com `<legend>`, e cada opção é um `<button type="button">` que responde e avança (é uma ação, não um estado; `aria-pressed` só marca a resposta já dada quando a pessoa volta). Rádios nativos não servem aqui porque as setas mudam a seleção e disparariam o avanço automático, e trocar para rádio + "Continuar" dobraria os toques do público 50+. O progresso fica em `aria-live="polite"` e o foco vai para a pergunta seguinte depois de cada resposta, "Voltar" ou "Pular".
+Padrão de acessibilidade escolhido (pareceres R2 e R2b, achado 7): cada etapa é um `<fieldset>` com `<legend>`, e cada opção é um `<button type="button">` que responde e avança (é uma ação, não um estado, por isso sem `aria-pressed`); ao voltar, a resposta anterior aparece em texto (`T.respostaAnterior`). Rádios nativos não servem aqui porque as setas mudam a seleção e disparariam o avanço automático, e trocar para rádio + "Continuar" dobraria os toques do público 50+. O progresso fica em `aria-live="polite"` e o foco vai para a pergunta seguinte depois de cada resposta, "Voltar" ou "Pular".
 
 - [ ] **Step 3: Implementar `src/interativos/Autoavaliacao.tsx`**
 
@@ -2669,7 +2693,14 @@ export interface Respostas {
 }
 
 export function montarResumo(respostas: Respostas, textos = T): string {
-  return textos.resumo(respostas);
+  const r = textos.resumo;
+  const partes = [
+    respostas.regiao ? r.regiao(respostas.regiao) : null,
+    respostas.limitacao ? r.limitacao(respostas.limitacao) : null,
+    respostas.tentativa ? r.tentativa(respostas.tentativa) : null,
+  ].filter((p): p is string => Boolean(p));
+  if (partes.length === 0) return r.semRespostas;
+  return `${r.inicio} ${partes.join("; ")}.`;
 }
 
 export function Autoavaliacao() {
@@ -2751,13 +2782,9 @@ export function Autoavaliacao() {
             {atual.pergunta}
           </span>
         </legend>
+        {respostas[atual.chave] ? <p>{T.respostaAnterior(respostas[atual.chave]!)}</p> : null}
         {atual.opcoes.map((opcao) => (
-          <button
-            key={opcao}
-            type="button"
-            aria-pressed={respostas[atual.chave] === opcao}
-            onClick={() => responder(atual.chave, opcao)}
-          >
+          <button key={opcao} type="button" onClick={() => responder(atual.chave, opcao)}>
             {opcao}
           </button>
         ))}
@@ -2810,6 +2837,7 @@ git commit -m "feat: adiciona secao de identificacao com autoavaliacao opcional"
 ```tsx
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TEXTOS_COMO_FUNCIONA } from "@/content/comoFunciona";
 import { CidadeProvider, useCidade } from "@/context/CidadeContext";
 import { SeletorCidade } from "./SeletorCidade";
 
@@ -2844,7 +2872,7 @@ describe("SeletorCidade", () => {
       </CidadeProvider>,
     );
     fireEvent.change(screen.getByRole("combobox"), { target: { value: "tuntum" } });
-    fireEvent.click(screen.getByRole("button", { name: /ver locais/i }));
+    fireEvent.click(screen.getByRole("button", { name: TEXTOS_COMO_FUNCIONA.botaoVerLocais }));
     expect(screen.getByRole("status")).toHaveTextContent("Tuntum:seletor");
     expect(window.dataLayer).toContainEqual({ event: "seletor_cidade", cidade: "Tuntum" });
     expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
@@ -2951,7 +2979,7 @@ export function SeletorCidade() {
 }
 ```
 
-`T.botaoVerLocais` deve conter "Ver locais" (o teste procura por ele).
+O rótulo de `T.botaoVerLocais` vem da nota `copy-lp` (o teste usa o próprio conteúdo, não um texto fixo).
 
 `src/components/Accordion.tsx`:
 
@@ -3415,7 +3443,7 @@ Run: `npm test` e `npm run build` → verdes.
 - [ ] **Step 6: Contêiner do GTM (sem publicar)**
 
 Com os acessos da nota "Credenciais, instruções e acessos" (seguir as instruções dela), num workspace do contêiner:
-- Variáveis de camada de dados: `local_cta`, `cidade`, `local`, `ref`, `regiao`, `pergunta`, `percentual`, `etapa`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `gclid`.
+- Variáveis de camada de dados: `local_cta`, `cidade`, `local`, `ref`, `regiao`, `pergunta`, `percentual`, `etapa`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `gclid`. **Não criar** variável, parâmetro nem campo para `utm_term`.
 - Acionadores de evento personalizado: `clique_whatsapp`, `autoavaliacao_etapa`, `autoavaliacao_concluida`, `autoavaliacao_pulada`, `seletor_cidade`, `troca_aba_cidade`, `como_chegar`, `faq_aberta`, `profundidade_rolagem`.
 - Tags: Google tag (GA4) na inicialização; um evento GA4 por evento acima com os parâmetros da spec §8; Vinculador de conversões; conversão do Google Ads em `clique_whatsapp` (ID e rótulo da ação: criada só depois da confirmação do André). Configurações de consentimento nativas das tags do Google.
 - Google tag do GA4: `page_location` = variável de camada de dados `pagina_limpa` (sem `utm_term`, sem texto livre, sem âncora); não criar variável nem parâmetro para `utm_term`. Conferir que nenhum evento leva região do corpo, limitação ou tratamento.
@@ -3434,7 +3462,7 @@ git commit -m "feat: adiciona consentimento, eventos e carregamento do GTM"
 **Files:**
 - Create: `vercel.json` (numa branch `chore/vercel` no Floor Dev, pelo fluxo normal de revisão)
 
-Regra (parecer R2, achado 1): até o marco de produção, cada entrega aprovada vai para um **preview** (protegido pela Vercel por padrão). O marco de produção é: Tarefas 8, 9 e 10 na `main`, C1 e C2 aprovadas e QA da Tarefa 12 sem falha crítica. Daí em diante, **produção** a cada merge aprovado. O token vem da nota "Credenciais, instruções e acessos" para a variável `VERCEL_TOKEN` da sessão e nunca é impresso.
+Regra (pareceres R2 e R2b, achado 1): até o marco de produção, cada entrega aprovada vai para um **preview** (protegido pela Vercel por padrão). O marco de produção é: Tarefas 8, 9 e 10 na `main`, C1 e C2 aprovadas, QA da Tarefa 12 sem falha crítica e fatos da política de privacidade confirmados pelo André (spec §17, item 10). Todos os comandos desta tarefa rodam no **Git Bash** (no PowerShell, `curl` vira `Invoke-WebRequest` e `grep` não existe). Daí em diante, **produção** a cada merge aprovado. O token vem da nota "Credenciais, instruções e acessos" para a variável `VERCEL_TOKEN` da sessão e nunca é impresso.
 
 - [ ] **Step 1: `vercel.json`**
 
