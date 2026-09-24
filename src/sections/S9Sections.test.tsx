@@ -4,6 +4,7 @@ import { CidadeProvider } from "@/context/CidadeContext";
 import { PENDENCIAS, ASSINATURA } from "@/config";
 import { TEXTOS_COMO_FUNCIONA } from "@/content/comoFunciona";
 import { TEXTOS_FAQ } from "@/content/faq";
+import { TEXTOS_SOBRE } from "@/content/sobre";
 import { S4ComoFunciona } from "./S4ComoFunciona";
 import { S5Sobre } from "./S5Sobre";
 import { S7Faq } from "./S7Faq";
@@ -45,12 +46,17 @@ describe("seções finais", () => {
     expect(screen.queryByText("Graduação em Medicina:")).toBeNull();
     expect(PENDENCIAS.graduacao).toBeNull();
     expect(screen.getByRole("img", { name: "Dr. Patrick Santos de pé ao lado do aparelho de ultrassom na sala de consulta" })).toBeInTheDocument();
+    expect(container.querySelectorAll("#sobre .sobre-fatos li")).toHaveLength(3);
+    for (const texto of TEXTOS_SOBRE.paragrafos) expect(screen.getByText(texto)).toBeInTheDocument();
+    expect(container.querySelector('#sobre img[src="/ilustracao-joelho.svg"][aria-hidden="true"]')).not.toBeNull();
   });
 
   it("FAQ contém 11 perguntas e o CTA de dúvida", () => {
     const { container } = renderizar(<S7Faq />);
     expect(container.querySelectorAll("#duvidas [aria-expanded]")).toHaveLength(11);
     expect(screen.getByRole("link", { name: TEXTOS_FAQ.finalCta })).toBeInTheDocument();
+    expect(container.querySelectorAll('#duvidas button[aria-expanded] svg[aria-hidden="true"]')).toHaveLength(11);
+    expect(container.querySelector("#duvidas .faq-fecho")).not.toBeNull();
   });
 
   it("rodapé contém assinatura, política, foto e slot de cookies", () => {
@@ -60,5 +66,7 @@ describe("seções finais", () => {
     expect(screen.getByRole("link", { name: "Política de privacidade" })).toHaveAttribute("href", "/politica-de-privacidade.html");
     expect(screen.getByRole("img", { name: "Dr. Patrick Santos sentado ao lado do aparelho de ultrassom, sorrindo" })).toBeInTheDocument();
     expect(container.querySelector("#rodape-extra")).toBeEmptyDOMElement();
+    expect(container.querySelector("#rodape .rodape-fecho img")).not.toBeNull();
+    expect(container.querySelectorAll('#rodape .rodape-cidades a[href^="#aba-"]')).toHaveLength(11);
   });
 });

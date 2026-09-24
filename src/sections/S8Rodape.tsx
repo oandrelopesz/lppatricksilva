@@ -24,7 +24,7 @@ function abrirAba(evento: MouseEvent<HTMLAnchorElement>, cidadeId: string) {
 export function S8Rodape() {
   return (
     <footer id="rodape" className="premium-texture bg-grafite px-4 py-20 text-creme md:py-28">
-      <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2">
+      <div className="rodape-fecho mx-auto grid max-w-6xl gap-12 md:grid-cols-2">
         <div>
           <h2 className="text-2xl font-semibold">{T.ctaTitulo}</h2>
           <p className="mt-3">{T.ctaTexto}</p>
@@ -41,7 +41,7 @@ export function S8Rodape() {
         <figure className="mx-auto w-full max-w-sm">
           <Foto nome="cta-final" alt={T.altFoto} sizes="(min-width: 768px) 384px, 100vw" className="premium-photo aspect-[4/5] h-auto w-full object-cover" />
         </figure>
-        <div className="md:col-span-2">
+        <div className="rodape-cidades md:col-span-2">
           <h3 className="text-xl font-semibold">{T.cidadesRotulo}</h3>
           <div className="mt-4 grid gap-5 sm:grid-cols-2">
             {REGIOES.map((regiao) => (
