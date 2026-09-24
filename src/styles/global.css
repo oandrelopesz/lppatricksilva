@@ -227,6 +227,13 @@
     background-size: 320px 320px;
   }
 
+  .sobre-imagens { position: relative; padding: 0 1.5rem 1.5rem 0; }
+  .sobre-imagens figure { position: relative; z-index: 1; }
+  .sobre-ilustracao { position: absolute; right: 0; bottom: 0; width: 9.375rem; height: 9.375rem; padding: .7rem; border: 1px solid rgb(212 176 106 / 65%); border-radius: 50%; background: var(--color-grafite); box-shadow: 0 12px 30px rgb(0 0 0 / 24%); }
+  .sobre-fatos { display: grid; gap: 1rem; list-style: none; padding: 0; }
+  .sobre-fatos li { padding: 1.1rem 1.2rem; border-left: 2px solid var(--color-dourado-claro); background: rgb(248 244 236 / 6%); border-radius: 0 .75rem .75rem 0; }
+  .sobre-fatos p { margin: 0; }
+
   #onde-atende {
     background: var(--color-bege);
     padding: 5rem 1rem;

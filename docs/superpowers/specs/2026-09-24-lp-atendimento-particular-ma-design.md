@@ -225,6 +225,7 @@ Opcional. O Designer pode propor um elemento que ajude a conversão (não decora
 | `src/components/icones/Icone.tsx`: calendário, alfinete de mapa, conversa e ultrassom | Como funciona | Etapas e recursos da consulta em SVG de linha; ícones decorativos ocultos da árvore de acessibilidade |
 | `public/textura-linhas.svg` | Fundos amplos do Sobre e rodapé | Linhas abstratas douradas de baixa opacidade, sem imagem clínica ou marca de terceiros |
 | `src/components/MapaMaranhao.tsx` (contorno de `src/data/mapaMaranhao.ts`) | Seção Onde atende | Mapa ilustrado do Maranhão derivado da malha e centroides do IBGE, com 11 marcadores numerados e clicáveis; pontos próximos têm área de toque separada por linha guia |
+| `public/ilustracao-joelho.svg` | Seção Sobre | Desenho anatômico neutro de um joelho, em linha fina dourada, decorativo e oculto da árvore de acessibilidade |
 
 ## 13. Compliance
 
