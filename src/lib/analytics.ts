@@ -17,10 +17,15 @@ declare global {
 
 let gtmCarregado = false;
 
-/** URL sem utm_term, texto livre e âncora, para o GTM usar como page_location do GA4. */
+/**
+ * URL sem utm_term, texto livre, âncora e gclid, para o GTM usar como page_location do GA4.
+ * O gclid nunca vai ao GA4 (parecer R17); o vinculador e a conversão do Ads o leem da URL de entrada.
+ */
 export function registrarPagina(): void {
+  const url = new URL(urlLimpa(window.location.href));
+  url.searchParams.delete("gclid");
   window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({ pagina_limpa: urlLimpa(window.location.href) });
+  window.dataLayer.push({ pagina_limpa: url.toString() });
 }
 
 export function carregarGtm(): void {

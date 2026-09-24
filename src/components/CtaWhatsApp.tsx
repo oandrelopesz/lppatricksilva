@@ -74,7 +74,6 @@ export function CtaWhatsApp({
       local,
       // Sem ref quando há resumo: a mensagem também não leva a ref (spec §7).
       ref: resumo ? undefined : origem.ref,
-      gclid: origem.gclid,
       utm_source: origem.utm_source,
       utm_medium: origem.utm_medium,
       utm_campaign: origem.utm_campaign,

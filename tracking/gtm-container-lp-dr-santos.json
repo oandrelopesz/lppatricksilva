@@ -20,7 +20,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "tagId": "27",
+        "tagId": "26",
         "name": "GA4 - Google tag",
         "type": "googtag",
         "parameter": [
@@ -65,7 +65,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "tagId": "28",
+        "tagId": "27",
         "name": "GA4 - Evento - clique_whatsapp",
         "type": "gaawe",
         "parameter": [
@@ -222,27 +222,12 @@
                     "value": "{{DLV - utm_content}}"
                   }
                 ]
-              },
-              {
-                "type": "MAP",
-                "map": [
-                  {
-                    "type": "TEMPLATE",
-                    "key": "parameter",
-                    "value": "gclid"
-                  },
-                  {
-                    "type": "TEMPLATE",
-                    "key": "parameterValue",
-                    "value": "{{DLV - gclid}}"
-                  }
-                ]
               }
             ]
           }
         ],
         "firingTriggerId": [
-          "18"
+          "17"
         ],
         "tagFiringOption": "ONCE_PER_EVENT",
         "monitoringMetadata": {
@@ -255,7 +240,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "tagId": "29",
+        "tagId": "28",
         "name": "GA4 - Evento - autoavaliacao_etapa",
         "type": "gaawe",
         "parameter": [
@@ -312,7 +297,7 @@
           }
         ],
         "firingTriggerId": [
-          "19"
+          "18"
         ],
         "tagFiringOption": "ONCE_PER_EVENT",
         "monitoringMetadata": {
@@ -325,7 +310,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "tagId": "30",
+        "tagId": "29",
         "name": "GA4 - Evento - autoavaliacao_concluida",
         "type": "gaawe",
         "parameter": [
@@ -367,7 +352,7 @@
           }
         ],
         "firingTriggerId": [
-          "20"
+          "19"
         ],
         "tagFiringOption": "ONCE_PER_EVENT",
         "monitoringMetadata": {
@@ -380,7 +365,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "tagId": "31",
+        "tagId": "30",
         "name": "GA4 - Evento - autoavaliacao_pulada",
         "type": "gaawe",
         "parameter": [
@@ -437,7 +422,7 @@
           }
         ],
         "firingTriggerId": [
-          "21"
+          "20"
         ],
         "tagFiringOption": "ONCE_PER_EVENT",
         "monitoringMetadata": {
@@ -450,7 +435,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "tagId": "32",
+        "tagId": "31",
         "name": "GA4 - Evento - seletor_cidade",
         "type": "gaawe",
         "parameter": [
@@ -507,7 +492,7 @@
           }
         ],
         "firingTriggerId": [
-          "22"
+          "21"
         ],
         "tagFiringOption": "ONCE_PER_EVENT",
         "monitoringMetadata": {
@@ -520,7 +505,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "tagId": "33",
+        "tagId": "32",
         "name": "GA4 - Evento - troca_aba_cidade",
         "type": "gaawe",
         "parameter": [
@@ -592,7 +577,7 @@
           }
         ],
         "firingTriggerId": [
-          "23"
+          "22"
         ],
         "tagFiringOption": "ONCE_PER_EVENT",
         "monitoringMetadata": {
@@ -605,7 +590,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "tagId": "34",
+        "tagId": "33",
         "name": "GA4 - Evento - como_chegar",
         "type": "gaawe",
         "parameter": [
@@ -677,7 +662,7 @@
           }
         ],
         "firingTriggerId": [
-          "24"
+          "23"
         ],
         "tagFiringOption": "ONCE_PER_EVENT",
         "monitoringMetadata": {
@@ -690,7 +675,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "tagId": "35",
+        "tagId": "34",
         "name": "GA4 - Evento - faq_aberta",
         "type": "gaawe",
         "parameter": [
@@ -747,7 +732,7 @@
           }
         ],
         "firingTriggerId": [
-          "25"
+          "24"
         ],
         "tagFiringOption": "ONCE_PER_EVENT",
         "monitoringMetadata": {
@@ -760,7 +745,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "tagId": "36",
+        "tagId": "35",
         "name": "GA4 - Evento - profundidade_rolagem",
         "type": "gaawe",
         "parameter": [
@@ -817,7 +802,7 @@
           }
         ],
         "firingTriggerId": [
-          "26"
+          "25"
         ],
         "tagFiringOption": "ONCE_PER_EVENT",
         "monitoringMetadata": {
@@ -830,7 +815,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "tagId": "37",
+        "tagId": "36",
         "name": "Ads - Vinculador de conversões",
         "type": "gclidw",
         "parameter": [
@@ -864,7 +849,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "tagId": "38",
+        "tagId": "37",
         "name": "Ads - Conversão - clique_whatsapp",
         "type": "awct",
         "parameter": [
@@ -915,7 +900,7 @@
           }
         ],
         "firingTriggerId": [
-          "18"
+          "17"
         ],
         "tagFiringOption": "ONCE_PER_EVENT",
         "monitoringMetadata": {
@@ -930,7 +915,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "triggerId": "18",
+        "triggerId": "17",
         "name": "Evento - clique_whatsapp",
         "type": "CUSTOM_EVENT",
         "customEventFilter": [
@@ -954,7 +939,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "triggerId": "19",
+        "triggerId": "18",
         "name": "Evento - autoavaliacao_etapa",
         "type": "CUSTOM_EVENT",
         "customEventFilter": [
@@ -978,7 +963,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "triggerId": "20",
+        "triggerId": "19",
         "name": "Evento - autoavaliacao_concluida",
         "type": "CUSTOM_EVENT",
         "customEventFilter": [
@@ -1002,7 +987,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "triggerId": "21",
+        "triggerId": "20",
         "name": "Evento - autoavaliacao_pulada",
         "type": "CUSTOM_EVENT",
         "customEventFilter": [
@@ -1026,7 +1011,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "triggerId": "22",
+        "triggerId": "21",
         "name": "Evento - seletor_cidade",
         "type": "CUSTOM_EVENT",
         "customEventFilter": [
@@ -1050,7 +1035,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "triggerId": "23",
+        "triggerId": "22",
         "name": "Evento - troca_aba_cidade",
         "type": "CUSTOM_EVENT",
         "customEventFilter": [
@@ -1074,7 +1059,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "triggerId": "24",
+        "triggerId": "23",
         "name": "Evento - como_chegar",
         "type": "CUSTOM_EVENT",
         "customEventFilter": [
@@ -1098,7 +1083,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "triggerId": "25",
+        "triggerId": "24",
         "name": "Evento - faq_aberta",
         "type": "CUSTOM_EVENT",
         "customEventFilter": [
@@ -1122,7 +1107,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "triggerId": "26",
+        "triggerId": "25",
         "name": "Evento - profundidade_rolagem",
         "type": "CUSTOM_EVENT",
         "customEventFilter": [
@@ -1419,31 +1404,6 @@
         "accountId": "0",
         "containerId": "0",
         "variableId": "13",
-        "name": "DLV - gclid",
-        "type": "v",
-        "parameter": [
-          {
-            "type": "INTEGER",
-            "key": "dataLayerVersion",
-            "value": "2"
-          },
-          {
-            "type": "BOOLEAN",
-            "key": "setDefaultValue",
-            "value": "false"
-          },
-          {
-            "type": "TEMPLATE",
-            "key": "name",
-            "value": "gclid"
-          }
-        ],
-        "formatValue": {}
-      },
-      {
-        "accountId": "0",
-        "containerId": "0",
-        "variableId": "14",
         "name": "DLV - etapa",
         "type": "v",
         "parameter": [
@@ -1468,7 +1428,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "variableId": "15",
+        "variableId": "14",
         "name": "DLV - regiao",
         "type": "v",
         "parameter": [
@@ -1493,7 +1453,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "variableId": "16",
+        "variableId": "15",
         "name": "DLV - pergunta",
         "type": "v",
         "parameter": [
@@ -1518,7 +1478,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "variableId": "17",
+        "variableId": "16",
         "name": "DLV - percentual",
         "type": "v",
         "parameter": [

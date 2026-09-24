@@ -1,6 +1,6 @@
 // Gera tracking/gtm-container-lp-dr-santos.json (importação do GTM, exportFormatVersion 2).
 // Uso: node tracking/gerar-conteiner.mjs
-// Regras: spec §8 e §20. Sem utm_term, sem Click URL e sem Click Text. page_location = pagina_limpa.
+// Regras: spec §8 e §20 e parecer R17. Sem utm_term, sem gclid no GA4, sem Click URL e sem Click Text. page_location = pagina_limpa.
 import fs from "node:fs";
 import path from "node:path";
 
@@ -12,7 +12,7 @@ const consentimento = { consentStatus: "NOT_NEEDED" }; // só as verificações 
 
 /** Eventos e parâmetros da spec §8 (dataLayer). */
 const EVENTOS = {
-  clique_whatsapp: ["local_cta", "cidade", "local", "ref", "utm_source", "utm_medium", "utm_campaign", "utm_content", "gclid"],
+  clique_whatsapp: ["local_cta", "cidade", "local", "ref", "utm_source", "utm_medium", "utm_campaign", "utm_content"],
   autoavaliacao_etapa: ["etapa"],
   autoavaliacao_concluida: [],
   autoavaliacao_pulada: ["etapa"],

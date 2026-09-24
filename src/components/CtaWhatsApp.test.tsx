@@ -55,6 +55,21 @@ describe("CtaWhatsApp", () => {
     expect(textoDe(url)).not.toContain("Balsas");
   });
 
+  it("o evento não leva o gclid (o Ads lê da URL de entrada; o GA4 nunca recebe)", () => {
+    reiniciarOrigemParaTestes();
+    capturarOrigem("?utm_source=google&gclid=Cj0abc_1", null);
+    render(
+      <CidadeProvider>
+        <CtaWhatsApp localCta="hero">Agendar</CtaWhatsApp>
+      </CidadeProvider>,
+    );
+    fireEvent.click(screen.getByRole("link", { name: "Agendar" }));
+    const evento = window.dataLayer!.find((e) => e.event === "clique_whatsapp")!;
+    expect(evento.utm_source).toBe("google");
+    expect(evento.gclid).toBeUndefined();
+    expect(JSON.stringify(evento)).not.toContain("Cj0abc_1");
+  });
+
   it("sem GTM, navega depois do tempo-limite", () => {
     render(
       <CidadeProvider>

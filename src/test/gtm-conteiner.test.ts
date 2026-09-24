@@ -22,7 +22,7 @@ interface Tag {
 
 /** Eventos e parâmetros da spec §8. */
 const EVENTOS: Record<string, string[]> = {
-  clique_whatsapp: ["local_cta", "cidade", "local", "ref", "utm_source", "utm_medium", "utm_campaign", "utm_content", "gclid"],
+  clique_whatsapp: ["local_cta", "cidade", "local", "ref", "utm_source", "utm_medium", "utm_campaign", "utm_content"],
   autoavaliacao_etapa: ["etapa"],
   autoavaliacao_concluida: [],
   autoavaliacao_pulada: ["etapa"],
@@ -59,6 +59,14 @@ describe("contêiner do GTM", () => {
     expect(bruto).not.toMatch(/utm_term/i);
     expect(bruto).not.toMatch(/click ?url|click ?text|CLICK_URL|CLICK_TEXT/i);
     expect(bruto).not.toMatch(/gtm\.element(Url|Text)/);
+  });
+
+  it("o gclid nunca vai ao GA4: sem variável nem parâmetro gclid", () => {
+    expect(bruto).not.toMatch(/DLV - gclid/);
+    expect(bruto).not.toMatch(/"value": "gclid"/);
+    for (const tag of tags.filter((t) => t.type === "gaawe" || t.type === "googtag")) {
+      expect(JSON.stringify(tag)).not.toMatch(/gclid/i);
+    }
   });
 
   it("as três constantes existem e estão marcadas para preencher", () => {

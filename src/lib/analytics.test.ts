@@ -51,6 +51,15 @@ describe("analytics", () => {
     window.history.replaceState(null, "", "/");
   });
 
+  it("registrarPagina nunca leva o gclid ao page_location do GA4", async () => {
+    window.history.replaceState(null, "", "/?utm_source=google&utm_medium=cpc&gclid=Cj0.KCQ_a-1");
+    const { registrarPagina } = await import("./analytics");
+    registrarPagina();
+    const item = window.dataLayer!.find((e) => "pagina_limpa" in e)!;
+    expect(item.pagina_limpa).toBe(`${window.location.origin}/?utm_source=google&utm_medium=cpc`);
+    window.history.replaceState(null, "", "/");
+  });
+
   it("track com aoConcluir chama uma vez só (callback do GTM e tempo-limite)", async () => {
     vi.useFakeTimers();
     const { track } = await import("./analytics");
