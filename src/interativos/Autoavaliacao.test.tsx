@@ -4,6 +4,7 @@ import { navegacao } from "@/components/CtaWhatsApp";
 import { TEXTOS_AUTOAVALIACAO as T } from "@/content/autoavaliacao";
 import { CidadeProvider } from "@/context/CidadeContext";
 import { reiniciarOrigemParaTestes } from "@/lib/origem";
+import { LINK_WHATSAPP_BASE } from "@/lib/whatsapp";
 import { Autoavaliacao, montarResumo } from "./Autoavaliacao";
 
 function renderizar() {
@@ -80,6 +81,25 @@ describe("Autoavaliacao", () => {
     expect(JSON.stringify(window.dataLayer)).not.toContain(regiao.opcoes[0]);
   });
 
+  it("depois de um clique sem opt-in, marcar a caixa volta o href ao link base (parecer R10)", () => {
+    renderizar();
+    fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: limitacao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: tentativa.opcoes[0] }));
+    const cta = screen.getByRole("link", { name: T.cta });
+    fireEvent.click(cta);
+    expect(cta.getAttribute("href")).not.toBe(LINK_WHATSAPP_BASE);
+    fireEvent.click(screen.getByRole("checkbox", { name: T.incluirResumo }));
+    expect(cta.getAttribute("href")).toBe(LINK_WHATSAPP_BASE);
+    window.dataLayer = [];
+    fireEvent(cta, new MouseEvent("auxclick", { bubbles: true, cancelable: true, button: 1 }));
+    expect(cta.getAttribute("href")).toBe(LINK_WHATSAPP_BASE);
+    const evento = window.dataLayer.find((e) => e.event === "clique_whatsapp")!;
+    expect(evento).toBeDefined();
+    expect(evento).not.toHaveProperty("ref");
+    const tudo = `${cta.getAttribute("href")} ${JSON.stringify(window.dataLayer)}`;
+    for (const etapa of T.etapas) for (const opcao of etapa.opcoes) expect(tudo).not.toContain(opcao);
+  });
   it("nenhum evento recebe resposta e registra etapas sem dados de saúde", () => {
     renderizar();
     fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));

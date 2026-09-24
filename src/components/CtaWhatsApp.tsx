@@ -1,4 +1,4 @@
-import type { AnchorHTMLAttributes, MouseEvent } from "react";
+import { useEffect, useRef, type AnchorHTMLAttributes, type MouseEvent } from "react";
 import { useCidade } from "@/context/CidadeContext";
 import { track } from "@/lib/analytics";
 import { obterOrigem } from "@/lib/origem";
@@ -37,17 +37,25 @@ export const navegacao = {
 
 export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, intencao = "agendar", children, ...resto }: Props) {
   const { cidade } = useCidade();
+  const refLink = useRef<HTMLAnchorElement>(null);
+  const linkBase = intencao === "duvida" ? LINK_WHATSAPP_DUVIDA : LINK_WHATSAPP_BASE;
+
+  // Um clique anterior sem resumo gravou a URL completa no href, e o React não regrava o atributo
+  // porque o valor virtual (linkBase) não mudou. Quando o resumo passa a existir, volta ao base (R10).
+  useEffect(() => {
+    if (resumo && refLink.current) refLink.current.href = linkBase;
+  }, [resumo, linkBase]);
 
   /**
    * Monta a URL completa e os parâmetros do evento. Sem resumo, grava a URL no href do elemento.
-   * Com resumo, o href fica no link base: a resposta de saúde nunca vai para o DOM, onde a medição
+   * Com resumo, o href volta ao link base: a resposta de saúde nunca vai para o DOM, onde a medição
    * de cliques de saída ou um acionador do GTM poderia ler a URL (spec §20, R5).
    */
   function preparar(elemento: HTMLAnchorElement) {
     const origem = obterOrigem();
     const nomeCidade = cidadeFixa ?? cidade?.nome;
     const url = montarLinkWhatsApp({ intencao, cidade: nomeCidade, local, resumo, ref: origem.ref });
-    if (!resumo) elemento.href = url;
+    elemento.href = resumo ? linkBase : url;
     const params = {
       local_cta: localCta,
       intencao,
@@ -86,7 +94,7 @@ export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, intencao = "a
   }
 
   return (
-    <a href={intencao === "duvida" ? LINK_WHATSAPP_DUVIDA : LINK_WHATSAPP_BASE} onClick={aoClicar} onAuxClick={aoClicarAuxiliar} {...resto}>
+    <a ref={refLink} href={linkBase} onClick={aoClicar} onAuxClick={aoClicarAuxiliar} {...resto}>
       {children}
     </a>
   );

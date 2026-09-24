@@ -207,4 +207,29 @@ describe("CtaWhatsApp", () => {
       expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", intencao: "agendar" }));
     });
   });
+
+  it("resumo incluído depois de um clique sem resumo volta o href ao link base (parecer R10)", () => {
+    const { rerender } = render(
+      <CidadeProvider>
+        <CtaWhatsApp localCta="autoavaliacao">Agendar</CtaWhatsApp>
+      </CidadeProvider>,
+    );
+    const link = screen.getByRole("link", { name: "Agendar" });
+    fireEvent.click(link, { ctrlKey: true });
+    expect(textoDe(link.getAttribute("href")!)).toMatch(/\(ref /);
+    rerender(
+      <CidadeProvider>
+        <CtaWhatsApp localCta="autoavaliacao" resumo="Meu resumo: joelho.">
+          Agendar
+        </CtaWhatsApp>
+      </CidadeProvider>,
+    );
+    expect(link.getAttribute("href")).toBe(LINK_WHATSAPP_BASE);
+    window.dataLayer = [];
+    fireEvent(link, new MouseEvent("auxclick", { bubbles: true, cancelable: true, button: 1 }));
+    expect(link.getAttribute("href")).toBe(LINK_WHATSAPP_BASE);
+    const evento = window.dataLayer!.find((e) => e.event === "clique_whatsapp")!;
+    expect(evento).not.toHaveProperty("ref");
+    expect(`${link.getAttribute("href")} ${JSON.stringify(window.dataLayer)}`).not.toContain("joelho");
+  });
 });
