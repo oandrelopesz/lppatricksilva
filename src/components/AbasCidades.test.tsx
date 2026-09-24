@@ -222,3 +222,61 @@ describe("AbasCidades sem IntersectionObserver (parecer R15)", () => {
     expect(container.querySelector("iframe")).toBeNull();
   });
 });
+
+describe("sombra das bordas da barra de abas (parecer R15)", () => {
+  let larguraRolavel = 800;
+
+  beforeEach(() => {
+    reiniciarOrigemParaTestes();
+    capturarOrigem("", null);
+    larguraRolavel = 800;
+    vi.stubGlobal("IntersectionObserver", ObservadorFalso);
+    vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockImplementation(function (this: HTMLElement) {
+      return this.getAttribute("role") === "tablist" ? larguraRolavel : 0;
+    });
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(function (this: HTMLElement) {
+      return this.getAttribute("role") === "tablist" ? 300 : 0;
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  const listaDoSul = () => screen.getByRole("tablist", { name: "Sul Maranhense" });
+  const moldura = () => listaDoSul().parentElement!;
+  function rolarPara(posicao: number) {
+    listaDoSul().scrollLeft = posicao;
+    fireEvent.scroll(listaDoSul());
+  }
+
+  it("no início só a borda direita tem sombra; no meio, as duas; no fim, só a esquerda", () => {
+    renderizar();
+    expect(moldura()).toHaveAttribute("data-sombra-direita");
+    expect(moldura()).not.toHaveAttribute("data-sombra-esquerda");
+    rolarPara(250);
+    expect(moldura()).toHaveAttribute("data-sombra-direita");
+    expect(moldura()).toHaveAttribute("data-sombra-esquerda");
+    rolarPara(500);
+    expect(moldura()).not.toHaveAttribute("data-sombra-direita");
+    expect(moldura()).toHaveAttribute("data-sombra-esquerda");
+  });
+
+  it("o foco por teclado que rola a lista atualiza a sombra", () => {
+    renderizar();
+    const balsas = screen.getByRole("tab", { name: "Balsas" });
+    balsas.focus();
+    fireEvent.keyDown(balsas, { key: "End" });
+    rolarPara(500);
+    expect(moldura()).not.toHaveAttribute("data-sombra-direita");
+    expect(moldura()).toHaveAttribute("data-sombra-esquerda");
+  });
+
+  it("sem largura rolável, nenhuma sombra", () => {
+    larguraRolavel = 300;
+    renderizar();
+    expect(moldura()).not.toHaveAttribute("data-sombra-direita");
+    expect(moldura()).not.toHaveAttribute("data-sombra-esquerda");
+  });
+});

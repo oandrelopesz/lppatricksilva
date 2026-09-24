@@ -332,7 +332,12 @@
   .mapa-ma figcaption a { text-decoration: underline; text-underline-offset: .2em; }
 
   .abas-cidades__lista-wrap { position: relative; }
-  .abas-cidades__lista-wrap::after { content: ""; position: absolute; inset: 0 0 0 auto; width: 2.5rem; pointer-events: none; background: linear-gradient(90deg, transparent, var(--color-bege)); }
+  .abas-cidades__lista-wrap::before,
+  .abas-cidades__lista-wrap::after { content: ""; position: absolute; top: 0; bottom: 0; z-index: 1; width: 2.5rem; pointer-events: none; opacity: 0; transition: opacity .15s ease; }
+  .abas-cidades__lista-wrap::before { left: 0; background: linear-gradient(270deg, transparent, var(--color-bege)); }
+  .abas-cidades__lista-wrap::after { right: 0; background: linear-gradient(90deg, transparent, var(--color-bege)); }
+  .abas-cidades__lista-wrap[data-sombra-esquerda]::before,
+  .abas-cidades__lista-wrap[data-sombra-direita]::after { opacity: 1; }
   .abas-cidades__lista { scroll-snap-type: x proximity; scrollbar-width: thin; }
   .abas-cidades__lista button { scroll-snap-align: start; font-weight: 600; transition: background-color .15s ease, border-color .15s ease; }
   .abas-cidades__lista button:hover { border-color: var(--color-grafite); }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { CartaoLocal } from "@/components/CartaoLocal";
 import { CtaWhatsApp } from "@/components/CtaWhatsApp";
 import { MapaMaranhao } from "@/components/MapaMaranhao";
@@ -20,6 +20,45 @@ function secaoPerto(secao: Element): boolean {
 export function registrarTrocaAba(cidade: Cidade): void {
   const regiao = REGIOES.find((item) => item.id === cidade.regiaoId)!;
   track("troca_aba_cidade", { cidade: cidade.nome, regiao: regiao.nome });
+}
+
+/**
+ * Barra de abas com sombra nas bordas só onde ainda há cidades para rolar. Recalcula no scroll da
+ * lista (inclusive o causado pelo foco por teclado) e no resize.
+ */
+function ListaComSombra({ rotuloId, children }: { rotuloId: string; children: ReactNode }) {
+  const refLista = useRef<HTMLDivElement>(null);
+  const [sombras, setSombras] = useState({ esquerda: false, direita: false });
+
+  useEffect(() => {
+    const lista = refLista.current;
+    if (!lista) return;
+    const medir = () => {
+      const maximo = lista.scrollWidth - lista.clientWidth;
+      const esquerda = maximo > 1 && lista.scrollLeft > 1;
+      const direita = maximo > 1 && lista.scrollLeft < maximo - 1;
+      setSombras((atual) => (atual.esquerda === esquerda && atual.direita === direita ? atual : { esquerda, direita }));
+    };
+    medir();
+    lista.addEventListener("scroll", medir, { passive: true });
+    window.addEventListener("resize", medir);
+    return () => {
+      lista.removeEventListener("scroll", medir);
+      window.removeEventListener("resize", medir);
+    };
+  }, []);
+
+  return (
+    <div
+      className="abas-cidades__lista-wrap"
+      data-sombra-esquerda={sombras.esquerda ? "" : undefined}
+      data-sombra-direita={sombras.direita ? "" : undefined}
+    >
+      <div ref={refLista} role="tablist" aria-labelledby={rotuloId} className="abas-cidades__lista">
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export function AbasCidades() {
@@ -110,7 +149,7 @@ export function AbasCidades() {
         const indiceAberto = visaoGeral ? -1 : lista.findIndex((cidade) => cidade.id === aberta.id);
         return <div key={regiao.id} className="abas-cidades__regiao">
           <h3 id={`regiao-${regiao.id}`}>{regiao.nome}</h3>
-          <div className="abas-cidades__lista-wrap"><div role="tablist" aria-labelledby={`regiao-${regiao.id}`} className="abas-cidades__lista">
+          <ListaComSombra rotuloId={`regiao-${regiao.id}`}>
             {lista.map((cidade, indice) => {
               const selecionada = indice === indiceAberto;
               const focada = focadaPorRegiao[regiao.id];
@@ -121,7 +160,7 @@ export function AbasCidades() {
                 onFocus={(evento) => { setFocadaPorRegiao((atual) => ({ ...atual, [regiao.id]: cidade.id })); evento.currentTarget.scrollIntoView?.({ block: "nearest", inline: "nearest" }); }}>
                 {cidade.nome}</button>;
             })}
-          </div></div>
+          </ListaComSombra>
         </div>;
       })}
       <div className="abas-cidades__geral" hidden={montado && !visaoGeral}>{CIDADES.map((cidade) => <div key={cidade.id}>
