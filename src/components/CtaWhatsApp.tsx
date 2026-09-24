@@ -26,6 +26,8 @@ interface Props extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href" | "
   resumo?: string;
   /** "duvida" nos CTAs "Perguntar no WhatsApp" (wa.duvida). Padrão: "agendar". */
   intencao?: IntencaoWhatsApp;
+  /** Não usa a cidade escolhida (ex.: "Não achou a sua cidade?"); a seleção continua para os outros CTAs. */
+  ignorarCidade?: boolean;
 }
 
 /** Navegação isolada para os testes trocarem. */
@@ -35,7 +37,16 @@ export const navegacao = {
   },
 };
 
-export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, intencao = "agendar", children, ...resto }: Props) {
+export function CtaWhatsApp({
+  localCta,
+  cidadeFixa,
+  local,
+  resumo,
+  intencao = "agendar",
+  ignorarCidade = false,
+  children,
+  ...resto
+}: Props) {
   const { cidade } = useCidade();
   const refLink = useRef<HTMLAnchorElement>(null);
   const linkBase = intencao === "duvida" ? LINK_WHATSAPP_DUVIDA : LINK_WHATSAPP_BASE;
@@ -53,7 +64,7 @@ export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, intencao = "a
    */
   function preparar(elemento: HTMLAnchorElement) {
     const origem = obterOrigem();
-    const nomeCidade = cidadeFixa ?? cidade?.nome;
+    const nomeCidade = ignorarCidade ? undefined : (cidadeFixa ?? cidade?.nome);
     const url = montarLinkWhatsApp({ intencao, cidade: nomeCidade, local, resumo, ref: origem.ref });
     elemento.href = resumo ? linkBase : url;
     const params = {

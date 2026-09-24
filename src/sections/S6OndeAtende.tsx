@@ -9,7 +9,8 @@ export function S6OndeAtende() {
       <p>{T.intro}</p>
       <AbasCidades />
       <p>{T.rodape}</p>
-      <CtaWhatsApp localCta="onde_atende" intencao="duvida">
+      {/* Quem não achou a cidade pergunta sem a cidade aberta antes (parecer R11). */}
+      <CtaWhatsApp localCta="onde_atende" intencao="duvida" ignorarCidade>
         {T.rodapeCta}
       </CtaWhatsApp>
     </section>

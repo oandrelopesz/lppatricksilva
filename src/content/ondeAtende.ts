@@ -7,7 +7,7 @@ export const TEXTOS_ONDE_ATENDE = {
   dicaRolagem: "Deslize para ver mais cidades",
   abasAria: "Cidades onde o Dr. Patrick atende",
   verMapa: "Ver mapa",
-  /** Sem ID na copy-lp: rótulo do botão que volta à visão geral (pendente com a Copywriter). */
+  /** onde.ver_todas (C1f): botão que volta da cidade aberta para a lista de todas as cidades. */
   verTodas: "Ver todas as cidades",
   clinica: {
     enderecoRotulo: "Endereço",
