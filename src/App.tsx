@@ -1,6 +1,7 @@
 import { CidadeProvider } from "@/context/CidadeContext";
 import { JsonLd } from "@/components/JsonLd";
 import { BotaoFlutuante } from "@/components/BotaoFlutuante";
+import { AvisoCookies } from "@/components/AvisoCookies";
 import { S1Topbar } from "@/sections/S1Topbar";
 import { S2Hero } from "@/sections/S2Hero";
 import { S3Identificacao } from "@/sections/S3Identificacao";
@@ -27,6 +28,7 @@ export default function App() {
         </CidadeProvider>
         <JsonLd />
       </main>
+      <AvisoCookies />
     </>
   );
 }

@@ -3,6 +3,7 @@ import { ASSINATURA } from "@/config";
 import { todosOsLocais } from "@/data/locais";
 import { render } from "@/entry-server";
 import { TEXTOS_FAQ } from "@/content/faq";
+import { TEXTOS_COOKIES } from "@/content/cookies";
 
 describe("HTML inicial (sem JavaScript)", () => {
   const html = render();
@@ -41,5 +42,10 @@ describe("HTML inicial (sem JavaScript)", () => {
     }
     expect((html.match(/role="region"/g) || [])).toHaveLength(11);
     expect(html).toContain('href="/politica-de-privacidade.html"');
+  });
+
+  it("não traz o aviso de cookies (só aparece depois da hidratação) e traz o botão de preferências", () => {
+    expect(html).not.toContain(TEXTOS_COOKIES.rotulo);
+    expect(html).toContain(TEXTOS_COOKIES.preferencias);
   });
 });

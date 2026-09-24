@@ -3,6 +3,7 @@ import { CtaWhatsApp } from "@/components/CtaWhatsApp";
 import { Foto } from "@/components/Foto";
 import { ASSINATURA } from "@/config";
 import { TEXTOS_RODAPE as T } from "@/content/rodape";
+import { TEXTOS_COOKIES } from "@/content/cookies";
 import { REGIOES, cidadesDaRegiao } from "@/data/locais";
 
 /**
@@ -62,7 +63,15 @@ export function S8Rodape() {
           <p className="mt-8">{T.avisoMedico}</p>
           <p className="mt-3">{T.lgpd}</p>
           <a className="mt-3 inline-block min-h-12 py-2 font-semibold underline underline-offset-4" href="/politica-de-privacidade.html">{T.politicaLink}</a>
-          <div id="rodape-extra"></div>
+          <div id="rodape-extra">
+            <button
+              type="button"
+              className="min-h-12 py-2 text-left font-semibold underline underline-offset-4"
+              onClick={() => window.dispatchEvent(new Event("abrir-preferencias-cookies"))}
+            >
+              {TEXTOS_COOKIES.preferencias}
+            </button>
+          </div>
           <p className="mt-4">{T.copyright(new Date().getFullYear())}</p>
         </div>
       </div>

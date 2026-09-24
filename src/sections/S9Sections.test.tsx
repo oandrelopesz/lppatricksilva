@@ -1,9 +1,10 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { CidadeProvider } from "@/context/CidadeContext";
 import { PENDENCIAS, ASSINATURA } from "@/config";
 import { TEXTOS_COMO_FUNCIONA } from "@/content/comoFunciona";
 import { TEXTOS_FAQ } from "@/content/faq";
+import { TEXTOS_COOKIES } from "@/content/cookies";
 import { S4ComoFunciona } from "./S4ComoFunciona";
 import { S5Sobre } from "./S5Sobre";
 import { S7Faq } from "./S7Faq";
@@ -48,6 +49,12 @@ describe("seções finais", () => {
     expect(screen.getByText(ASSINATURA)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Política de privacidade" })).toHaveAttribute("href", "/politica-de-privacidade.html");
     expect(screen.getByRole("img", { name: "Dr. Patrick Santos de pé na sala de ultrassom" })).toBeInTheDocument();
-    expect(container.querySelector("#rodape-extra")).toBeEmptyDOMElement();
+    const botao = screen.getByRole("button", { name: TEXTOS_COOKIES.preferencias });
+    expect(container.querySelector("#rodape-extra")!.contains(botao)).toBe(true);
+    const reabrir = vi.fn();
+    window.addEventListener("abrir-preferencias-cookies", reabrir);
+    fireEvent.click(botao);
+    window.removeEventListener("abrir-preferencias-cookies", reabrir);
+    expect(reabrir).toHaveBeenCalledTimes(1);
   });
 });

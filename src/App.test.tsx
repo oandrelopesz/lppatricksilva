@@ -1,10 +1,22 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { TEXTOS_TOPBAR } from "@/content/topbar";
+import { TEXTOS_COOKIES } from "@/content/cookies";
 import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
 import App from "./App";
 
 describe("App", () => {
+  it("mostra o aviso de cookies sem escolha e reabre pelo botão do rodapé", () => {
+    localStorage.clear();
+    window.dataLayer = [];
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: TEXTOS_COOKIES.recusar }));
+    expect(screen.queryByRole("region", { name: TEXTOS_COOKIES.rotulo })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: TEXTOS_COOKIES.preferencias }));
+    expect(screen.getByRole("region", { name: TEXTOS_COOKIES.rotulo })).toBeInTheDocument();
+    localStorage.clear();
+  });
+
   it("renderiza a headline e a assinatura do médico", () => {
     render(<App />);
     expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
