@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { CartaoLocal } from "@/components/CartaoLocal";
+import { CtaWhatsApp } from "@/components/CtaWhatsApp";
 import { MapaMaranhao } from "@/components/MapaMaranhao";
 import { TEXTOS_ONDE_ATENDE as T } from "@/content/ondeAtende";
 import { useCidade } from "@/context/CidadeContext";
@@ -12,6 +13,9 @@ export function AbasCidades() {
   const [aberta, setAberta] = useState<Cidade>(CIDADES[0]);
   const [visaoGeral, setVisaoGeral] = useState(false);
   const [mapasVisiveis, setMapasVisiveis] = useState(false);
+  // Sem JavaScript (e no HTML do servidor), a lista geral fica visível; só some depois de montar.
+  const [montado, setMontado] = useState(false);
+  useEffect(() => setMontado(true), []);
   const [focadaPorRegiao, setFocadaPorRegiao] = useState<Partial<Record<RegiaoId, string>>>({});
   const refsAbas = useRef(new Map<string, HTMLButtonElement>());
   const raiz = useRef<HTMLDivElement>(null);
@@ -84,10 +88,11 @@ export function AbasCidades() {
           </div></div>
         </div>;
       })}
-      <div className="abas-cidades__geral" hidden={!visaoGeral}>{CIDADES.map((cidade) => <div key={cidade.id}>
+      <div className="abas-cidades__geral" hidden={montado && !visaoGeral}>{CIDADES.map((cidade) => <div key={cidade.id}>
         <h4>{cidade.nome}</h4><ul>{cidade.locais.map((local) => <li key={local.id}>
           <strong>{local.nome}</strong> {local.endereco}{" "}
-          <a href={local.linkComoChegar} target="_blank" rel="noreferrer" onClick={() => track("como_chegar", { local: local.nome, cidade: cidade.nome })}>{T.clinica.comoChegar}</a>
+          <a href={local.linkComoChegar} target="_blank" rel="noreferrer" onClick={() => track("como_chegar", { local: local.nome, cidade: cidade.nome })}>{T.clinica.comoChegar}</a>{" "}
+          <CtaWhatsApp localCta="onde_atende" cidadeFixa={cidade.nome} local={local.nome}>{T.clinica.cta(cidade.nome)}</CtaWhatsApp>
         </li>)}</ul>
       </div>)}</div>
       {CIDADES.map((cidade) => {
