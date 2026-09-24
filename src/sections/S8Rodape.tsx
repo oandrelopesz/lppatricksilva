@@ -1,8 +1,23 @@
+import type { MouseEvent } from "react";
 import { CtaWhatsApp } from "@/components/CtaWhatsApp";
 import { Foto } from "@/components/Foto";
 import { ASSINATURA } from "@/config";
 import { TEXTOS_RODAPE as T } from "@/content/rodape";
 import { REGIOES, cidadesDaRegiao } from "@/data/locais";
+
+/**
+ * Abre a aba da cidade com a mesma ação do clique na aba (contexto com fonte "aba", evento e mapa
+ * liberado por ação real) e leva o foco a ela. Sem JavaScript, o href #aba-... continua levando à aba.
+ */
+function abrirAba(evento: MouseEvent<HTMLAnchorElement>, cidadeId: string) {
+  const aba = document.getElementById(`aba-${cidadeId}`);
+  if (!aba) return;
+  evento.preventDefault();
+  aba.click();
+  const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+  aba.scrollIntoView?.({ behavior: reduzir ? "auto" : "smooth", block: "center" });
+  aba.focus({ preventScroll: true });
+}
 
 export function S8Rodape() {
   return (
@@ -32,7 +47,11 @@ export function S8Rodape() {
                 <h4 className="font-semibold">{regiao.nome}</h4>
                 <ul className="mt-2 space-y-1">
                   {cidadesDaRegiao(regiao.id).map((cidade) => (
-                    <li key={cidade.id}><a className="underline underline-offset-4" href={`#aba-${cidade.id}`}>{cidade.nome}</a></li>
+                    <li key={cidade.id}>
+                      <a className="underline underline-offset-4" href={`#aba-${cidade.id}`} onClick={(e) => abrirAba(e, cidade.id)}>
+                        {cidade.nome}
+                      </a>
+                    </li>
                   ))}
                 </ul>
               </div>

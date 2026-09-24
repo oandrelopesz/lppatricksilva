@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { TEXTOS_TOPBAR } from "@/content/topbar";
+import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
 import App from "./App";
 
 describe("App", () => {
@@ -31,5 +32,22 @@ describe("App", () => {
     const rodape = container.querySelector("#rodape");
     expect(rodape).not.toBeNull();
     expect(container.querySelector("main#conteudo")?.contains(rodape)).toBe(true);
+  });
+
+  it("cidade do rodapé abre a aba, leva o foco e libera o mapa (parecer R13)", () => {
+    reiniciarOrigemParaTestes();
+    capturarOrigem("", null);
+    window.dataLayer = [];
+    const { container } = render(<App />);
+    const rodape = container.querySelector("#rodape") as HTMLElement;
+    const link = within(rodape).getByRole("link", { name: "Tuntum" });
+    expect(link).toHaveAttribute("href", "#aba-tuntum");
+    fireEvent.click(link);
+    const aba = screen.getByRole("tab", { name: "Tuntum" });
+    expect(aba).toHaveAttribute("aria-selected", "true");
+    expect(aba).toHaveFocus();
+    expect(screen.getByRole("tabpanel", { name: "Tuntum" })).toBeVisible();
+    expect(container.querySelectorAll("#onde-atende iframe")).toHaveLength(1);
+    expect(window.dataLayer).toContainEqual({ event: "troca_aba_cidade", cidade: "Tuntum", regiao: "Centro Maranhense" });
   });
 });
