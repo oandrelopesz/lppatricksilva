@@ -11,6 +11,13 @@ const EXIGIDOS = [
   ["CSS embutido no head", /<style>/],
   ["JSON-LD no HTML inicial", /<script type="application\/ld\+json">/],
   ["14 locais ligados ao médico no JSON-LD", (h) => (h.match(/#local-/g) || []).length === 28],
+  ["aviso de particular", /particular/i],
+  ["assinatura com MÉDICO", /MÉDICO/],
+  ["CRM-MA 16520", /CRM-MA 16520/],
+  ["RQE 7389", /RQE 7389/],
+  ["CTA do WhatsApp", /href="https:\/\/wa\.me\/5513996822680\?text=/],
+  ["link para #onde-atende", /href="#onde-atende"/],
+  ["foto do hero prioritária", /fetchpriority="high"/],
 ];
 
 const PROIBIDOS = [
@@ -19,6 +26,8 @@ const PROIBIDOS = [
   ["placeholder visível", /\[PREENCHER\]/],
   ["travessão", /—/],
   ["referência ao preview", /__preview/],
+  ["BMA na página", /\bBMA\b/],
+  ["Instituto na página", /Instituto Patrick Santos/],
 ];
 
 const passa = (teste) => (typeof teste === "function" ? teste(html) : teste.test(html));

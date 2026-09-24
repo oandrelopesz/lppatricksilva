@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { CidadeProvider } from "@/context/CidadeContext";
 import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
+import { TEXTOS_ONDE_ATENDE as T } from "@/content/ondeAtende";
 import { AbasCidades } from "./AbasCidades";
 
 function renderizar() {
@@ -134,6 +135,25 @@ describe("AbasCidades", () => {
       renderizar();
       fireEvent.click(screen.getByRole("tab", { name: "Loreto" }));
       expect(focavel()).toEqual([screen.getByRole("tab", { name: "Loreto" })]);
+    });
+  });
+
+  describe("copy aprovada (onde.*)", () => {
+    it("cartão mostra o rótulo de endereço, a disponibilidade e o CTA aprovado", () => {
+      renderizar();
+      fireEvent.click(screen.getByRole("tab", { name: "Tuntum" }));
+      const painel = screen.getByRole("tabpanel", { name: "Tuntum" });
+      expect(within(painel).getByText(T.clinica.enderecoRotulo)).toBeInTheDocument();
+      expect(within(painel).getByText(T.clinica.disponibilidade)).toBeInTheDocument();
+      expect(within(painel).getByRole("link", { name: T.clinica.cta("Tuntum") })).toBeInTheDocument();
+    });
+
+    it("cidade com mais de um local mostra o aviso de múltiplos locais; com um só, não", () => {
+      renderizar();
+      fireEvent.click(screen.getByRole("tab", { name: "Balsas" }));
+      expect(within(screen.getByRole("tabpanel", { name: "Balsas" })).getByText(T.multiplas(3))).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("tab", { name: "Tuntum" }));
+      expect(within(screen.getByRole("tabpanel", { name: "Tuntum" })).queryByText(/locais nesta cidade/)).toBeNull();
     });
   });
 });

@@ -91,7 +91,6 @@ export function AbasCidades() {
 
       {mostrarGeral ? (
         <div className="abas-cidades__geral">
-          <p>{T.semCidade}</p>
           {CIDADES.map((cidade) => (
             <div key={cidade.id}>
               <h4>{cidade.nome}</h4>
@@ -105,7 +104,7 @@ export function AbasCidades() {
                       rel="noreferrer"
                       onClick={() => track("como_chegar", { local: local.nome, cidade: cidade.nome })}
                     >
-                      {T.comoChegar}
+                      {T.clinica.comoChegar}
                     </a>
                   </li>
                 ))}
@@ -132,6 +131,7 @@ export function AbasCidades() {
                 {T.verMapa}
               </button>
             ) : null}
+            {cidade.locais.length > 1 ? <p>{T.multiplas(cidade.locais.length)}</p> : null}
             {cidade.locais.map((local) => (
               <CartaoLocal key={local.id} cidade={cidade} local={local} mostrarMapa={mapaPermitido} />
             ))}
