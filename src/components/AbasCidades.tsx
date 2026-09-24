@@ -13,7 +13,9 @@ export function AbasCidades() {
   const [visaoGeral, setVisaoGeral] = useState(false);
   const [mapasVisiveis, setMapasVisiveis] = useState(false);
   const [focadaPorRegiao, setFocadaPorRegiao] = useState<Partial<Record<RegiaoId, string>>>({});
+  const [sombras, setSombras] = useState<Partial<Record<RegiaoId, { esquerda: boolean; direita: boolean }>>>({});
   const refsAbas = useRef(new Map<string, HTMLButtonElement>());
+  const refsListas = useRef(new Map<RegiaoId, HTMLDivElement>());
   const raiz = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,6 +42,22 @@ export function AbasCidades() {
     }, { rootMargin: "400px 0px", threshold: 0 });
     observador.observe(secao);
     return () => observador.disconnect();
+  }, []);
+
+  function atualizarSombras(id: RegiaoId, lista: HTMLDivElement) {
+    const esquerda = lista.scrollLeft > 1;
+    const direita = lista.scrollLeft + lista.clientWidth < lista.scrollWidth - 1;
+    setSombras((atual) => {
+      if (atual[id]?.esquerda === esquerda && atual[id]?.direita === direita) return atual;
+      return { ...atual, [id]: { esquerda, direita } };
+    });
+  }
+
+  useEffect(() => {
+    const atualizar = () => refsListas.current.forEach((lista, id) => atualizarSombras(id, lista));
+    atualizar();
+    window.addEventListener("resize", atualizar);
+    return () => window.removeEventListener("resize", atualizar);
   }, []);
 
   function abrir(cidade: Cidade) {
@@ -70,7 +88,8 @@ export function AbasCidades() {
         const indiceAberto = visaoGeral ? -1 : lista.findIndex((cidade) => cidade.id === aberta.id);
         return <div key={regiao.id} className="abas-cidades__regiao">
           <h3 id={`regiao-${regiao.id}`}>{regiao.nome}</h3>
-          <div className="abas-cidades__lista-wrap"><div role="tablist" aria-labelledby={`regiao-${regiao.id}`} className="abas-cidades__lista">
+          <div className="abas-cidades__lista-wrap" data-more-left={sombras[regiao.id]?.esquerda ? "" : undefined} data-more-right={sombras[regiao.id]?.direita ? "" : undefined}><div role="tablist" aria-labelledby={`regiao-${regiao.id}`} className="abas-cidades__lista"
+            ref={(el) => { if (el) refsListas.current.set(regiao.id, el); else refsListas.current.delete(regiao.id); }} onScroll={(evento) => atualizarSombras(regiao.id, evento.currentTarget)}>
             {lista.map((cidade, indice) => {
               const selecionada = indice === indiceAberto;
               const focada = focadaPorRegiao[regiao.id];
