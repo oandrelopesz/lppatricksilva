@@ -6,7 +6,7 @@ import { CIDADES, REGIOES, cidadesDaRegiao, type Cidade, type RegiaoId } from "@
 import { track } from "@/lib/analytics";
 
 export function AbasCidades() {
-  const { cidade: aberta, fonte, escolherCidade } = useCidade();
+  const { cidade: aberta, fonte, escolherCidade, pedidosVisaoGeral } = useCidade();
   const [visaoGeral, setVisaoGeral] = useState(true);
   /** Cidade cujo mapa o usuário liberou com uma ação real. */
   const [mapaLiberado, setMapaLiberado] = useState<string | undefined>();
@@ -19,6 +19,11 @@ export function AbasCidades() {
     setVisaoGeral(false);
     if (fonte === "aba" || fonte === "seletor") setMapaLiberado(aberta.id);
   }, [aberta, fonte]);
+
+  // Pedido de visão geral vindo de fora (seletor com a opção vazia).
+  useEffect(() => {
+    if (pedidosVisaoGeral > 0) setVisaoGeral(true);
+  }, [pedidosVisaoGeral]);
 
   // Nova cidade selecionada (aba, seletor ou URL): a selecionada volta a ser a parada do Tab.
   useEffect(() => setFocadaPorRegiao({}), [aberta]);

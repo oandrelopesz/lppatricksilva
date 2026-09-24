@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ASSINATURA } from "@/config";
 import { todosOsLocais } from "@/data/locais";
 import { render } from "@/entry-server";
+import { TEXTOS_FAQ } from "@/content/faq";
 
 describe("HTML inicial (sem JavaScript)", () => {
   const html = render();
@@ -29,5 +30,16 @@ describe("HTML inicial (sem JavaScript)", () => {
     expect(html).toContain('href="#onde-atende"');
     expect(html).toContain('fetchpriority="high"');
     expect(html).not.toMatch(/\bBMA\b|Instituto Patrick Santos/);
+  });
+
+  it("tem as âncoras de todas as seções e as 11 respostas do FAQ", () => {
+    for (const id of ["para-quem", "como-funciona", "sobre", "onde-atende", "duvidas", "rodape"]) {
+      expect(html).toContain(`id="${id}"`);
+    }
+    for (const item of TEXTOS_FAQ.itens) {
+      expect(html).toContain(item.resposta.replace(/&/g, "&amp;").replace(/"/g, "&quot;"));
+    }
+    expect((html.match(/role="region"/g) || [])).toHaveLength(11);
+    expect(html).toContain('href="/politica-de-privacidade.html"');
   });
 });

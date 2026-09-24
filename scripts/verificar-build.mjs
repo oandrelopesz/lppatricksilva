@@ -18,6 +18,9 @@ const EXIGIDOS = [
   ["CTA do WhatsApp", /href="https:\/\/wa\.me\/5513996822680\?text=/],
   ["link para #onde-atende", /href="#onde-atende"/],
   ["foto do hero prioritária", /fetchpriority="high"/],
+  ["âncoras de todas as seções", (h) => ["para-quem", "como-funciona", "sobre", "onde-atende", "duvidas", "rodape"].every((id) => h.includes(`id="${id}"`))],
+  ["FAQ com respostas no HTML", (h) => (h.match(/role="region"/g) || []).length >= 11],
+  ["link da política de privacidade", /href="\/politica-de-privacidade\.html"/],
 ];
 
 const PROIBIDOS = [
