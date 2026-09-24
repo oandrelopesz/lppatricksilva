@@ -17,6 +17,9 @@
 - "Instituto Patrick Santos" e "BMA" não aparecem na página. PRP só nos termos da Resolução CFM 2.464/2026 (spec §13).
 - Nenhum dado de saúde (região do corpo, limitação, tratamento) vai para storage, dataLayer, GA4 ou Ads.
 - Nenhuma cidade é presumida: sem escolha do usuário ou `?cidade=` válido, a mensagem do WhatsApp é a base.
+- Origem: só `utm_source`, `utm_medium`, `utm_campaign`, `utm_content` e `gclid`, sanitizados; `utm_term` nunca é lido. `page_location` do GA4 = `pagina_limpa`.
+- Mapa só no painel aberto e só depois de ação real do usuário; iframe com `referrerPolicy="no-referrer"`.
+- Deploy: preview até o marco de produção (Tarefas 8 a 10, C1 e C2 aprovadas, QA sem falha crítica); produção depois.
 - Nenhum `[PREENCHER]` visível. Dado ausente = `null` em `src/config.ts` e texto que orienta a perguntar no WhatsApp.
 - Texto visível só da nota `copy-lp` (aprovada pelo Revisor). Sem travessão (—) em nenhum texto visível.
 - Componentes renderizam no servidor: nada de `window`, `document` ou storage durante o render.
@@ -34,7 +37,7 @@
 4. O agente reporta com `maestri ask "Maestro" "Tarefa N pronta: branch <b>, commits <hashes>, saída de npm test e npm run build (resumo)"`.
 5. O Maestro pede ao Revisor: `git diff main...<branch>` + checklist da spec §13 + critérios da tarefa. Resposta começa com APROVADO ou MUDANÇAS NECESSÁRIAS.
 6. Com APROVADO, o Git Manager, no ground: `git merge --no-ff <branch> -m "merge: <branch>"`, `npm test`, `git push origin main`. Conflito: resolve mantendo a intenção de ambos os lados; se houver dúvida, pergunta ao Maestro.
-7. A partir da Tarefa 11, o Dev faz o deploy de produção depois de cada merge.
+7. A partir da Tarefa 11, o Dev publica depois de cada merge: **preview** da Vercel até o marco de produção (Tarefas 8, 9 e 10 na `main`, copy C1 e C2 aprovadas e QA da Tarefa 12 sem falha crítica); **produção** a partir desse marco.
 8. O Maestro atualiza o status na nota `spec-lp-dr-patrick`.
 
 Floors (worktrees do Maestri; caminhos em `maestri floor list`): **Floor Dev** (Dev), **Floor Front** (Designer), **Floor Braçal** (Braçal), **Floor Tracking** (Tracking). O ground (`C:\Users\Andre\LPs\Effect\Dr Patrick Silva`) fica na `main` e roda o servidor de desenvolvimento.
@@ -235,6 +238,7 @@ Expected: FAIL (`./App` e `./entry-server` não existem).
     <title>Dr. Patrick Santos, ortopedista no Maranhão | Atendimento particular</title>
     <meta name="description" content="Dr. Patrick Santos, médico ortopedista (CRM-MA 16520, RQE 7389). Atendimento particular em 14 clínicas e hospitais parceiros de 11 cidades do Maranhão." />
     <meta name="theme-color" content="#15171B" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
   </head>
   <body>
     <div id="root"></div>
@@ -490,7 +494,7 @@ console.log(`verificar-build: ${EXIGIDOS.length + PROIBIDOS.length + 1} checagen
 - [ ] **Step 9: Rodar testes e build**
 
 Run: `npm test` → Expected: 2 testes PASS.
-Run: `npm run build` → Expected: `prerender: ... KB` e `verificar-build: 8 checagens OK`.
+Run: `npm run build` → Expected: `prerender: ... KB` e `verificar-build: 9 checagens OK` (2 exigidos + 6 proibidos + arquivo de preview).
 
 - [ ] **Step 10: Conferir o servidor de desenvolvimento**
 
@@ -1129,11 +1133,13 @@ git commit -m "feat: adiciona JSON-LD do medico e dos 14 locais"
 **Interfaces:**
 - Consumes: `buscarCidade`, `Cidade` (Tarefa 2); `WHATSAPP_NUMERO` (Tarefa 1).
 - Produces:
-  - `origem.ts`: `interface Origem { ref: string; gclid?; utm_source?; utm_medium?; utm_campaign?; utm_term?; utm_content?; cidade? }`, `gerarRef(aleatorio?): string`, `capturarOrigem(search: string, storage: Storage | null, aleatorio?): Origem`, `obterOrigem(): Origem`, `reiniciarOrigemParaTestes(): void`.
-  - `whatsapp.ts`: `interface PedidoWhatsApp { cidade?: string; local?: string; resumo?: string; ref: string }`, `montarMensagem(p): string`, `montarLinkWhatsApp(p): string`, `LINK_WHATSAPP_BASE: string`.
-  - `analytics.ts` (mínimo, o Tracking completa na Tarefa 10): `type ParametrosEvento = Record<string, string | number | undefined>`, `track(evento: string, params?: ParametrosEvento): void`.
+  - `origem.ts`: `interface Origem { ref: string; gclid?; utm_source?; utm_medium?; utm_campaign?; utm_content?; cidade? }`, `gerarRef(aleatorio?): string`, `sanitizar(chave: string, valor: string | null): string | undefined`, `capturarOrigem(search: string, storage: Storage | null, aleatorio?): Origem`, `obterOrigem(): Origem`, `urlLimpa(href: string): string`, `reiniciarOrigemParaTestes(): void`. `utm_term` nunca é capturado (texto livre).
+  - `whatsapp.ts`: `interface PedidoWhatsApp { cidade?: string; local?: string; resumo?: string; ref: string }`, `montarMensagem(p): string`, `montarLinkWhatsApp(p): string`, `LINK_WHATSAPP_BASE: string`. Com `resumo`, a mensagem não leva `ref`.
+  - `analytics.ts` (mínimo, o Tracking completa na Tarefa 10 sem mudar a assinatura): `type ParametrosEvento = Record<string, string | number | undefined>`, `interface OpcoesEvento { aoConcluir?: () => void; tempoLimiteMs?: number }`, `track(evento: string, params?: ParametrosEvento, opcoes?: OpcoesEvento): void`.
   - `CidadeContext.tsx`: `type FonteEscolha = "url" | "aba" | "seletor"`, `CidadeProvider`, `useCidade(): { cidade: Cidade | undefined; fonte: FonteEscolha | undefined; escolherCidade(id: string, fonte: FonteEscolha): void }`.
-  - `CtaWhatsApp.tsx`: `type LocalCta = "topbar" | "hero" | "identificacao" | "autoavaliacao" | "como_funciona" | "sobre" | "onde_atende" | "faq" | "rodape" | "flutuante"`; `<CtaWhatsApp localCta cidadeFixa? local? resumo? className? children />`.
+  - `CtaWhatsApp.tsx`: `type LocalCta = "topbar" | "hero" | "identificacao" | "autoavaliacao" | "como_funciona" | "sobre" | "onde_atende" | "faq" | "rodape" | "flutuante"`; `<CtaWhatsApp localCta cidadeFixa? local? resumo? className? id? children />`; `navegacao.ir(url)` (troca nos testes).
+
+Comportamento do clique (spec §7 e parecer R2): o `href` pré-renderizado é o link base (funciona sem JavaScript). Com JavaScript, o clique simples monta o link completo, faz `preventDefault`, põe `clique_whatsapp` no `dataLayer` com `eventCallback` e `eventTimeout` e navega na mesma aba quando o GTM confirma ou quando o tempo-limite de 800 ms vence (o que vier primeiro, uma vez só). Clique com Ctrl, Cmd, Shift ou botão do meio segue o comportamento do navegador (nova aba) e só registra o evento.
 
 - [ ] **Step 1: Escrever os testes que falham**
 
@@ -1141,7 +1147,7 @@ git commit -m "feat: adiciona JSON-LD do medico e dos 14 locais"
 
 ```ts
 import { beforeEach, describe, expect, it } from "vitest";
-import { capturarOrigem, gerarRef, reiniciarOrigemParaTestes } from "./origem";
+import { capturarOrigem, gerarRef, reiniciarOrigemParaTestes, sanitizar, urlLimpa } from "./origem";
 
 function storageFalso(): Storage {
   const mapa = new Map<string, string>();
@@ -1164,24 +1170,45 @@ describe("origem", () => {
     expect(gerarRef()).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
   });
 
-  it("captura UTMs e gclid da URL", () => {
-    const o = capturarOrigem("?utm_source=google&utm_medium=cpc&utm_campaign=g1&gclid=abc", storageFalso());
-    expect(o).toMatchObject({ utm_source: "google", utm_medium: "cpc", utm_campaign: "g1", gclid: "abc" });
+  it("captura UTMs permitidos e gclid, e nunca utm_term", () => {
+    const o = capturarOrigem("?utm_source=google&utm_medium=cpc&utm_campaign=g1_dor&utm_term=dor+no+joelho&gclid=Cj0abc_1", storageFalso());
+    expect(o).toMatchObject({ utm_source: "google", utm_medium: "cpc", utm_campaign: "g1_dor", gclid: "Cj0abc_1" });
+    expect(o).not.toHaveProperty("utm_term");
+  });
+
+  it("descarta valores com espaço, acento, @ ou longos demais", () => {
+    expect(sanitizar("utm_campaign", "dor no joelho")).toBeUndefined();
+    expect(sanitizar("utm_content", "maria@email.com")).toBeUndefined();
+    expect(sanitizar("utm_source", "joão")).toBeUndefined();
+    expect(sanitizar("utm_source", "a".repeat(101))).toBeUndefined();
+    expect(sanitizar("utm_source", "google")).toBe("google");
   });
 
   it("mantém ref e UTMs da sessão quando a URL vem sem parâmetros", () => {
     const storage = storageFalso();
-    const primeira = capturarOrigem("?utm_source=google", storage);
+    const primeira = capturarOrigem("?utm_source=google&utm_content=a1", storage);
     reiniciarOrigemParaTestes();
     const segunda = capturarOrigem("", storage);
     expect(segunda.ref).toBe(primeira.ref);
-    expect(segunda.utm_source).toBe("google");
+    expect(segunda).toMatchObject({ utm_source: "google", utm_content: "a1" });
   });
 
-  it("aceita cidade válida e ignora cidade inválida", () => {
-    expect(capturarOrigem("?cidade=loreto", storageFalso()).cidade).toBe("loreto");
+  it("uma campanha nova substitui o conjunto anterior de UTMs", () => {
+    const storage = storageFalso();
+    capturarOrigem("?utm_source=google&utm_content=a1", storage);
     reiniciarOrigemParaTestes();
-    expect(capturarOrigem("?cidade=recife", storageFalso()).cidade).toBeUndefined();
+    const nova = capturarOrigem("?utm_source=meta", storage);
+    expect(nova.utm_source).toBe("meta");
+    expect(nova.utm_content).toBeUndefined();
+  });
+
+  it("a cidade vale só para a navegação atual", () => {
+    const storage = storageFalso();
+    expect(capturarOrigem("?cidade=loreto", storage).cidade).toBe("loreto");
+    reiniciarOrigemParaTestes();
+    expect(capturarOrigem("", storage).cidade).toBeUndefined();
+    reiniciarOrigemParaTestes();
+    expect(capturarOrigem("?cidade=recife", storage).cidade).toBeUndefined();
   });
 
   it("funciona com storage que lança erro", () => {
@@ -1194,6 +1221,11 @@ describe("origem", () => {
       },
     } as unknown as Storage;
     expect(capturarOrigem("?utm_source=google", quebrado).utm_source).toBe("google");
+  });
+
+  it("urlLimpa mantém só parâmetros permitidos e válidos", () => {
+    const limpa = urlLimpa("https://lp-dr-santos.vercel.app/?utm_source=google&utm_term=dor+no+joelho&nome=Maria&cidade=tuntum#duvidas");
+    expect(limpa).toBe("https://lp-dr-santos.vercel.app/?utm_source=google&cidade=tuntum");
   });
 });
 ```
@@ -1226,9 +1258,10 @@ describe("whatsapp", () => {
     );
   });
 
-  it("o resumo só entra quando é enviado", () => {
-    expect(montarMensagem({ ref: "ABC234" })).not.toContain("Marquei");
-    expect(montarMensagem({ resumo: "Marquei no site: joelho.", ref: "ABC234" })).toContain("Marquei no site: joelho.");
+  it("com resumo, inclui o resumo e não leva a ref", () => {
+    const m = montarMensagem({ resumo: "Marquei no site: joelho.", ref: "ABC234" });
+    expect(m).toContain("Marquei no site: joelho.");
+    expect(m).not.toContain("ABC234");
   });
 
   it("codifica a mensagem na URL", () => {
@@ -1243,49 +1276,86 @@ describe("whatsapp", () => {
 
 ```tsx
 import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CidadeProvider, useCidade } from "@/context/CidadeContext";
-import { reiniciarOrigemParaTestes } from "@/lib/origem";
-import { CtaWhatsApp } from "./CtaWhatsApp";
+import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
+import { CtaWhatsApp, navegacao } from "./CtaWhatsApp";
 
 function EscolherTuntum() {
   const { escolherCidade } = useCidade();
   return <button onClick={() => escolherCidade("tuntum", "aba")}>escolher</button>;
 }
 
-function textoDoLink(link: HTMLElement) {
-  return new URL(link.getAttribute("href")!).searchParams.get("text")!;
-}
+const textoDe = (url: string) => new URL(url).searchParams.get("text")!;
 
 describe("CtaWhatsApp", () => {
+  const irOriginal = navegacao.ir;
+
   beforeEach(() => {
     reiniciarOrigemParaTestes();
+    capturarOrigem("", null);
     window.dataLayer = [];
+    navegacao.ir = vi.fn();
+    vi.useFakeTimers();
   });
 
-  it("no HTML inicial aponta para o link base e abre em nova aba", () => {
+  afterEach(() => {
+    navegacao.ir = irOriginal;
+    vi.useRealTimers();
+  });
+
+  it("no HTML inicial aponta para o link base (funciona sem JavaScript)", () => {
     render(
       <CidadeProvider>
         <CtaWhatsApp localCta="hero">Agendar</CtaWhatsApp>
       </CidadeProvider>,
     );
-    const link = screen.getByRole("link", { name: "Agendar" });
-    expect(link.getAttribute("href")).toMatch(/^https:\/\/wa\.me\/5513996822680\?text=/);
-    expect(link).toHaveAttribute("target", "_blank");
-    expect(link).toHaveAttribute("rel", "noopener");
+    expect(screen.getByRole("link", { name: "Agendar" }).getAttribute("href")).toMatch(/^https:\/\/wa\.me\/5513996822680\?text=/);
   });
 
-  it("sem cidade escolhida, o clique não presume cidade e registra o evento", () => {
+  it("clique simples registra o evento e navega uma vez quando o GTM confirma", () => {
     render(
       <CidadeProvider>
         <CtaWhatsApp localCta="hero">Agendar</CtaWhatsApp>
       </CidadeProvider>,
     );
+    fireEvent.click(screen.getByRole("link", { name: "Agendar" }));
+    const evento = window.dataLayer!.find((e) => e.event === "clique_whatsapp")!;
+    expect(evento).toMatchObject({ local_cta: "hero", eventTimeout: 800 });
+    expect(navegacao.ir).not.toHaveBeenCalled();
+    (evento.eventCallback as () => void)();
+    vi.advanceTimersByTime(1000);
+    expect(navegacao.ir).toHaveBeenCalledTimes(1);
+    const url = vi.mocked(navegacao.ir).mock.calls[0][0];
+    expect(textoDe(url)).toMatch(/\(ref [A-HJ-NP-Z2-9]{6}\)$/);
+    expect(textoDe(url)).not.toContain("Balsas");
+  });
+
+  it("sem GTM, navega depois do tempo-limite", () => {
+    render(
+      <CidadeProvider>
+        <CtaWhatsApp localCta="faq">Agendar</CtaWhatsApp>
+      </CidadeProvider>,
+    );
+    fireEvent.click(screen.getByRole("link", { name: "Agendar" }));
+    vi.advanceTimersByTime(799);
+    expect(navegacao.ir).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(navegacao.ir).toHaveBeenCalledTimes(1);
+  });
+
+  it("clique com Ctrl deixa o navegador abrir nova aba e só registra o evento", () => {
+    render(
+      <CidadeProvider>
+        <CtaWhatsApp localCta="rodape">Agendar</CtaWhatsApp>
+      </CidadeProvider>,
+    );
     const link = screen.getByRole("link", { name: "Agendar" });
-    fireEvent.click(link);
-    expect(textoDoLink(link)).toMatch(/\(ref [A-HJ-NP-Z2-9]{6}\)$/);
-    expect(textoDoLink(link)).not.toContain("Balsas");
-    expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", local_cta: "hero" }));
+    fireEvent.click(link, { ctrlKey: true });
+    vi.advanceTimersByTime(1000);
+    expect(navegacao.ir).not.toHaveBeenCalled();
+    expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", local_cta: "rodape" }));
+    expect(textoDe(link.getAttribute("href")!)).toMatch(/\(ref /);
   });
 
   it("depois que o usuário escolhe a cidade, o clique inclui a cidade", () => {
@@ -1296,13 +1366,13 @@ describe("CtaWhatsApp", () => {
       </CidadeProvider>,
     );
     fireEvent.click(screen.getByText("escolher"));
-    const link = screen.getByRole("link", { name: "Agendar" });
-    fireEvent.click(link);
-    expect(textoDoLink(link)).toContain("Tuntum");
+    fireEvent.click(screen.getByRole("link", { name: "Agendar" }));
+    vi.advanceTimersByTime(800);
+    expect(textoDe(vi.mocked(navegacao.ir).mock.calls[0][0])).toContain("Tuntum");
     expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", cidade: "Tuntum" }));
   });
 
-  it("CTA de local manda cidade e local, e o resumo só com opt-in", () => {
+  it("CTA de local manda cidade e local; o resumo nunca vai para o evento", () => {
     render(
       <CidadeProvider>
         <CtaWhatsApp localCta="onde_atende" cidadeFixa="Balsas" local="Hospital São José" resumo="Marquei no site: joelho.">
@@ -1310,11 +1380,12 @@ describe("CtaWhatsApp", () => {
         </CtaWhatsApp>
       </CidadeProvider>,
     );
-    const link = screen.getByRole("link", { name: "Agendar em Balsas" });
-    fireEvent.click(link);
-    expect(textoDoLink(link)).toContain("Balsas");
-    expect(textoDoLink(link)).toContain("Hospital São José");
-    expect(textoDoLink(link)).toContain("Marquei no site: joelho.");
+    fireEvent.click(screen.getByRole("link", { name: "Agendar em Balsas" }));
+    vi.advanceTimersByTime(800);
+    const texto = textoDe(vi.mocked(navegacao.ir).mock.calls[0][0]);
+    expect(texto).toContain("Balsas");
+    expect(texto).toContain("Hospital São José");
+    expect(texto).toContain("Marquei no site: joelho.");
     const evento = window.dataLayer!.find((e) => e.event === "clique_whatsapp")!;
     expect(JSON.stringify(evento)).not.toContain("joelho");
   });
@@ -1332,20 +1403,24 @@ Run: `npm test` → Expected: FAIL nos três arquivos (módulos não existem).
 ```ts
 import { buscarCidade } from "@/data/locais";
 
+/** Origem da visita. Só parâmetros permitidos e sanitizados; nenhum texto livre. */
 export interface Origem {
   ref: string;
   gclid?: string;
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
-  utm_term?: string;
   utm_content?: string;
-  /** id de cidade vindo do anúncio (?cidade=), só se existir em locais.ts */
+  /** id de cidade da navegação atual (?cidade=), só se existir em locais.ts. Não persiste. */
   cidade?: string;
 }
 
 const CHAVE = "lp_origem_v1";
-const PARAMETROS = ["gclid", "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
+/** utm_term fica de fora de propósito: é a palavra buscada (texto livre) e pode conter sintoma. */
+const UTMS = ["utm_source", "utm_medium", "utm_campaign", "utm_content"] as const;
+const CAMPOS = [...UTMS, "gclid"] as const;
+const PADRAO_UTM = /^[A-Za-z0-9_.-]{1,100}$/;
+const PADRAO_GCLID = /^[A-Za-z0-9_-]{1,200}$/;
 const ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 let emMemoria: Origem | null = null;
@@ -1354,6 +1429,12 @@ export function gerarRef(aleatorio: () => number = Math.random): string {
   let ref = "";
   for (let i = 0; i < 6; i++) ref += ALFABETO[Math.floor(aleatorio() * ALFABETO.length)];
   return ref;
+}
+
+export function sanitizar(chave: string, valor: string | null): string | undefined {
+  if (!valor) return undefined;
+  const padrao = chave === "gclid" ? PADRAO_GCLID : PADRAO_UTM;
+  return padrao.test(valor) ? valor : undefined;
 }
 
 function ler(storage: Storage | null): Origem | null {
@@ -1369,7 +1450,9 @@ function ler(storage: Storage | null): Origem | null {
 function gravar(storage: Storage | null, origem: Origem): void {
   if (!storage) return;
   try {
-    storage.setItem(CHAVE, JSON.stringify(origem));
+    const { cidade: _naoPersiste, ...persistir } = origem;
+    void _naoPersiste;
+    storage.setItem(CHAVE, JSON.stringify(persistir));
   } catch {
     /* storage bloqueado: a origem fica só em memória */
   }
@@ -1386,13 +1469,19 @@ function sessionStorageSeguro(): Storage | null {
 export function capturarOrigem(search: string, storage: Storage | null, aleatorio: () => number = Math.random): Origem {
   const anterior = ler(storage) ?? emMemoria;
   const params = new URLSearchParams(search);
-  const origem: Origem = { ...(anterior ?? {}), ref: anterior?.ref ?? gerarRef(aleatorio) };
-  for (const chave of PARAMETROS) {
-    const valor = params.get(chave);
-    if (valor) origem[chave] = valor.slice(0, 200);
+  const origem: Origem = { ref: anterior?.ref ?? gerarRef(aleatorio) };
+
+  // Campanha nova (algum parâmetro válido na URL) substitui o conjunto; sem parâmetros, mantém o da sessão.
+  const campanhaNova = CAMPOS.some((chave) => sanitizar(chave, params.get(chave)));
+  for (const chave of CAMPOS) {
+    const valor = campanhaNova ? sanitizar(chave, params.get(chave)) : anterior?.[chave];
+    if (valor) origem[chave] = valor;
   }
+
+  // Cidade: só da URL desta navegação.
   const cidade = buscarCidade(params.get("cidade"));
   if (cidade) origem.cidade = cidade.id;
+
   emMemoria = origem;
   gravar(storage, origem);
   return origem;
@@ -1405,15 +1494,28 @@ export function obterOrigem(): Origem {
   return capturarOrigem(window.location.search, sessionStorageSeguro());
 }
 
+/** URL sem parâmetros fora da lista permitida e sem âncora (page_location do GA4). */
+export function urlLimpa(href: string): string {
+  const url = new URL(href);
+  const limpa = new URL(url.origin + url.pathname);
+  for (const chave of CAMPOS) {
+    const valor = sanitizar(chave, url.searchParams.get(chave));
+    if (valor) limpa.searchParams.set(chave, valor);
+  }
+  const cidade = buscarCidade(url.searchParams.get("cidade"));
+  if (cidade) limpa.searchParams.set("cidade", cidade.id);
+  return limpa.toString();
+}
+
 export function reiniciarOrigemParaTestes(): void {
   emMemoria = null;
 }
 ```
 
-`src/content/whatsapp.ts` (texto provisório; o Designer troca pelo texto aprovado da nota `copy-lp` na Tarefa 7, mantendo as assinaturas):
+`src/content/whatsapp.ts` (texto aprovado da nota `copy-lp`, IDs `wa.*`, se a C1 já tiver OK do Revisor; senão, o texto abaixo com o comentário `// PROVISORIO`, que a Tarefa 7 remove):
 
 ```ts
-/** Mensagens pré-preenchidas do WhatsApp. Fonte final: nota "copy-lp" (IDs whatsapp.*). */
+// PROVISORIO: trocar pelo texto aprovado da nota copy-lp (IDs wa.*) na Tarefa 7.
 export const MENSAGENS_WHATSAPP = {
   base: "Olá! Vim pelo site do Dr. Patrick Santos e quero agendar uma consulta particular.",
   comCidade: (cidade: string) => `Olá! Vim pelo site do Dr. Patrick Santos e quero agendar uma consulta particular em ${cidade}.`,
@@ -1439,15 +1541,15 @@ export interface PedidoWhatsApp {
 }
 
 export function montarMensagem(p: PedidoWhatsApp): string {
-  let texto =
+  const texto =
     p.cidade && p.local
       ? MENSAGENS_WHATSAPP.comLocal(p.cidade, p.local)
       : p.cidade
         ? MENSAGENS_WHATSAPP.comCidade(p.cidade)
         : MENSAGENS_WHATSAPP.base;
-  if (p.resumo) texto += ` ${p.resumo.trim()}`;
-  if (p.ref) texto += ` (ref ${p.ref})`;
-  return texto;
+  // Com resumo clínico, a mensagem não leva a ref: a origem do clique não fica ligada às respostas.
+  if (p.resumo) return `${texto} ${p.resumo.trim()}`;
+  return p.ref ? `${texto} (ref ${p.ref})` : texto;
 }
 
 function link(texto: string): string {
@@ -1462,10 +1564,16 @@ export function montarLinkWhatsApp(p: PedidoWhatsApp): string {
 export const LINK_WHATSAPP_BASE = link(MENSAGENS_WHATSAPP.base);
 ```
 
-`src/lib/analytics.ts` (versão mínima; o Tracking completa na Tarefa 10 sem mudar a assinatura de `track`):
+`src/lib/analytics.ts` (versão mínima; o Tracking completa na Tarefa 10 mantendo esta assinatura e este comportamento):
 
 ```ts
 export type ParametrosEvento = Record<string, string | number | undefined>;
+
+export interface OpcoesEvento {
+  /** Chamado uma vez: pelo GTM (eventCallback) ou pelo tempo-limite, o que vier primeiro. */
+  aoConcluir?: () => void;
+  tempoLimiteMs?: number;
+}
 
 declare global {
   interface Window {
@@ -1473,11 +1581,23 @@ declare global {
   }
 }
 
-export function track(evento: string, params: ParametrosEvento = {}): void {
+export function track(evento: string, params: ParametrosEvento = {}, opcoes: OpcoesEvento = {}): void {
   if (typeof window === "undefined") return;
   const limpo = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ""));
   window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({ event: evento, ...limpo });
+  const { aoConcluir, tempoLimiteMs = 800 } = opcoes;
+  if (!aoConcluir) {
+    window.dataLayer.push({ event: evento, ...limpo });
+    return;
+  }
+  let concluido = false;
+  const concluir = () => {
+    if (concluido) return;
+    concluido = true;
+    aoConcluir();
+  };
+  window.dataLayer.push({ event: evento, ...limpo, eventCallback: concluir, eventTimeout: tempoLimiteMs });
+  window.setTimeout(concluir, tempoLimiteMs);
 }
 ```
 
@@ -1557,30 +1677,44 @@ interface Props extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href" | "
   resumo?: string;
 }
 
+/** Navegação isolada para os testes trocarem. */
+export const navegacao = {
+  ir(url: string) {
+    window.location.assign(url);
+  },
+};
+
 export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, children, ...resto }: Props) {
   const { cidade } = useCidade();
 
   function aoClicar(evento: MouseEvent<HTMLAnchorElement>) {
     const origem = obterOrigem();
     const nomeCidade = cidadeFixa ?? cidade?.nome;
-    // Troca o href antes da navegação: sem preventDefault e sem window.open assíncrono.
-    evento.currentTarget.href = montarLinkWhatsApp({ cidade: nomeCidade, local, resumo, ref: origem.ref });
-    track("clique_whatsapp", {
+    const url = montarLinkWhatsApp({ cidade: nomeCidade, local, resumo, ref: origem.ref });
+    evento.currentTarget.href = url;
+    const params = {
       local_cta: localCta,
       cidade: nomeCidade,
       local,
-      ref: origem.ref,
+      // Sem ref quando há resumo: a mensagem também não leva a ref (spec §7).
+      ref: resumo ? undefined : origem.ref,
       gclid: origem.gclid,
       utm_source: origem.utm_source,
       utm_medium: origem.utm_medium,
       utm_campaign: origem.utm_campaign,
-      utm_term: origem.utm_term,
       utm_content: origem.utm_content,
-    });
+    };
+    const novaAba = evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.button !== 0;
+    if (novaAba) {
+      track("clique_whatsapp", params);
+      return;
+    }
+    evento.preventDefault();
+    track("clique_whatsapp", params, { aoConcluir: () => navegacao.ir(url) });
   }
 
   return (
-    <a href={LINK_WHATSAPP_BASE} target="_blank" rel="noopener" onClick={aoClicar} {...resto}>
+    <a href={LINK_WHATSAPP_BASE} onClick={aoClicar} {...resto}>
       {children}
     </a>
   );
@@ -1597,23 +1731,31 @@ Run: `npm test` → Expected: todos PASS. `npm run build` → verde.
 
 ```bash
 git add src/lib src/content/whatsapp.ts src/context src/components/CtaWhatsApp.tsx src/components/CtaWhatsApp.test.tsx src/App.tsx
-git commit -m "feat: adiciona link do WhatsApp com origem, cidade escolhida e CTA"
+git commit -m "feat: adiciona link do WhatsApp com origem sanitizada, cidade escolhida e CTA"
 ```
 
 ### Tarefa 6 (Dev · Floor Dev · `feat/onde-atende`): Abas por cidade com mapas sob demanda
 
 **Files:**
 - Create: `src/components/AbasCidades.tsx`, `src/components/CartaoLocal.tsx`, `src/sections/S6OndeAtende.tsx`, `src/content/ondeAtende.ts`
-- Modify: `src/App.tsx` (renderizar `<S6OndeAtende />`), `scripts/verificar-build.mjs`
-- Test: `src/components/AbasCidades.test.tsx`
+- Modify: `src/App.tsx` (renderizar `<S6OndeAtende />`)
+- Test: `src/components/AbasCidades.test.tsx`, `src/test/html-inicial.test.tsx`
 
 **Interfaces:**
-- Consumes: `REGIOES`, `CIDADES`, `cidadesDaRegiao`, `urlEmbedMapa`, `Cidade`, `Local` (Tarefa 2); `useCidade`, `CtaWhatsApp`, `track` (Tarefa 5).
-- Produces: `<S6OndeAtende />` com `id="onde-atende"`; `<AbasCidades />`; ids de aba `aba-<cidadeId>` e de painel `painel-<cidadeId>` (a Tarefa 9 usa para rolar e focar).
+- Consumes: `REGIOES`, `CIDADES`, `cidadesDaRegiao`, `todosOsLocais`, `urlEmbedMapa`, `Cidade`, `Local` (Tarefa 2); `useCidade`, `CtaWhatsApp`, `track` (Tarefa 5); `render` de `src/entry-server.tsx` (Tarefa 1).
+- Produces: `<S6OndeAtende />` com `id="onde-atende"`; `<AbasCidades />`; ids de aba `aba-<cidadeId>` e de painel `painel-<cidadeId>` (a Tarefa 9 usa para rolar e focar); `src/test/html-inicial.test.tsx`, que as Tarefas 7 e 9 estendem.
 
-Comportamento (spec §5.6): estado inicial neutro com a visão geral de todas as cidades (nome, endereço e "Como chegar" dos 14 locais, sem iframe); duas `tablist` (uma por região) com rótulo visível; roving `tabindex` por tablist; setas movem o foco sem abrir, Enter/Espaço/clique abrem; a aba aberta é a cidade do `CidadeContext`; abrir aba chama `escolherCidade(id, "aba")` e `track("troca_aba_cidade")`; o painel da cidade mostra cartões com endereço, "Como chegar" (`track("como_chegar")`), iframe do mapa com `src` só depois que o painel foi aberto uma vez e CTA "Agendar em <cidade>" com cidade e local; botão "Ver todas as cidades" volta à visão geral.
+Comportamento (spec §5.6 e parecer R2):
+- Estado inicial neutro: visão geral com as 11 cidades e os 14 locais (nome, endereço, "Como chegar"), sem iframe. Tudo isso está no HTML inicial.
+- Duas `tablist` (uma por região) com rótulo visível; roving `tabindex` por tablist; setas, Home e End movem o foco sem abrir; Enter, Espaço ou clique abrem.
+- A aba aberta é a cidade do `CidadeContext`. Clique na aba chama `escolherCidade(id, "aba")` e `track("troca_aba_cidade")`.
+- **Mapa:** só no painel aberto (os iframes das outras cidades são desmontados) e só depois de ação real do usuário: clique na aba (`fonte "aba"`) ou escolha no seletor da seção 4 (`fonte "seletor"`). Cidade vinda do anúncio (`fonte "url"`) abre o painel sem mapa e mostra o botão "Ver mapa". `referrerPolicy="no-referrer"` no iframe.
+- Cada cartão: nome, endereço, "Como chegar" (`track("como_chegar")`, `rel="noreferrer"`) e CTA "Agendar em <cidade>" com cidade e local.
+- Botão "Ver todas as cidades" volta à visão geral.
 
-- [ ] **Step 1: Escrever o teste que falha** (`src/components/AbasCidades.test.tsx`)
+- [ ] **Step 1: Escrever os testes que falham**
+
+`src/components/AbasCidades.test.tsx`:
 
 ```tsx
 import { fireEvent, render, screen, within } from "@testing-library/react";
@@ -1639,8 +1781,7 @@ describe("AbasCidades", () => {
 
   it("mostra 11 abas em 2 listas por região, nenhuma aberta", () => {
     renderizar();
-    const listas = screen.getAllByRole("tablist");
-    expect(listas).toHaveLength(2);
+    expect(screen.getAllByRole("tablist")).toHaveLength(2);
     expect(screen.getAllByRole("tab")).toHaveLength(11);
     expect(screen.getAllByRole("tab").some((aba) => aba.getAttribute("aria-selected") === "true")).toBe(false);
   });
@@ -1651,7 +1792,7 @@ describe("AbasCidades", () => {
     expect(container.querySelector("iframe")).toBeNull();
   });
 
-  it("abrir Tuntum mostra o painel, carrega o mapa e registra o evento", () => {
+  it("clicar em Tuntum abre o painel, carrega 1 mapa sem referrer e registra o evento", () => {
     const { container } = renderizar();
     fireEvent.click(screen.getByRole("tab", { name: "Tuntum" }));
     expect(screen.getByRole("tab", { name: "Tuntum" })).toHaveAttribute("aria-selected", "true");
@@ -1660,17 +1801,20 @@ describe("AbasCidades", () => {
     const iframes = container.querySelectorAll("iframe");
     expect(iframes).toHaveLength(1);
     expect(iframes[0].getAttribute("src")).toContain("output=embed");
+    expect(iframes[0].getAttribute("referrerpolicy")).toBe("no-referrer");
     expect(window.dataLayer).toContainEqual({ event: "troca_aba_cidade", cidade: "Tuntum", regiao: "Centro Maranhense" });
   });
 
-  it("Balsas mostra 3 locais com 3 mapas", () => {
+  it("Balsas mostra 3 locais com 3 mapas; trocar de aba desmonta os mapas anteriores", () => {
     const { container } = renderizar();
     fireEvent.click(screen.getByRole("tab", { name: "Balsas" }));
     expect(container.querySelectorAll("iframe")).toHaveLength(3);
     expect(within(screen.getByRole("tabpanel", { name: "Balsas" })).getAllByRole("link", { name: /agendar em balsas/i })).toHaveLength(3);
+    fireEvent.click(screen.getByRole("tab", { name: "Loreto" }));
+    expect(container.querySelectorAll("iframe")).toHaveLength(1);
   });
 
-  it("setas movem o foco sem abrir; Enter abre", () => {
+  it("setas movem o foco sem abrir; End vai para a última da região", () => {
     renderizar();
     const balsas = screen.getByRole("tab", { name: "Balsas" });
     balsas.focus();
@@ -1699,29 +1843,63 @@ describe("AbasCidades", () => {
     expect(window.dataLayer).toContainEqual({ event: "como_chegar", local: "Clínica Risalva Carvalho", cidade: "Fortuna" });
   });
 
-  it("abre a cidade do anúncio (?cidade=) depois de montar", () => {
+  it("cidade do anúncio (?cidade=) abre o painel sem carregar mapa até o clique em 'Ver mapa'", () => {
     reiniciarOrigemParaTestes();
     capturarOrigem("?cidade=loreto", null);
-    renderizar();
+    const { container } = renderizar();
     expect(screen.getByRole("tab", { name: "Loreto" })).toHaveAttribute("aria-selected", "true");
+    expect(container.querySelector("iframe")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /ver mapa/i }));
+    expect(container.querySelectorAll("iframe")).toHaveLength(1);
+  });
+});
+```
+
+`src/test/html-inicial.test.tsx` (confere o HTML que o prerender injeta, o mesmo que funciona sem JavaScript):
+
+```tsx
+import { describe, expect, it } from "vitest";
+import { todosOsLocais } from "@/data/locais";
+import { render } from "@/entry-server";
+
+describe("HTML inicial (sem JavaScript)", () => {
+  const html = render();
+
+  it("tem os 14 locais com nome, endereço e link 'Como chegar'", () => {
+    for (const { local } of todosOsLocais()) {
+      expect(html).toContain(local.nome);
+      expect(html).toContain(local.endereco);
+      expect(html).toContain(local.linkComoChegar.replace(/&/g, "&amp;"));
+    }
+  });
+
+  it("tem a âncora de onde atende e nenhum iframe", () => {
+    expect(html).toContain('id="onde-atende"');
+    expect(html).not.toContain("<iframe");
+  });
+
+  it("tem CTA com o link base do WhatsApp", () => {
+    expect(html).toMatch(/href="https:\/\/wa\.me\/5513996822680\?text=/);
   });
 });
 ```
 
 - [ ] **Step 2: Rodar e ver falhar**
 
-Run: `npx vitest run src/components/AbasCidades.test.tsx` → Expected: FAIL (módulo não existe).
+Run: `npm test` → Expected: FAIL (módulos não existem; `html-inicial` sem os locais).
 
 - [ ] **Step 3: Implementar**
 
-`src/content/ondeAtende.ts` (provisório; a Tarefa 7 troca pelo texto aprovado da nota `copy-lp`, IDs `onde.*`):
+`src/content/ondeAtende.ts` (texto aprovado da `copy-lp`, IDs `onde.*`, se a C1 já tiver OK; senão com o comentário `// PROVISORIO`, que a Tarefa 7 remove):
 
 ```ts
+// PROVISORIO: trocar pelo texto aprovado da nota copy-lp (IDs onde.*) na Tarefa 7.
 export const TEXTOS_ONDE_ATENDE = {
   titulo: "Onde ele atende",
   introducao: "São 14 clínicas e hospitais parceiros em 11 cidades do Maranhão. Escolha sua cidade para ver endereço, mapa e como agendar.",
   semCidade: "Escolha sua cidade acima para ver o mapa e agendar.",
   verTodas: "Ver todas as cidades",
+  verMapa: "Ver mapa",
   comoChegar: "Como chegar",
   agendarEm: (cidade: string) => `Agendar em ${cidade}`,
   tituloMapa: (local: string) => `Mapa: ${local}`,
@@ -1739,23 +1917,23 @@ import { track } from "@/lib/analytics";
 interface Props {
   cidade: Cidade;
   local: Local;
-  /** Só vira true depois que o usuário abriu a aba da cidade. */
-  carregarMapa: boolean;
+  /** true só no painel aberto e depois de ação real do usuário. */
+  mostrarMapa: boolean;
 }
 
-export function CartaoLocal({ cidade, local, carregarMapa }: Props) {
+export function CartaoLocal({ cidade, local, mostrarMapa }: Props) {
   return (
     <article className="cartao-local" aria-labelledby={`local-${local.id}`}>
       <h4 id={`local-${local.id}`}>{local.nome}</h4>
       <p>{local.endereco}</p>
       {local.diasAtendimento ? <p>{local.diasAtendimento}</p> : null}
-      <div className="cartao-local__mapa">
-        {carregarMapa ? (
+      <div className="cartao-local__mapa" style={{ minHeight: 240 }}>
+        {mostrarMapa ? (
           <iframe
             src={urlEmbedMapa(local)}
             title={T.tituloMapa(local.nome)}
             loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
+            referrerPolicy="no-referrer"
             width="100%"
             height="240"
           />
@@ -1764,7 +1942,7 @@ export function CartaoLocal({ cidade, local, carregarMapa }: Props) {
       <a
         href={local.linkComoChegar}
         target="_blank"
-        rel="noopener"
+        rel="noreferrer"
         onClick={() => track("como_chegar", { local: local.nome, cidade: cidade.nome })}
       >
         {T.comoChegar}
@@ -1788,17 +1966,17 @@ import { CIDADES, REGIOES, cidadesDaRegiao, type Cidade } from "@/data/locais";
 import { track } from "@/lib/analytics";
 
 export function AbasCidades() {
-  const { cidade: aberta, escolherCidade } = useCidade();
-  const [mapasCarregados, setMapasCarregados] = useState<Set<string>>(new Set());
+  const { cidade: aberta, fonte, escolherCidade } = useCidade();
   const [visaoGeral, setVisaoGeral] = useState(true);
+  /** Cidade cujo mapa o usuário liberou com uma ação real. */
+  const [mapaLiberado, setMapaLiberado] = useState<string | undefined>();
   const refsAbas = useRef(new Map<string, HTMLButtonElement>());
 
-  // Qualquer cidade escolhida (aba, seletor da seção 4 ou anúncio) abre o painel e libera o mapa.
   useEffect(() => {
     if (!aberta) return;
     setVisaoGeral(false);
-    setMapasCarregados((atual) => (atual.has(aberta.id) ? atual : new Set(atual).add(aberta.id)));
-  }, [aberta]);
+    if (fonte === "aba" || fonte === "seletor") setMapaLiberado(aberta.id);
+  }, [aberta, fonte]);
 
   function abrir(cidade: Cidade) {
     escolherCidade(cidade.id, "aba");
@@ -1825,14 +2003,14 @@ export function AbasCidades() {
     <div className="abas-cidades">
       {REGIOES.map((regiao) => {
         const lista = cidadesDaRegiao(regiao.id);
-        const indiceAberto = lista.findIndex((c) => c.id === aberta?.id);
+        const indiceAberto = mostrarGeral ? -1 : lista.findIndex((c) => c.id === aberta?.id);
         return (
           <div key={regiao.id} className="abas-cidades__regiao">
             <h3 id={`regiao-${regiao.id}`}>{regiao.nome}</h3>
             <div role="tablist" aria-labelledby={`regiao-${regiao.id}`} className="abas-cidades__lista">
               {lista.map((cidade, indice) => {
-                const selecionada = !mostrarGeral && cidade.id === aberta?.id;
-                const focavel = indiceAberto >= 0 ? indice === indiceAberto : indice === 0;
+                const selecionada = indice === indiceAberto;
+                const focavel = indiceAberto >= 0 ? selecionada : indice === 0;
                 return (
                   <button
                     key={cidade.id}
@@ -1872,7 +2050,7 @@ export function AbasCidades() {
                     <a
                       href={local.linkComoChegar}
                       target="_blank"
-                      rel="noopener"
+                      rel="noreferrer"
                       onClick={() => track("como_chegar", { local: local.nome, cidade: cidade.nome })}
                     >
                       {T.comoChegar}
@@ -1885,29 +2063,38 @@ export function AbasCidades() {
         </div>
       ) : null}
 
-      {CIDADES.map((cidade) => (
-        <div
-          key={cidade.id}
-          role="tabpanel"
-          id={`painel-${cidade.id}`}
-          aria-labelledby={`aba-${cidade.id}`}
-          hidden={mostrarGeral || cidade.id !== aberta?.id}
-          tabIndex={0}
-        >
-          {cidade.locais.map((local) => (
-            <CartaoLocal key={local.id} cidade={cidade} local={local} carregarMapa={mapasCarregados.has(cidade.id)} />
-          ))}
-          <button type="button" onClick={() => setVisaoGeral(true)}>
-            {T.verTodas}
-          </button>
-        </div>
-      ))}
+      {CIDADES.map((cidade) => {
+        const estaAberta = !mostrarGeral && cidade.id === aberta?.id;
+        const mapaPermitido = estaAberta && mapaLiberado === cidade.id;
+        return (
+          <div
+            key={cidade.id}
+            role="tabpanel"
+            id={`painel-${cidade.id}`}
+            aria-labelledby={`aba-${cidade.id}`}
+            hidden={!estaAberta}
+            tabIndex={0}
+          >
+            {estaAberta && !mapaPermitido ? (
+              <button type="button" onClick={() => setMapaLiberado(cidade.id)}>
+                {T.verMapa}
+              </button>
+            ) : null}
+            {cidade.locais.map((local) => (
+              <CartaoLocal key={local.id} cidade={cidade} local={local} mostrarMapa={mapaPermitido} />
+            ))}
+            <button type="button" onClick={() => setVisaoGeral(true)}>
+              {T.verTodas}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }
 ```
 
-Nota: `hidden` remove o painel da árvore de acessibilidade, então `getByRole("tabpanel", { name })` só encontra o painel aberto (é o que os testes esperam). O painel precisa de nome acessível: `aria-labelledby` aponta para a aba com o nome da cidade.
+Nota: `hidden` tira o painel da árvore de acessibilidade, então `getByRole("tabpanel", { name })` só encontra o painel aberto. O painel recebe o nome pela aba (`aria-labelledby`).
 
 `src/sections/S6OndeAtende.tsx`:
 
@@ -1926,23 +2113,16 @@ export function S6OndeAtende() {
 }
 ```
 
-Em `src/App.tsx`, renderizar `<S6OndeAtende />` dentro do `<CidadeProvider>`, antes do `<JsonLd />`.
-
-Em `scripts/verificar-build.mjs`, acrescentar a `EXIGIDOS`:
-
-```js
-  ["seção onde atende com âncora", /id="onde-atende"/],
-  ["14 links Como chegar no HTML inicial", (h) => (h.match(/maps\.google\.com\/\?cid=|google\.com\/maps\/search\//g) || []).length >= 14],
-```
+Em `src/App.tsx`, renderizar `<S6OndeAtende />` dentro do `<CidadeProvider>`, antes do `<JsonLd />` (se a Tarefa 4 já estiver na `main`).
 
 - [ ] **Step 4: Rodar e ver passar**
 
-Run: `npm test` → Expected: todos PASS. `npm run build` → verde (sem iframe no HTML inicial).
+Run: `npm test` → Expected: todos PASS. `npm run build` → verde (o `verificar-build` continua proibindo iframe no HTML inicial).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/components/AbasCidades.tsx src/components/AbasCidades.test.tsx src/components/CartaoLocal.tsx src/sections/S6OndeAtende.tsx src/content/ondeAtende.ts src/App.tsx scripts/verificar-build.mjs
+git add src/components/AbasCidades.tsx src/components/AbasCidades.test.tsx src/components/CartaoLocal.tsx src/sections/S6OndeAtende.tsx src/content/ondeAtende.ts src/test/html-inicial.test.tsx src/App.tsx
 git commit -m "feat: adiciona abas por cidade com mapas sob demanda"
 ```
 
@@ -1951,6 +2131,7 @@ git commit -m "feat: adiciona abas por cidade com mapas sob demanda"
 - C1 (em andamento): todo o texto visível conforme a spec v2 (correções da revisão R1 já enviadas).
 - C2 (depois do OK do Revisor na C1): `meta.title` (até 60 caracteres), `meta.description` (até 155), `alt` das 4 fotos e a minuta da política de privacidade (controlador: Dr. Patrick Santos, MÉDICO, CRM-MA 16520; dados de navegação medidos com consentimento via Google Analytics e Google Ads; dados enviados pelo próprio usuário no WhatsApp; finalidades; terceiros: Google e WhatsApp; retenção; direitos da LGPD; contato pelo WhatsApp). Marcar no topo da nota que é minuta para revisão jurídica.
 - O Revisor aprova cada entrega (checklist §13) antes do Designer aplicar.
+- **Bloqueio:** as Tarefas 7 e 8 só começam com a C1 APROVADA pelo Revisor; a Tarefa 9 só começa com a C2 APROVADA. Nenhum texto provisório chega a deploy: a Tarefa 7 remove todo comentário `// PROVISORIO` de `src/content/`.
 
 ### Tarefa 7 (Designer · Floor Front · `feat/base-visual`): Base visual, topbar, hero e botão flutuante
 
@@ -2020,7 +2201,7 @@ Ajuste o `size-adjust` dos fallbacks (e `ascent-override`, se precisar) para zer
 
 - [ ] **Step 3: Conteúdo aprovado**
 
-Transcrever da nota `copy-lp` (versão aprovada pelo Revisor), sem editar texto: `src/content/topbar.ts`, `src/content/hero.ts`, `src/content/meta.ts` e os textos finais de `src/content/whatsapp.ts` e `src/content/ondeAtende.ts` (mantendo as assinaturas das funções). O `index.html` recebe `meta.title` e `meta.description` da C2.
+Transcrever da nota `copy-lp` (versão aprovada pelo Revisor), sem editar texto e sem os colchetes de fonte: `src/content/topbar.ts`, `src/content/hero.ts`, `src/content/meta.ts` e os textos finais de `src/content/whatsapp.ts` e `src/content/ondeAtende.ts` (mantendo as assinaturas das funções e removendo o comentário `// PROVISORIO`). O `index.html` recebe `meta.title` e `meta.description` da nota `copy-lp-c2`. Conferir: `grep -r "PROVISORIO" src/content` sem resultado.
 
 - [ ] **Step 4: Escrever os testes que falham**
 
@@ -2296,6 +2477,20 @@ e a `PROIBIDOS`:
   ["Instituto na página", /Instituto Patrick Santos/],
 ```
 
+Acrescentar a `src/test/html-inicial.test.tsx`:
+
+```tsx
+  it("tem topbar de particular, assinatura completa e link para os locais", () => {
+    expect(html).toContain(ASSINATURA);
+    expect(html.toLowerCase()).toContain("particular");
+    expect(html).toContain('href="#onde-atende"');
+    expect(html).toContain('fetchpriority="high"');
+    expect(html).not.toMatch(/\bBMA\b|Instituto Patrick Santos/);
+  });
+```
+
+(importar `ASSINATURA` de `@/config`).
+
 - [ ] **Step 7: Rodar e ver passar; conferir nas três telas**
 
 Run: `npm test` e `npm run build` → verdes. `npm run dev` no Floor e conferir 390x844 (CTA visível sem rolar, topbar em uma ou duas linhas), 820x1180 e 1440x900. Medir o tamanho do JS inicial (`dist/assets/*.js` gzip) e do CSS e registrar no relatório.
@@ -2354,7 +2549,8 @@ O Designer substitui o `{} as never` pelo objeto completo com os textos aprovado
 
 ```tsx
 import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { navegacao } from "@/components/CtaWhatsApp";
 import { TEXTOS_AUTOAVALIACAO as T } from "@/content/autoavaliacao";
 import { CidadeProvider } from "@/context/CidadeContext";
 import { reiniciarOrigemParaTestes } from "@/lib/origem";
@@ -2374,6 +2570,7 @@ describe("Autoavaliacao", () => {
   beforeEach(() => {
     reiniciarOrigemParaTestes();
     window.dataLayer = [];
+    navegacao.ir = vi.fn();
   });
 
   it("começa na etapa 1 com fieldset, legenda e progresso", () => {
@@ -2425,6 +2622,24 @@ describe("Autoavaliacao", () => {
     expect(window.dataLayer).toContainEqual({ event: "autoavaliacao_etapa", etapa: 2 });
   });
 
+  it("voltar, trocar e pular não deixam resposta omitida no resumo", () => {
+    renderizar();
+    fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: T.voltar }));
+    fireEvent.click(screen.getByRole("button", { name: T.pular }));
+    fireEvent.click(screen.getByRole("button", { name: limitacao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: tentativa.opcoes[0] }));
+    fireEvent.click(screen.getByRole("checkbox", { name: T.incluirResumo }));
+    const cta = screen.getByRole("link", { name: T.cta });
+    fireEvent.click(cta);
+    expect(new URL(cta.getAttribute("href")!).searchParams.get("text")).not.toContain(regiao.opcoes[0]);
+  });
+
+  it("anuncia o progresso para leitor de tela", () => {
+    renderizar();
+    expect(screen.getByText(T.progresso(1, 3))).toHaveAttribute("aria-live", "polite");
+  });
+
   it("move o foco para a pergunta seguinte depois de responder", () => {
     renderizar();
     fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
@@ -2436,6 +2651,8 @@ describe("Autoavaliacao", () => {
 - [ ] **Step 2: Rodar e ver falhar**
 
 Run: `npx vitest run src/interativos/Autoavaliacao.test.tsx` → Expected: FAIL.
+
+Padrão de acessibilidade escolhido (parecer R2, achado 7): cada etapa é um `<fieldset>` com `<legend>`, e cada opção é um `<button type="button">` que responde e avança (é uma ação, não um estado; `aria-pressed` só marca a resposta já dada quando a pessoa volta). Rádios nativos não servem aqui porque as setas mudam a seleção e disparariam o avanço automático, e trocar para rádio + "Continuar" dobraria os toques do público 50+. O progresso fica em `aria-live="polite"` e o foco vai para a pergunta seguinte depois de cada resposta, "Voltar" ou "Pular".
 
 - [ ] **Step 3: Implementar `src/interativos/Autoavaliacao.tsx`**
 
@@ -2486,6 +2703,9 @@ export function Autoavaliacao() {
   }
 
   function pular() {
+    // Pular apaga a resposta desta etapa: nada que a pessoa quis omitir entra no resumo.
+    const chave = T.etapas[etapa].chave;
+    setRespostas((r) => ({ ...r, [chave]: undefined }));
     track("autoavaliacao_pulada", { etapa: etapa + 1 });
     avancar(etapa + 1);
   }
@@ -2524,7 +2744,7 @@ export function Autoavaliacao() {
   const atual = T.etapas[etapa];
   return (
     <div className="autoavaliacao">
-      <p>{T.progresso(etapa + 1, 3)}</p>
+      <p aria-live="polite">{T.progresso(etapa + 1, 3)}</p>
       <fieldset>
         <legend>
           <span ref={refPergunta as React.RefObject<HTMLSpanElement>} tabIndex={-1}>
@@ -3027,8 +3247,15 @@ export function aplicarConsentimento(escolha: Escolha): void {
 
 ```ts
 import { GTM_ID } from "@/config";
+import { urlLimpa } from "@/lib/origem";
 
 export type ParametrosEvento = Record<string, string | number | undefined>;
+
+export interface OpcoesEvento {
+  /** Chamado uma vez: pelo GTM (eventCallback) ou pelo tempo-limite, o que vier primeiro. */
+  aoConcluir?: () => void;
+  tempoLimiteMs?: number;
+}
 
 declare global {
   interface Window {
@@ -3037,6 +3264,12 @@ declare global {
 }
 
 let gtmCarregado = false;
+
+/** URL sem utm_term, texto livre e âncora, para o GTM usar como page_location do GA4. */
+export function registrarPagina(): void {
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ pagina_limpa: urlLimpa(window.location.href) });
+}
 
 export function carregarGtm(): void {
   if (gtmCarregado || typeof document === "undefined") return;
@@ -3058,14 +3291,50 @@ export function agendarGtm(): void {
   agendar(() => carregarGtm());
 }
 
-export function track(evento: string, params: ParametrosEvento = {}): void {
+export function track(evento: string, params: ParametrosEvento = {}, opcoes: OpcoesEvento = {}): void {
   if (typeof window === "undefined") return;
   const limpo = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ""));
   window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({ event: evento, ...limpo });
-  // A conversão não pode se perder se o clique vier antes do carregamento agendado.
+  // O clique pode vir antes do carregamento agendado: carrega o GTM na hora.
   if (evento === "clique_whatsapp") carregarGtm();
+  const { aoConcluir, tempoLimiteMs = 800 } = opcoes;
+  if (!aoConcluir) {
+    window.dataLayer.push({ event: evento, ...limpo });
+    return;
+  }
+  let concluido = false;
+  const concluir = () => {
+    if (concluido) return;
+    concluido = true;
+    aoConcluir();
+  };
+  window.dataLayer.push({ event: evento, ...limpo, eventCallback: concluir, eventTimeout: tempoLimiteMs });
+  window.setTimeout(concluir, tempoLimiteMs);
 }
+```
+
+Acrescentar a `src/lib/analytics.test.ts`:
+
+```ts
+  it("registrarPagina põe a URL limpa na fila, sem utm_term", async () => {
+    window.history.replaceState(null, "", "/?utm_source=google&utm_term=dor+no+joelho#duvidas");
+    const { registrarPagina } = await import("./analytics");
+    registrarPagina();
+    const item = window.dataLayer!.find((e) => "pagina_limpa" in e)!;
+    expect(item.pagina_limpa).toBe(`${window.location.origin}/?utm_source=google`);
+  });
+
+  it("track com aoConcluir chama uma vez só (callback do GTM e tempo-limite)", async () => {
+    vi.useFakeTimers();
+    const { track } = await import("./analytics");
+    const aoConcluir = vi.fn();
+    track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir });
+    const item = window.dataLayer!.find((e) => e.event === "clique_whatsapp")!;
+    (item.eventCallback as () => void)();
+    vi.advanceTimersByTime(1000);
+    expect(aoConcluir).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
 ```
 
 `src/lib/profundidade.ts`:
@@ -3137,7 +3406,7 @@ export function AvisoCookies() {
 
 Em `S8Rodape`, dentro de `#rodape-extra`: `<button type="button" onClick={() => window.dispatchEvent(new Event("abrir-preferencias-cookies"))}>{TEXTOS_COOKIES.preferencias}</button>`.
 
-Em `src/main.tsx`, depois do `hydrateRoot`/`render`: `agendarGtm(); observarProfundidade();` (importados de `@/lib/analytics` e `@/lib/profundidade`).
+Em `src/main.tsx`, depois do `hydrateRoot`/`render`: `registrarPagina(); agendarGtm(); observarProfundidade();` (importados de `@/lib/analytics` e `@/lib/profundidade`). `registrarPagina` vem antes do GTM para o `page_location` já sair limpo.
 
 - [ ] **Step 5: Rodar e ver passar**
 
@@ -3149,7 +3418,8 @@ Com os acessos da nota "Credenciais, instruções e acessos" (seguir as instruç
 - Variáveis de camada de dados: `local_cta`, `cidade`, `local`, `ref`, `regiao`, `pergunta`, `percentual`, `etapa`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `gclid`.
 - Acionadores de evento personalizado: `clique_whatsapp`, `autoavaliacao_etapa`, `autoavaliacao_concluida`, `autoavaliacao_pulada`, `seletor_cidade`, `troca_aba_cidade`, `como_chegar`, `faq_aberta`, `profundidade_rolagem`.
 - Tags: Google tag (GA4) na inicialização; um evento GA4 por evento acima com os parâmetros da spec §8; Vinculador de conversões; conversão do Google Ads em `clique_whatsapp` (ID e rótulo da ação: criada só depois da confirmação do André). Configurações de consentimento nativas das tags do Google.
-- Validar no modo de visualização (Tag Assistant) com `npm run preview` do Floor e `VITE_GTM_ID` em `.env.local` (fora do git): todos os eventos, com consentimento aceito e recusado; clique imediato no CTA do hero logo após carregar. Conferir no Chrome as requisições `collect?v=2` (com `gcs`/`gcd`) e a da conversão. **Não publicar.**
+- Google tag do GA4: `page_location` = variável de camada de dados `pagina_limpa` (sem `utm_term`, sem texto livre, sem âncora); não criar variável nem parâmetro para `utm_term`. Conferir que nenhum evento leva região do corpo, limitação ou tratamento.
+- Validar no modo de visualização (Tag Assistant) com `npm run preview` do Floor e `VITE_GTM_ID` em `.env.local` (fora do git): todos os eventos, com consentimento aceito e recusado. **Critério de aceite da conversão:** com a aba de rede do Chrome aberta e "Preserve log" ligado, carregar a página e clicar no CTA do hero em até 1 segundo; a requisição de conversão do Google Ads (e o `collect?v=2` do GA4 com `gcs`/`gcd`) precisa aparecer **antes** da navegação para `wa.me`, com consentimento aceito e com recusado. Repetir 5 vezes; anotar quantas passaram. Registrar a lacuna conhecida: sem JavaScript o link abre o WhatsApp e nenhuma conversão é medida. **Não publicar.**
 - Mandar ao Maestro a lista do que seria publicado (versão do contêiner com tags, acionadores e variáveis; ação de conversão no Google Ads com nome, categoria e contagem "uma"). O Maestro pede ao André a confirmação única.
 
 - [ ] **Step 7: Commit**
@@ -3159,12 +3429,14 @@ git add -A src index.html
 git commit -m "feat: adiciona consentimento, eventos e carregamento do GTM"
 ```
 
-### Tarefa 11 (Dev · ground, depois do merge da Tarefa 7): Vercel
+### Tarefa 11 (Dev · ground, depois do merge da Tarefa 7): Vercel, preview e produção
 
 **Files:**
-- Create: `vercel.json`
+- Create: `vercel.json` (numa branch `chore/vercel` no Floor Dev, pelo fluxo normal de revisão)
 
-- [ ] **Step 1: `vercel.json`** (numa branch `chore/vercel` no Floor Dev, pelo fluxo normal de revisão)
+Regra (parecer R2, achado 1): até o marco de produção, cada entrega aprovada vai para um **preview** (protegido pela Vercel por padrão). O marco de produção é: Tarefas 8, 9 e 10 na `main`, C1 e C2 aprovadas e QA da Tarefa 12 sem falha crítica. Daí em diante, **produção** a cada merge aprovado. O token vem da nota "Credenciais, instruções e acessos" para a variável `VERCEL_TOKEN` da sessão e nunca é impresso.
+
+- [ ] **Step 1: `vercel.json`**
 
 ```json
 {
@@ -3179,29 +3451,51 @@ git commit -m "feat: adiciona consentimento, eventos e carregamento do GTM"
 }
 ```
 
-- [ ] **Step 2: Projeto e deploy** (no ground, na `main`, depois do merge; token lido da nota de credenciais para uma variável de ambiente da sessão, nunca impresso)
+- [ ] **Step 2: Criar e vincular o projeto** (no ground, na `main`, depois do merge)
 
 ```bash
 npx vercel@60 project add lp-dr-santos --token "$VERCEL_TOKEN"
 npx vercel@60 link --yes --project lp-dr-santos --token "$VERCEL_TOKEN"
+```
+
+- [ ] **Step 3: Deploy de preview (até o marco)**
+
+```bash
+npx vercel@60 pull --yes --environment=preview --token "$VERCEL_TOKEN"
+npx vercel@60 build --token "$VERCEL_TOKEN"
+npx vercel@60 deploy --prebuilt --token "$VERCEL_TOKEN"
+```
+
+O deploy pré-construído envia só `.vercel/output`, sem `Sobre o Patrick/` nem `fotos-originais/`. Mandar a URL de preview ao Maestro.
+
+- [ ] **Step 4: Variável do GTM** (quando o Tracking tiver o ID do contêiner)
+
+```bash
+npx vercel@60 env add VITE_GTM_ID production --token "$VERCEL_TOKEN"
+npx vercel@60 env add VITE_GTM_ID preview --token "$VERCEL_TOKEN"
+```
+
+O valor vem da nota de credenciais, digitado no prompt do comando (nunca em argumento nem em log). Como o Vite embute a variável no build, todo deploy depois disso começa com `vercel pull` do ambiente certo. Conferir no artefato sem imprimir o ID: `grep -l "googletagmanager" .vercel/output/static/assets/*.js | wc -l` deve ser ≥ 1 e `grep -c "GTM-" .vercel/output/static/assets/*.js` maior que 0.
+
+- [ ] **Step 5: Produção (a partir do marco)**
+
+```bash
 npx vercel@60 pull --yes --environment=production --token "$VERCEL_TOKEN"
 npx vercel@60 build --prod --token "$VERCEL_TOKEN"
 npx vercel@60 deploy --prebuilt --prod --token "$VERCEL_TOKEN"
 ```
 
-O deploy pré-construído envia só `.vercel/output`, sem subir `Sobre o Patrick/` nem `fotos-originais/`. Quando o Tracking tiver o ID do contêiner: `npx vercel@60 env add VITE_GTM_ID production --token "$VERCEL_TOKEN"` (valor da nota) e novo deploy.
+- [ ] **Step 6: Conferir**
 
-- [ ] **Step 3: Conferir**
+Run: `curl -s -o /dev/null -w "%{http_code}" https://lp-dr-santos.vercel.app/` → Expected: `200`; `curl -s https://lp-dr-santos.vercel.app/ | grep -c "CRM-MA 16520"` → Expected: ≥ 1; `curl -s -o /dev/null -w "%{http_code}" https://lp-dr-santos.vercel.app/__preview.html` → Expected: `404`.
 
-Run: `curl -s -o /dev/null -w "%{http_code}" https://lp-dr-santos.vercel.app/` → Expected: `200`; `curl -s https://lp-dr-santos.vercel.app/ | grep -c "CRM-MA 16520"` → Expected: ≥ 1; `https://lp-dr-santos.vercel.app/__preview.html` → Expected: `404`.
+- [ ] **Step 7: Depois de cada merge aprovado**
 
-- [ ] **Step 4: Redeploy a cada merge aprovado**
-
-Depois de cada merge na `main`: `npx vercel@60 build --prod` e `npx vercel@60 deploy --prebuilt --prod` no ground; mandar a URL ao Maestro.
+Repetir o Step 3 (antes do marco) ou o Step 5 (depois do marco) no ground e mandar a URL ao Maestro.
 
 ### Tarefa 12 (Browser/QA): QA nas três telas e sem JavaScript
 
-Ambiente: produção (`https://lp-dr-santos.vercel.app`) e, se necessário, `npm run preview` do ground. Chrome liberado pelo Maestro (Tracking fora do Chrome).
+Ambiente: o preview mais recente da Vercel (a QA vem antes do marco de produção) e, se necessário, `npm run preview` do ground. Chrome liberado pelo Maestro (Tracking fora do Chrome).
 
 - [ ] Em 390x844, 820x1180 e 1440x900, conferir e registrar (ok ou falha com passos, esperado, obtido e print):
   - topbar fixa visível do topo ao rodapé;
