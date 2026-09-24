@@ -22,6 +22,16 @@ describe("seções finais", () => {
     expect(screen.getByRole("img", { name: TEXTOS_COMO_FUNCIONA.altFoto })).toBeInTheDocument();
   });
 
+  it("organiza os seis passos numa linha do tempo e integra o seletor ao primeiro", () => {
+    const { container } = renderizar(<S4ComoFunciona />);
+    const passos = container.querySelectorAll("#como-funciona ol > li");
+    expect(passos).toHaveLength(6);
+    expect(container.querySelectorAll("#como-funciona .timeline-marker")).toHaveLength(6);
+    for (const passo of passos) expect(passo.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    expect(passos[0].querySelector("#seletor-cidade")).not.toBeNull();
+    expect(container.querySelector("#como-funciona img")).toHaveClass("premium-photo");
+  });
+
   it("sobre mostra assinatura e oculta pendências sem valor", () => {
     const { container } = renderizar(<S5Sobre />);
     expect(container.querySelector("#sobre")).not.toBeNull();

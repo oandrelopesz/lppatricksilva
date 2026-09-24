@@ -185,9 +185,41 @@
     position: absolute;
     top: 1.5rem;
     bottom: 1.5rem;
-    left: 1.5rem;
-    width: 1px;
-    background: rgb(185 143 78 / 40%);
+    left: 1.375rem;
+    width: 2px;
+    background: rgb(185 143 78 / 55%);
+  }
+
+  .timeline-marker {
+    position: absolute;
+    top: 1rem;
+    left: -3.45rem;
+    z-index: 1;
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border: 2px solid var(--color-dourado);
+    border-radius: 50%;
+    color: var(--color-grafite);
+    background: var(--color-creme);
+    font-family: var(--font-titulo);
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .seletor-cidade {
+    border-left: 3px solid var(--color-dourado);
+  }
+
+  .seletor-cidade select:focus-visible,
+  .seletor-cidade button:focus-visible {
+    outline: 3px solid var(--color-cta);
+    outline-offset: 3px;
+  }
+
+  .seletor-cidade button:hover {
+    background: #30343b;
   }
 
   #sobre {
