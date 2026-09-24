@@ -218,6 +218,10 @@ Opcional. O Designer pode propor um elemento que ajude a conversão (não decora
 
 **Assets gerados (autorizado pelo André):** o Designer (Codex) pode gerar assets e elementos visuais (ícones, grafismos, texturas, ilustrações anatômicas neutras, favicon e monograma provisório) e colocá-los na página, em SVG sempre que possível ou em AVIF/WebP dentro do orçamento da seção 1. Limites: nenhuma imagem de paciente, de procedimento em pessoa, de antes e depois ou que sugira resultado; nenhuma imagem gerada que represente o Dr. Patrick (as fotos dele são só as reais); nada que imite marca de terceiros. Registrar cada asset gerado aqui (arquivo, onde entrou e o que representa) para o Revisor conferir.
 
+| Asset gerado | Onde entrou | O que representa |
+|---|---|---|
+| `public/favicon.svg` (Tarefa 7a, commit 8503e3e) | Favicon da página | Monograma "PS" provisório em traço fino, dourado `#B98F4E` sobre grafite `#15171B`, até chegar o logo oficial |
+
 ## 13. Compliance
 
 Checklist do Revisor antes de cada merge com texto visível:
