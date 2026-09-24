@@ -10,6 +10,8 @@ import { REGIOES, cidadesDaRegiao } from "@/data/locais";
  * liberado por ação real) e leva o foco a ela. Sem JavaScript, o href #aba-... continua levando à aba.
  */
 function abrirAba(evento: MouseEvent<HTMLAnchorElement>, cidadeId: string) {
+  // Clique com modificador ou outro botão: o navegador segue o href (nova aba, janela etc.).
+  if (evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
   const aba = document.getElementById(`aba-${cidadeId}`);
   if (!aba) return;
   evento.preventDefault();

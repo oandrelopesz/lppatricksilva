@@ -50,4 +50,18 @@ describe("App", () => {
     expect(container.querySelectorAll("#onde-atende iframe")).toHaveLength(1);
     expect(window.dataLayer).toContainEqual({ event: "troca_aba_cidade", cidade: "Tuntum", regiao: "Centro Maranhense" });
   });
+
+  it("cidade do rodapé com Ctrl segue o link sem abrir a aba na página (parecer R13b)", () => {
+    reiniciarOrigemParaTestes();
+    capturarOrigem("", null);
+    window.dataLayer = [];
+    const { container } = render(<App />);
+    const rodape = container.querySelector("#rodape") as HTMLElement;
+    const link = within(rodape).getByRole("link", { name: "Tuntum" });
+    const naoCancelado = fireEvent.click(link, { ctrlKey: true });
+    expect(naoCancelado).toBe(true);
+    expect(screen.getByRole("tab", { name: "Tuntum" })).toHaveAttribute("aria-selected", "false");
+    expect(container.querySelector("#onde-atende iframe")).toBeNull();
+    expect(window.dataLayer).not.toContainEqual(expect.objectContaining({ event: "troca_aba_cidade" }));
+  });
 });
