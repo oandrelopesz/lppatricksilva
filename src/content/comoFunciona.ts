@@ -15,7 +15,7 @@ export const TEXTOS_COMO_FUNCIONA = {
     },
     {
       titulo: "A consulta",
-      texto: "Uma conversa sobre a dor e o que você já tentou, exame físico e leitura dos exames que você levar. Raio X, ressonância ou ultrassom que já tiver, leve junto.",
+      texto: "Uma conversa sobre a dor e o que você já tentou, exame físico e leitura dos exames que você levar.",
     },
     {
       titulo: "O plano, explicado com calma",

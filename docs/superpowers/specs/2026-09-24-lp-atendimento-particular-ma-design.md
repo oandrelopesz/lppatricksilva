@@ -95,7 +95,7 @@ Fixa no topo em mobile, tablet e desktop. Fundo dourado claro com texto grafite 
 ### 5.3 Identificação: para quem é
 1. Três exemplos estáticos com o mesmo peso visual: articulação (joelho, quadril, ombro), coluna (lombar, ciática, pescoço) e esporte (calcanhar, tendão, cotovelo), com sinais que a pessoa reconhece nela mesma (textos do copy a partir de ICPs e personas).
 2. CTA direto visível antes e depois do interativo.
-3. **Interativo A (opcional, curto):** autoavaliação em 3 toques, com "Pular" e "Voltar" em toda etapa.
+3. **Interativo A (opcional, curto):** autoavaliação em 3 toques, com "Pular" em toda etapa e "Voltar" nas etapas 2 e 3 (na primeira não há etapa anterior).
    - Etapas: onde dói; o que a dor já atrapalha; o que já tentou. Cada etapa é um `<fieldset>` com `<legend>`, opções como botões de resposta grandes (48 px, sem `aria-pressed`: cada um é uma ação que responde e avança), foco movido para a próxima pergunta após responder, voltar ou pular, progresso em `aria-live` ("Etapa 2 de 3"). Ao voltar, a resposta anterior aparece em texto ("Sua resposta: ...").
    - "Pular" apaga a resposta da etapa. O resumo é montado por fragmentos condicionais (região, limitação, tentativa), com texto próprio para cada combinação de respostas omitidas e para nenhuma resposta, sem inferir condição nem tratamento.
    - Resultado: resume o que a pessoa marcou e diz o que a consulta avalia. Não dá diagnóstico, não sugere procedimento (nem PRP, nem infiltração) e traz "isso não substitui a avaliação na consulta".
@@ -284,6 +284,17 @@ Formulário, agendamento online, página por cidade, blog, depoimentos, Meta Pix
 Aceitos os 13 achados. Dois ajustes para cumprir o brief:
 - Achado 8 (mapa só por comando "Mostrar mapa"): o brief exige embed em toda aba, carregado quando a aba é aberta. Mantido o carregamento na abertura da aba, mas sem nenhuma aba aberta por padrão; abrir a aba já é ação explícita do usuário.
 - Achado 4 (aba não é escolha): o brief exige a cidade da aba vista na mensagem. Mantido, mas só depois que o usuário abre uma aba (nunca por padrão) ou vindo de `?cidade=` validado.
+
+## 21. Direção visual (Tarefa V, pedido do André em 24/09/2026)
+
+O André avaliou a página como sem acabamento visual: sem mapa aparente, interativos sem destaque, sem assets e com a foto do hero errada. Decisões:
+- **Fotos:** hero `_DSC2069` (explicando no modelo de joelho, escolha do André); sobre `_DSC1992` (sala de ultrassom); como funciona `_DSC2001`; CTA final `_DSC2011` (sentado, sorrindo). A `_DSC2060` sai da página.
+- **Direção de arte:** clínica premium, calma e explicada. Grafite, dourado e bege dos tokens; títulos em Lora com escala editorial; bastante respiro; ritmo de fundos creme, bege e grafite; fotos com cantos de 24 px e filete dourado fino; textura sutil (grão ou linhas finas em SVG) só em fundos grandes.
+- **Assets gerados pelo Codex (SVG, registrados na tabela da §12):** ícones de linha (1,5 px) para joelho, quadril, ombro, coluna, pé e calcanhar, cotovelo, tendão e treino, calendário, alfinete de mapa, conversa, ultrassom; ilustrações anatômicas neutras em traço fino (joelho, coluna, ombro); **mapa ilustrado do Maranhão** feito a partir da malha oficial do IBGE (dados públicos, citar a fonte), simplificado, com as 11 cidades marcadas pelas coordenadas reais.
+- **Interativos com destaque:** autoavaliação em cartões com ícone por região, barra de progresso e cartão de resultado; "Como funciona" como linha do tempo visual com ícones (sem esconder conteúdo, parecer R1); seletor de cidade estilizado; "Onde atende" com o mapa do Maranhão interativo (tocar numa cidade = abrir a aba dela, o que libera o mapa do Google por ação real), abas com rolagem horizontal, scroll-snap e sombra indicando mais cidades, cartões de local com alvos de 48 px (parecer R13, item 2).
+- **Movimento:** revelação leve ao rolar (CSS + IntersectionObserver), transições curtas, tudo desligado em `prefers-reduced-motion`. Sem biblioteca pesada; JS inicial continua até 90 KB gzip e PageSpeed mobile acima de 90.
+- **21st.dev e Motion Sites:** o Designer pode pedir ao Browser/QA para trazer um componente gratuito que ajude a conversão (regras da §12).
+- **Preview ao vivo do design:** terminal "Servidor Design" no Floor Front (porta 8082) e portais "LP design ao vivo" e "LP design 3 telas", para o André acompanhar antes do merge.
 
 ## 19. Registro do parecer R2 (Revisor, plano)
 
