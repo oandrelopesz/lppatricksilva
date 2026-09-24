@@ -20,7 +20,7 @@ export function S2Hero() {
             <Icone nome="mapa" className="mt-0.5 h-5 w-5 shrink-0 text-dourado" />
             <span>
             {T.linhaCidades}{" "}
-            <a className="font-semibold underline underline-offset-4" href="#onde-atende">{T.linkOndeAtende}</a>
+            <a className="inline-flex min-h-12 items-center font-semibold underline underline-offset-4" href="#onde-atende">{T.linkOndeAtende}</a>
             </span>
           </p>
           <CtaWhatsApp
@@ -31,8 +31,9 @@ export function S2Hero() {
             <Icone nome="conversa" className="h-5 w-5 shrink-0" />
             {T.cta}
           </CtaWhatsApp>
+          <p className="mt-5 max-w-xl border-t border-dourado/40 pt-4 text-[18px] leading-snug text-grafite">{ASSINATURA}</p>
         </div>
-        <figure className="mx-auto w-full max-w-[31rem] md:col-start-2 md:row-span-2 md:row-start-1">
+        <figure className="mx-auto w-full max-w-[31rem] md:col-start-2 md:row-start-1">
           <Foto
             nome="hero"
             alt={T.altFoto}
@@ -41,7 +42,6 @@ export function S2Hero() {
             className="premium-photo aspect-[4/5] h-auto w-full object-cover"
           />
         </figure>
-        <p className="max-w-xl border-t border-dourado/40 pt-4 text-sm leading-relaxed text-grafite/80 md:col-start-1 md:row-start-2">{ASSINATURA}</p>
       </div>
     </header>
   );

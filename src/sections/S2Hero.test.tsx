@@ -35,19 +35,20 @@ describe("S2Hero", () => {
 
   it("a foto do hero é prioritária e não é lazy", () => {
     renderizar();
-    const img = screen.getByRole("img");
+    const img = screen.getByRole("img", { name: "Dr. Patrick Santos apontando para um modelo anatômico de joelho no consultório" });
     expect(img).not.toHaveAttribute("loading", "lazy");
     expect(img).toHaveAttribute("fetchpriority", "high");
     expect(img.getAttribute("width")).toBeTruthy();
     expect(img.getAttribute("height")).toBeTruthy();
   });
 
-  it("coloca a foto logo depois do CTA e preserva a assinatura no hero", () => {
+  it("coloca a assinatura junto ao CTA, antes da foto na leitura mobile", () => {
     renderizar();
     const cta = document.getElementById("cta-hero")!;
-    const foto = screen.getByRole("img", { name: TEXTOS_HERO.altFoto });
+    const foto = screen.getByRole("img", { name: "Dr. Patrick Santos apontando para um modelo anatômico de joelho no consultório" });
     const assinatura = screen.getByText(ASSINATURA);
     expect(cta.compareDocumentPosition(foto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(foto.compareDocumentPosition(assinatura) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(cta.compareDocumentPosition(assinatura) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(assinatura.compareDocumentPosition(foto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

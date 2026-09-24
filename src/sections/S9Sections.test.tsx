@@ -4,7 +4,6 @@ import { CidadeProvider } from "@/context/CidadeContext";
 import { PENDENCIAS, ASSINATURA } from "@/config";
 import { TEXTOS_COMO_FUNCIONA } from "@/content/comoFunciona";
 import { TEXTOS_FAQ } from "@/content/faq";
-import { TEXTOS_RODAPE } from "@/content/rodape";
 import { S4ComoFunciona } from "./S4ComoFunciona";
 import { S5Sobre } from "./S5Sobre";
 import { S7Faq } from "./S7Faq";
@@ -45,6 +44,7 @@ describe("seções finais", () => {
     expect(screen.getByText(ASSINATURA)).toBeInTheDocument();
     expect(screen.queryByText("Graduação em Medicina:")).toBeNull();
     expect(PENDENCIAS.graduacao).toBeNull();
+    expect(screen.getByRole("img", { name: "Dr. Patrick Santos de pé ao lado do aparelho de ultrassom na sala de consulta" })).toBeInTheDocument();
   });
 
   it("FAQ contém 11 perguntas e o CTA de dúvida", () => {
@@ -58,7 +58,7 @@ describe("seções finais", () => {
     expect(container.querySelector("#rodape")).not.toBeNull();
     expect(screen.getByText(ASSINATURA)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Política de privacidade" })).toHaveAttribute("href", "/politica-de-privacidade.html");
-    expect(screen.getByRole("img", { name: TEXTOS_RODAPE.altFoto })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Dr. Patrick Santos sentado ao lado do aparelho de ultrassom, sorrindo" })).toBeInTheDocument();
     expect(container.querySelector("#rodape-extra")).toBeEmptyDOMElement();
   });
 });

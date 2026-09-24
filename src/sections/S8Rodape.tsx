@@ -50,7 +50,7 @@ export function S8Rodape() {
                 <ul className="mt-2 space-y-1">
                   {cidadesDaRegiao(regiao.id).map((cidade) => (
                     <li key={cidade.id}>
-                      <a className="underline underline-offset-4" href={`#aba-${cidade.id}`} onClick={(e) => abrirAba(e, cidade.id)}>
+                      <a className="inline-flex min-h-12 items-center underline underline-offset-4" href={`#aba-${cidade.id}`} onClick={(e) => abrirAba(e, cidade.id)}>
                         {cidade.nome}
                       </a>
                     </li>
