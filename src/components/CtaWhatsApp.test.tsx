@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CidadeProvider, useCidade } from "@/context/CidadeContext";
 import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
-import { LINK_WHATSAPP_BASE } from "@/lib/whatsapp";
+import { LINK_WHATSAPP_BASE, LINK_WHATSAPP_DUVIDA } from "@/lib/whatsapp";
 import { CtaWhatsApp, navegacao } from "./CtaWhatsApp";
 
 function EscolherTuntum() {
@@ -159,5 +159,52 @@ describe("CtaWhatsApp", () => {
     expect(link.getAttribute("href")).toBe(LINK_WHATSAPP_BASE);
     expect(document.body.innerHTML).not.toContain("joelho");
     expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", local_cta: "autoavaliacao" }));
+  });
+
+  describe("intenção", () => {
+    it("CTA de dúvida: href inicial e clique usam wa.duvida e o evento leva intencao", () => {
+      render(
+        <CidadeProvider>
+          <CtaWhatsApp localCta="onde_atende" intencao="duvida">
+            Perguntar
+          </CtaWhatsApp>
+        </CidadeProvider>,
+      );
+      const link = screen.getByRole("link", { name: "Perguntar" });
+      expect(link.getAttribute("href")).toBe(LINK_WHATSAPP_DUVIDA);
+      fireEvent.click(link);
+      vi.advanceTimersByTime(800);
+      expect(textoDe(vi.mocked(navegacao.ir).mock.calls[0][0])).toMatch(/^Olá! Vim do site e gostaria de tirar uma dúvida antes de agendar uma consulta\. \(ref [A-HJ-NP-Z2-9]{6}\)$/);
+      expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", intencao: "duvida" }));
+    });
+
+    it("CTA de dúvida com cidade escolhida inclui a cidade", () => {
+      render(
+        <CidadeProvider>
+          <EscolherTuntum />
+          <CtaWhatsApp localCta="faq" intencao="duvida">
+            Perguntar
+          </CtaWhatsApp>
+        </CidadeProvider>,
+      );
+      fireEvent.click(screen.getByText("escolher"));
+      fireEvent.click(screen.getByRole("link", { name: "Perguntar" }));
+      vi.advanceTimersByTime(800);
+      expect(textoDe(vi.mocked(navegacao.ir).mock.calls[0][0])).toContain("tirar uma dúvida antes de agendar uma consulta em Tuntum.");
+    });
+
+    it("sem a prop, o CTA agenda e o evento leva intencao agendar", () => {
+      render(
+        <CidadeProvider>
+          <CtaWhatsApp localCta="hero">Agendar</CtaWhatsApp>
+        </CidadeProvider>,
+      );
+      const link = screen.getByRole("link", { name: "Agendar" });
+      expect(link.getAttribute("href")).toBe(LINK_WHATSAPP_BASE);
+      fireEvent.click(link);
+      vi.advanceTimersByTime(800);
+      expect(textoDe(vi.mocked(navegacao.ir).mock.calls[0][0])).toContain("gostaria de agendar uma consulta");
+      expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", intencao: "agendar" }));
+    });
   });
 });

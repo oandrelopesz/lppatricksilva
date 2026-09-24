@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MENSAGENS_WHATSAPP } from "@/content/whatsapp";
-import { LINK_WHATSAPP_BASE, montarLinkWhatsApp, montarMensagem } from "./whatsapp";
+import { LINK_WHATSAPP_BASE, LINK_WHATSAPP_DUVIDA, montarLinkWhatsApp, montarMensagem } from "./whatsapp";
 
 describe("whatsapp", () => {
   it("usa exatamente as mensagens aprovadas na copy C1e", () => {
@@ -43,5 +43,27 @@ describe("whatsapp", () => {
     const url = montarLinkWhatsApp({ cidade: "São Domingos do Azeitão", ref: "ABC234" });
     expect(url).not.toContain(" ");
     expect(new URL(url).searchParams.get("text")).toContain("São Domingos do Azeitão");
+  });
+
+  it("dúvida sem cidade usa wa.duvida", () => {
+    expect(MENSAGENS_WHATSAPP.duvida).toBe("Olá! Vim do site e gostaria de tirar uma dúvida antes de agendar uma consulta.");
+    expect(montarMensagem({ intencao: "duvida", ref: "ABC234" })).toBe(`${MENSAGENS_WHATSAPP.duvida} (ref ABC234)`);
+  });
+
+  it("dúvida com cidade segue o padrão de wa.cidade", () => {
+    expect(montarMensagem({ intencao: "duvida", cidade: "Tuntum", ref: "ABC234" })).toBe(
+      "Olá! Vim do site e gostaria de tirar uma dúvida antes de agendar uma consulta em Tuntum. (ref ABC234)",
+    );
+  });
+
+  it("sem intenção, o padrão continua agendar", () => {
+    expect(montarMensagem({ cidade: "Tuntum", ref: "ABC234" })).toBe(
+      montarMensagem({ intencao: "agendar", cidade: "Tuntum", ref: "ABC234" }),
+    );
+    expect(montarMensagem({ ref: "ABC234" }).startsWith(MENSAGENS_WHATSAPP.base)).toBe(true);
+  });
+
+  it("o link base de dúvida usa wa.duvida", () => {
+    expect(new URL(LINK_WHATSAPP_DUVIDA).searchParams.get("text")).toBe(MENSAGENS_WHATSAPP.duvida);
   });
 });

@@ -2,7 +2,7 @@ import type { AnchorHTMLAttributes, MouseEvent } from "react";
 import { useCidade } from "@/context/CidadeContext";
 import { track } from "@/lib/analytics";
 import { obterOrigem } from "@/lib/origem";
-import { LINK_WHATSAPP_BASE, montarLinkWhatsApp } from "@/lib/whatsapp";
+import { LINK_WHATSAPP_BASE, LINK_WHATSAPP_DUVIDA, montarLinkWhatsApp, type IntencaoWhatsApp } from "@/lib/whatsapp";
 
 export type LocalCta =
   | "topbar"
@@ -24,6 +24,8 @@ interface Props extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href" | "
   local?: string;
   /** Resumo da autoavaliação; só passe quando o usuário marcou a caixa de inclusão. */
   resumo?: string;
+  /** "duvida" nos CTAs "Perguntar no WhatsApp" (wa.duvida). Padrão: "agendar". */
+  intencao?: IntencaoWhatsApp;
 }
 
 /** Navegação isolada para os testes trocarem. */
@@ -33,7 +35,7 @@ export const navegacao = {
   },
 };
 
-export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, children, ...resto }: Props) {
+export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, intencao = "agendar", children, ...resto }: Props) {
   const { cidade } = useCidade();
 
   /**
@@ -44,10 +46,11 @@ export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, children, ...
   function preparar(elemento: HTMLAnchorElement) {
     const origem = obterOrigem();
     const nomeCidade = cidadeFixa ?? cidade?.nome;
-    const url = montarLinkWhatsApp({ cidade: nomeCidade, local, resumo, ref: origem.ref });
+    const url = montarLinkWhatsApp({ intencao, cidade: nomeCidade, local, resumo, ref: origem.ref });
     if (!resumo) elemento.href = url;
     const params = {
       local_cta: localCta,
+      intencao,
       cidade: nomeCidade,
       local,
       // Sem ref quando há resumo: a mensagem também não leva a ref (spec §7).
@@ -83,7 +86,7 @@ export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, children, ...
   }
 
   return (
-    <a href={LINK_WHATSAPP_BASE} onClick={aoClicar} onAuxClick={aoClicarAuxiliar} {...resto}>
+    <a href={intencao === "duvida" ? LINK_WHATSAPP_DUVIDA : LINK_WHATSAPP_BASE} onClick={aoClicar} onAuxClick={aoClicarAuxiliar} {...resto}>
       {children}
     </a>
   );
