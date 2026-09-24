@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CidadeProvider, useCidade } from "@/context/CidadeContext";
 import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
+import { LINK_WHATSAPP_BASE } from "@/lib/whatsapp";
 import { CtaWhatsApp, navegacao } from "./CtaWhatsApp";
 
 function EscolherTuntum() {
@@ -126,5 +127,37 @@ describe("CtaWhatsApp", () => {
     expect(texto).toContain("Marquei no site: joelho.");
     const evento = window.dataLayer!.find((e) => e.event === "clique_whatsapp")!;
     expect(JSON.stringify(evento)).not.toContain("joelho");
+  });
+
+  it("com resumo, o href do DOM continua o link base e a navegação usa a URL completa", () => {
+    render(
+      <CidadeProvider>
+        <CtaWhatsApp localCta="autoavaliacao" resumo="Meu resumo: joelho.">
+          Agendar
+        </CtaWhatsApp>
+      </CidadeProvider>,
+    );
+    const link = screen.getByRole("link", { name: "Agendar" });
+    fireEvent.click(link, { ctrlKey: true });
+    expect(link.getAttribute("href")).toBe(LINK_WHATSAPP_BASE);
+    vi.advanceTimersByTime(800);
+    expect(navegacao.ir).toHaveBeenCalledTimes(1);
+    expect(textoDe(vi.mocked(navegacao.ir).mock.calls[0][0])).toContain("Meu resumo: joelho.");
+    expect(document.body.innerHTML).not.toContain("joelho");
+  });
+
+  it("com resumo, o botão do meio mantém o link base no href", () => {
+    render(
+      <CidadeProvider>
+        <CtaWhatsApp localCta="autoavaliacao" resumo="Meu resumo: joelho.">
+          Agendar
+        </CtaWhatsApp>
+      </CidadeProvider>,
+    );
+    const link = screen.getByRole("link", { name: "Agendar" });
+    fireEvent(link, new MouseEvent("auxclick", { bubbles: true, cancelable: true, button: 1 }));
+    expect(link.getAttribute("href")).toBe(LINK_WHATSAPP_BASE);
+    expect(document.body.innerHTML).not.toContain("joelho");
+    expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", local_cta: "autoavaliacao" }));
   });
 });

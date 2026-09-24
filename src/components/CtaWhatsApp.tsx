@@ -36,12 +36,16 @@ export const navegacao = {
 export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, children, ...resto }: Props) {
   const { cidade } = useCidade();
 
-  /** Monta o link completo no href do elemento e devolve a URL e os parâmetros do evento. */
+  /**
+   * Monta a URL completa e os parâmetros do evento. Sem resumo, grava a URL no href do elemento.
+   * Com resumo, o href fica no link base: a resposta de saúde nunca vai para o DOM, onde a medição
+   * de cliques de saída ou um acionador do GTM poderia ler a URL (spec §20, R5).
+   */
   function preparar(elemento: HTMLAnchorElement) {
     const origem = obterOrigem();
     const nomeCidade = cidadeFixa ?? cidade?.nome;
     const url = montarLinkWhatsApp({ cidade: nomeCidade, local, resumo, ref: origem.ref });
-    elemento.href = url;
+    if (!resumo) elemento.href = url;
     const params = {
       local_cta: localCta,
       cidade: nomeCidade,
@@ -60,7 +64,8 @@ export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, children, ...
   function aoClicar(evento: MouseEvent<HTMLAnchorElement>) {
     const { url, params } = preparar(evento.currentTarget);
     const novaAba = evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.button !== 0;
-    if (novaAba) {
+    // Com resumo, o navegador abriria o link base: todo clique navega por código com a URL completa.
+    if (novaAba && !resumo) {
       track("clique_whatsapp", params);
       return;
     }
@@ -68,7 +73,10 @@ export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, children, ...
     track("clique_whatsapp", params, { aoConcluir: () => navegacao.ir(url) });
   }
 
-  /** Botão do meio dispara auxclick, não click: o navegador abre a nova aba e aqui só registra. */
+  /**
+   * Botão do meio dispara auxclick, não click: o navegador abre a nova aba e aqui só registra.
+   * Com resumo, a nova aba abre o link base (spec §20, R5).
+   */
   function aoClicarAuxiliar(evento: MouseEvent<HTMLAnchorElement>) {
     if (evento.button !== 1) return;
     track("clique_whatsapp", preparar(evento.currentTarget).params);

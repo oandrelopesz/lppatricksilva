@@ -23,8 +23,8 @@ describe("origem", () => {
   });
 
   it("captura UTMs permitidos e gclid, e nunca utm_term", () => {
-    const o = capturarOrigem("?utm_source=google&utm_medium=cpc&utm_campaign=g1_dor&utm_term=dor+no+joelho&gclid=Cj0abc_1", storageFalso());
-    expect(o).toMatchObject({ utm_source: "google", utm_medium: "cpc", utm_campaign: "g1_dor", gclid: "Cj0abc_1" });
+    const o = capturarOrigem("?utm_source=google&utm_medium=cpc&utm_campaign=c01&utm_term=dor+no+joelho&gclid=Cj0abc_1", storageFalso());
+    expect(o).toMatchObject({ utm_source: "google", utm_medium: "cpc", utm_campaign: "c01", gclid: "Cj0abc_1" });
     expect(o).not.toHaveProperty("utm_term");
   });
 
@@ -38,19 +38,19 @@ describe("origem", () => {
 
   it("mantém ref e UTMs da sessão quando a URL vem sem parâmetros", () => {
     const storage = storageFalso();
-    const primeira = capturarOrigem("?utm_source=google&utm_content=a1", storage);
+    const primeira = capturarOrigem("?utm_source=google&utm_content=a01", storage);
     reiniciarOrigemParaTestes();
     const segunda = capturarOrigem("", storage);
     expect(segunda.ref).toBe(primeira.ref);
-    expect(segunda).toMatchObject({ utm_source: "google", utm_content: "a1" });
+    expect(segunda).toMatchObject({ utm_source: "google", utm_content: "a01" });
   });
 
   it("uma campanha nova substitui o conjunto anterior de UTMs", () => {
     const storage = storageFalso();
-    capturarOrigem("?utm_source=google&utm_content=a1", storage);
+    capturarOrigem("?utm_source=google&utm_content=a01", storage);
     reiniciarOrigemParaTestes();
-    const nova = capturarOrigem("?utm_source=meta", storage);
-    expect(nova.utm_source).toBe("meta");
+    const nova = capturarOrigem("?utm_source=facebook", storage);
+    expect(nova.utm_source).toBe("facebook");
     expect(nova.utm_content).toBeUndefined();
   });
 
@@ -78,5 +78,26 @@ describe("origem", () => {
   it("urlLimpa mantém só parâmetros permitidos e válidos", () => {
     const limpa = urlLimpa("https://lp-dr-santos.vercel.app/?utm_source=google&utm_term=dor+no+joelho&nome=Maria&cidade=tuntum#duvidas");
     expect(limpa).toBe("https://lp-dr-santos.vercel.app/?utm_source=google&cidade=tuntum");
+  });
+
+  it("aplica a convenção fechada de UTMs (spec §20, R5)", () => {
+    expect(sanitizar("utm_campaign", "dor_joelho")).toBeUndefined();
+    expect(sanitizar("utm_content", "artrose")).toBeUndefined();
+    expect(sanitizar("utm_source", "joao")).toBeUndefined();
+    expect(sanitizar("utm_medium", "dor")).toBeUndefined();
+    expect(sanitizar("utm_campaign", "c01")).toBe("c01");
+    expect(sanitizar("utm_content", "a0412")).toBe("a0412");
+    expect(sanitizar("utm_source", "facebook")).toBe("facebook");
+    expect(sanitizar("utm_medium", "cpc")).toBe("cpc");
+  });
+
+  it("aceita gclid com ponto", () => {
+    expect(sanitizar("gclid", "Cj0.KCQ_a-1")).toBe("Cj0.KCQ_a-1");
+  });
+
+  it("URL com UTM clínico não leva o valor para page_location", () => {
+    expect(urlLimpa("https://lp-dr-santos.vercel.app/?utm_campaign=dor_joelho&utm_source=google")).toBe(
+      "https://lp-dr-santos.vercel.app/?utm_source=google",
+    );
   });
 });

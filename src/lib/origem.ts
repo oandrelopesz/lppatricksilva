@@ -16,8 +16,17 @@ const CHAVE = "lp_origem_v1";
 /** utm_term fica de fora de propósito: é a palavra buscada (texto livre) e pode conter sintoma. */
 const UTMS = ["utm_source", "utm_medium", "utm_campaign", "utm_content"] as const;
 const CAMPOS = [...UTMS, "gclid"] as const;
-const PADRAO_UTM = /^[A-Za-z0-9_.-]{1,100}$/;
-const PADRAO_GCLID = /^[A-Za-z0-9_-]{1,200}$/;
+const FONTES = ["google", "bing", "facebook", "instagram", "whatsapp", "email", "organico"];
+const MEIOS = ["cpc", "pago", "social", "organico", "email", "referencia"];
+
+/** Convenção fechada (spec §20, R5): nomes livres podem carregar condição de saúde. */
+const REGRAS: Record<(typeof CAMPOS)[number], (valor: string) => boolean> = {
+  utm_source: (v) => FONTES.includes(v),
+  utm_medium: (v) => MEIOS.includes(v),
+  utm_campaign: (v) => /^c\d{2,4}$/.test(v),
+  utm_content: (v) => /^a\d{2,4}$/.test(v),
+  gclid: (v) => /^[A-Za-z0-9_.-]{1,200}$/.test(v),
+};
 const ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 let emMemoria: Origem | null = null;
@@ -30,8 +39,8 @@ export function gerarRef(aleatorio: () => number = Math.random): string {
 
 export function sanitizar(chave: string, valor: string | null): string | undefined {
   if (!valor) return undefined;
-  const padrao = chave === "gclid" ? PADRAO_GCLID : PADRAO_UTM;
-  return padrao.test(valor) ? valor : undefined;
+  const regra = REGRAS[chave as keyof typeof REGRAS];
+  return regra && regra(valor) ? valor : undefined;
 }
 
 function ler(storage: Storage | null): Origem | null {
