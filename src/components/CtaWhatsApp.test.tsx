@@ -81,6 +81,21 @@ describe("CtaWhatsApp", () => {
     expect(textoDe(link.getAttribute("href")!)).toMatch(/\(ref /);
   });
 
+  it("clique com o botão do meio monta o link completo e só registra o evento", () => {
+    render(
+      <CidadeProvider>
+        <CtaWhatsApp localCta="sobre">Agendar</CtaWhatsApp>
+      </CidadeProvider>,
+    );
+    const link = screen.getByRole("link", { name: "Agendar" });
+    // O @testing-library/dom instalado não tem fireEvent.auxClick: dispara o evento nativo.
+    fireEvent(link, new MouseEvent("auxclick", { bubbles: true, cancelable: true, button: 1 }));
+    vi.advanceTimersByTime(1000);
+    expect(navegacao.ir).not.toHaveBeenCalled();
+    expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", local_cta: "sobre" }));
+    expect(textoDe(link.getAttribute("href")!)).toMatch(/\(ref [A-HJ-NP-Z2-9]{6}\)$/);
+  });
+
   it("depois que o usuário escolhe a cidade, o clique inclui a cidade", () => {
     render(
       <CidadeProvider>

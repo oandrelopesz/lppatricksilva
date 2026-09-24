@@ -36,11 +36,12 @@ export const navegacao = {
 export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, children, ...resto }: Props) {
   const { cidade } = useCidade();
 
-  function aoClicar(evento: MouseEvent<HTMLAnchorElement>) {
+  /** Monta o link completo no href do elemento e devolve a URL e os parâmetros do evento. */
+  function preparar(elemento: HTMLAnchorElement) {
     const origem = obterOrigem();
     const nomeCidade = cidadeFixa ?? cidade?.nome;
     const url = montarLinkWhatsApp({ cidade: nomeCidade, local, resumo, ref: origem.ref });
-    evento.currentTarget.href = url;
+    elemento.href = url;
     const params = {
       local_cta: localCta,
       cidade: nomeCidade,
@@ -53,6 +54,11 @@ export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, children, ...
       utm_campaign: origem.utm_campaign,
       utm_content: origem.utm_content,
     };
+    return { url, params };
+  }
+
+  function aoClicar(evento: MouseEvent<HTMLAnchorElement>) {
+    const { url, params } = preparar(evento.currentTarget);
     const novaAba = evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.button !== 0;
     if (novaAba) {
       track("clique_whatsapp", params);
@@ -62,8 +68,14 @@ export function CtaWhatsApp({ localCta, cidadeFixa, local, resumo, children, ...
     track("clique_whatsapp", params, { aoConcluir: () => navegacao.ir(url) });
   }
 
+  /** Botão do meio dispara auxclick, não click: o navegador abre a nova aba e aqui só registra. */
+  function aoClicarAuxiliar(evento: MouseEvent<HTMLAnchorElement>) {
+    if (evento.button !== 1) return;
+    track("clique_whatsapp", preparar(evento.currentTarget).params);
+  }
+
   return (
-    <a href={LINK_WHATSAPP_BASE} onClick={aoClicar} {...resto}>
+    <a href={LINK_WHATSAPP_BASE} onClick={aoClicar} onAuxClick={aoClicarAuxiliar} {...resto}>
       {children}
     </a>
   );
