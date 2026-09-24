@@ -8,6 +8,8 @@ interface ValorCidade {
   cidade: Cidade | undefined;
   fonte: FonteEscolha | undefined;
   escolherCidade: (id: string, fonte: FonteEscolha) => void;
+  /** A pessoa deixou a cidade em branco (seletor): os CTAs voltam à mensagem base. */
+  limparCidade: () => void;
   /** Conta os pedidos para mostrar a visão geral de locais; a cidade escolhida continua. */
   pedidosVisaoGeral: number;
   pedirVisaoGeral: () => void;
@@ -30,11 +32,13 @@ export function CidadeProvider({ children }: { children: ReactNode }) {
     if (cidade) setEstado({ cidade, fonte });
   }, []);
 
+  const limparCidade = useCallback(() => setEstado({}), []);
+
   const pedirVisaoGeral = useCallback(() => setPedidosVisaoGeral((n) => n + 1), []);
 
   const valor = useMemo(
-    () => ({ cidade: estado.cidade, fonte: estado.fonte, escolherCidade, pedidosVisaoGeral, pedirVisaoGeral }),
-    [estado, escolherCidade, pedidosVisaoGeral, pedirVisaoGeral],
+    () => ({ cidade: estado.cidade, fonte: estado.fonte, escolherCidade, limparCidade, pedidosVisaoGeral, pedirVisaoGeral }),
+    [estado, escolherCidade, limparCidade, pedidosVisaoGeral, pedirVisaoGeral],
   );
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }

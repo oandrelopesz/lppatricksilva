@@ -10,7 +10,7 @@ function rolarParaLocais(): void {
 }
 
 export function SeletorCidade() {
-  const { cidade: escolhida, escolherCidade, pedirVisaoGeral } = useCidade();
+  const { cidade: escolhida, escolherCidade, limparCidade, pedirVisaoGeral } = useCidade();
   const [valor, setValor] = useState("");
   /** Escolha feita no select e ainda não aplicada pelo botão: a cidade do contexto não a atropela. */
   const pendente = useRef(false);
@@ -24,7 +24,8 @@ export function SeletorCidade() {
     pendente.current = false;
     const cidade = buscarCidade(valor);
     if (!cidade) {
-      // Opção vazia: leva à visão geral de todas as cidades.
+      // Opção vazia: a pessoa informa a cidade na conversa. Limpa a cidade e mostra todas as cidades.
+      limparCidade();
       pedirVisaoGeral();
       rolarParaLocais();
       document.querySelector<HTMLElement>('#onde-atende [role="tab"][tabindex="0"]')?.focus({ preventScroll: true });

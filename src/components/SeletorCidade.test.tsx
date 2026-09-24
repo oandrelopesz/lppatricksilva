@@ -1,7 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { CtaWhatsApp } from "@/components/CtaWhatsApp";
 import { TEXTOS_COMO_FUNCIONA } from "@/content/comoFunciona";
 import { TEXTOS_ONDE_ATENDE } from "@/content/ondeAtende";
+import { MENSAGENS_WHATSAPP } from "@/content/whatsapp";
 import { CidadeProvider, useCidade } from "@/context/CidadeContext";
 import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
 import { S6OndeAtende } from "@/sections/S6OndeAtende";
@@ -85,5 +87,58 @@ describe("SeletorCidade sincronizado com a cidade escolhida (parecer R13)", () =
     expect(screen.getAllByRole("link", { name: TEXTOS_ONDE_ATENDE.clinica.comoChegar })).toHaveLength(14);
     expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
     expect(document.activeElement).toHaveAttribute("role", "tab");
+  });
+});
+
+describe("SeletorCidade com a opção vazia aplicada (parecer R13b)", () => {
+  beforeEach(() => {
+    document.body.innerHTML = "";
+    window.dataLayer = [];
+    reiniciarOrigemParaTestes();
+    capturarOrigem("", null);
+    Element.prototype.scrollIntoView = vi.fn();
+  });
+
+  function renderizarComCtaGeral() {
+    return render(
+      <CidadeProvider>
+        <SeletorCidade />
+        <S6OndeAtende />
+        <CtaWhatsApp localCta="hero">Agendar</CtaWhatsApp>
+      </CidadeProvider>,
+    );
+  }
+
+  /** Clique com Ctrl: o CTA grava a URL completa no href sem navegar. */
+  function textoDoCtaGeral() {
+    const cta = screen.getByRole("link", { name: "Agendar" });
+    fireEvent.click(cta, { ctrlKey: true });
+    return new URL(cta.getAttribute("href")!).searchParams.get("text")!;
+  }
+
+  function aplicarOpcaoVazia() {
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: TEXTOS_COMO_FUNCIONA.botaoVerLocais }));
+  }
+
+  it("cidade escolhida na aba: a opção vazia limpa a cidade e o CTA geral volta à mensagem base", () => {
+    renderizarComCtaGeral();
+    fireEvent.click(screen.getByRole("tab", { name: "Tuntum" }));
+    expect(textoDoCtaGeral()).toContain("Tuntum");
+    aplicarOpcaoVazia();
+    const texto = textoDoCtaGeral();
+    expect(texto.startsWith(`${MENSAGENS_WHATSAPP.base} (ref `)).toBe(true);
+    expect(texto).not.toContain("Tuntum");
+  });
+
+  it("cidade vinda de ?cidade=: a opção vazia limpa a cidade e o CTA geral volta à mensagem base", () => {
+    reiniciarOrigemParaTestes();
+    capturarOrigem("?cidade=loreto", null);
+    renderizarComCtaGeral();
+    expect(textoDoCtaGeral()).toContain("Loreto");
+    aplicarOpcaoVazia();
+    const texto = textoDoCtaGeral();
+    expect(texto.startsWith(`${MENSAGENS_WHATSAPP.base} (ref `)).toBe(true);
+    expect(texto).not.toContain("Loreto");
   });
 });
