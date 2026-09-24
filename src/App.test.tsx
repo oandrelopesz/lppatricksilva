@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { TEXTOS_COMO_FUNCIONA } from "@/content/comoFunciona";
 import { TEXTOS_ONDE_ATENDE } from "@/content/ondeAtende";
@@ -36,21 +36,40 @@ describe("App", () => {
     expect(container.querySelector("main#conteudo")?.contains(rodape)).toBe(true);
   });
 
-  it("cidade do rodapé abre a aba, leva o foco e libera o mapa (parecer R13)", () => {
+  it("cidade do rodapé marca a aba e leva o foco; os mapas só montam quando a seção se aproxima (parecer R15)", () => {
     reiniciarOrigemParaTestes();
     capturarOrigem("", null);
     window.dataLayer = [];
-    const { container } = render(<App />);
-    const rodape = container.querySelector("#rodape") as HTMLElement;
-    const link = within(rodape).getByRole("link", { name: "Tuntum" });
-    expect(link).toHaveAttribute("href", "#aba-tuntum");
-    fireEvent.click(link);
-    const aba = screen.getByRole("tab", { name: "Tuntum" });
-    expect(aba).toHaveAttribute("aria-selected", "true");
-    expect(aba).toHaveFocus();
-    expect(screen.getByRole("tabpanel", { name: "Tuntum" })).toBeVisible();
-    expect(container.querySelectorAll("#onde-atende iframe")).toHaveLength(1);
-    expect(window.dataLayer).toContainEqual({ event: "troca_aba_cidade", cidade: "Tuntum", regiao: "Centro Maranhense" });
+    const observados: Array<{ alvo: Element; retorno: IntersectionObserverCallback; observador: IntersectionObserver }> = [];
+    class ObservadorFalso {
+      constructor(private retorno: IntersectionObserverCallback) {}
+      observe = (alvo: Element) => void observados.push({ alvo, retorno: this.retorno, observador: this as unknown as IntersectionObserver });
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+    }
+    vi.stubGlobal("IntersectionObserver", ObservadorFalso);
+    try {
+      const { container } = render(<App />);
+      const secao = container.querySelector("#onde-atende")!;
+      const rodape = container.querySelector("#rodape") as HTMLElement;
+      const link = within(rodape).getByRole("link", { name: "Tuntum" });
+      expect(link).toHaveAttribute("href", "#aba-tuntum");
+      fireEvent.click(link);
+      const aba = screen.getByRole("tab", { name: "Tuntum" });
+      expect(aba).toHaveAttribute("aria-selected", "true");
+      expect(aba).toHaveFocus();
+      expect(screen.getByRole("tabpanel", { name: "Tuntum" })).toBeVisible();
+      expect(window.dataLayer).toContainEqual({ event: "troca_aba_cidade", cidade: "Tuntum", regiao: "Centro Maranhense" });
+      expect(container.querySelectorAll("#onde-atende iframe")).toHaveLength(0);
+      const daSecao = observados.filter((o) => o.alvo === secao);
+      expect(daSecao.length).toBeGreaterThan(0);
+      act(() => {
+        for (const o of daSecao) o.retorno([{ isIntersecting: true, target: secao } as unknown as IntersectionObserverEntry], o.observador);
+      });
+      expect(container.querySelectorAll("#painel-tuntum iframe")).toHaveLength(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("cidade do rodapé com Ctrl segue o link sem abrir a aba na página (parecer R13b)", () => {

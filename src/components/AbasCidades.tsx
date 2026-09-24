@@ -7,6 +7,21 @@ import { useCidade } from "@/context/CidadeContext";
 import { CIDADES, REGIOES, cidadesDaRegiao, type Cidade, type RegiaoId } from "@/data/locais";
 import { track } from "@/lib/analytics";
 
+/** Os mapas carregam quando a seção chega a esta distância da viewport (spec §21). */
+const MARGEM_MAPAS_PX = 400;
+const INTERVALO_FALLBACK_MS = 200;
+
+function secaoPerto(secao: Element): boolean {
+  const { top, bottom } = secao.getBoundingClientRect();
+  return top < window.innerHeight + MARGEM_MAPAS_PX && bottom > -MARGEM_MAPAS_PX;
+}
+
+/** Evento da troca de aba, também usado quando a cidade é aberta de fora da seção (rodapé). */
+export function registrarTrocaAba(cidade: Cidade): void {
+  const regiao = REGIOES.find((item) => item.id === cidade.regiaoId)!;
+  track("troca_aba_cidade", { cidade: cidade.nome, regiao: regiao.nome });
+}
+
 export function AbasCidades() {
   const { cidade: escolhida, escolherCidade, pedidosAbertura, pedidosVisaoGeral } = useCidade();
   // A primeira aba é só visual: não altera a cidade dos CTAs gerais.
@@ -33,26 +48,47 @@ export function AbasCidades() {
     const secao = raiz.current?.closest("section") ?? raiz.current;
     if (!secao) return;
     if (typeof IntersectionObserver === "undefined") {
-      setMapasVisiveis(true);
-      return;
+      // Sem observer: mede a distância no scroll, com throttling.
+      if (secaoPerto(secao)) {
+        setMapasVisiveis(true);
+        return;
+      }
+      let espera: ReturnType<typeof setTimeout> | undefined;
+      const conferir = () => {
+        espera = undefined;
+        if (!secaoPerto(secao)) return;
+        setMapasVisiveis(true);
+        parar();
+      };
+      const agendar = () => {
+        if (espera === undefined) espera = setTimeout(conferir, INTERVALO_FALLBACK_MS);
+      };
+      const parar = () => {
+        window.removeEventListener("scroll", agendar);
+        window.removeEventListener("resize", agendar);
+        if (espera !== undefined) clearTimeout(espera);
+      };
+      window.addEventListener("scroll", agendar, { passive: true });
+      window.addEventListener("resize", agendar);
+      return parar;
     }
     const observador = new IntersectionObserver((entradas) => {
       if (entradas.some((entrada) => entrada.isIntersecting)) {
         setMapasVisiveis(true);
         observador.disconnect();
       }
-    }, { rootMargin: "400px 0px", threshold: 0 });
+    }, { rootMargin: `${MARGEM_MAPAS_PX}px 0px`, threshold: 0 });
     observador.observe(secao);
     return () => observador.disconnect();
   }, []);
 
+  /** Clique na aba ou no mapa ilustrado: a seção já está na tela, então os mapas podem montar. */
   function abrir(cidade: Cidade) {
     setAberta(cidade);
     setVisaoGeral(false);
     setMapasVisiveis(true);
     escolherCidade(cidade.id, "aba");
-    const regiao = REGIOES.find((item) => item.id === cidade.regiaoId)!;
-    track("troca_aba_cidade", { cidade: cidade.nome, regiao: regiao.nome });
+    registrarTrocaAba(cidade);
   }
 
   function aoTeclar(evento: KeyboardEvent<HTMLButtonElement>, lista: Cidade[], indice: number) {
