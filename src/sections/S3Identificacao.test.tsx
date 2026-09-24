@@ -1,0 +1,17 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { CidadeProvider } from "@/context/CidadeContext";
+import { TEXTOS_IDENTIFICACAO as T } from "@/content/identificacao";
+import { S3Identificacao } from "./S3Identificacao";
+
+describe("S3Identificacao", () => {
+  it("mostra três exemplos com o mesmo nível e CTA antes e depois do interativo", () => {
+    render(<CidadeProvider><S3Identificacao /></CidadeProvider>);
+    expect(screen.getByRole("heading", { name: T.titulo })).toBeInTheDocument();
+    for (const grupo of T.grupos) {
+      expect(screen.getByRole("heading", { name: grupo.rotulo, level: 3 })).toBeInTheDocument();
+      for (const exemplo of grupo.exemplos) expect(screen.getByText(exemplo)).toBeInTheDocument();
+    }
+    expect(screen.getAllByRole("link", { name: T.cta })).toHaveLength(2);
+  });
+});

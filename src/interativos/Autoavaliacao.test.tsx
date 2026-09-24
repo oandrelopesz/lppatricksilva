@@ -1,0 +1,113 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { navegacao } from "@/components/CtaWhatsApp";
+import { TEXTOS_AUTOAVALIACAO as T } from "@/content/autoavaliacao";
+import { CidadeProvider } from "@/context/CidadeContext";
+import { reiniciarOrigemParaTestes } from "@/lib/origem";
+import { Autoavaliacao, montarResumo } from "./Autoavaliacao";
+
+function renderizar() {
+  return render(<CidadeProvider><Autoavaliacao /></CidadeProvider>);
+}
+
+const [regiao, limitacao, tentativa] = T.etapas;
+
+describe("Autoavaliacao", () => {
+  beforeEach(() => {
+    reiniciarOrigemParaTestes();
+    window.dataLayer = [];
+    navegacao.ir = vi.fn();
+  });
+
+  it("começa na etapa 1 com fieldset, legenda e progresso anunciado sem roubar foco", () => {
+    renderizar();
+    expect(screen.getByRole("group", { name: regiao.pergunta })).toBeInTheDocument();
+    expect(screen.getByText(T.progresso(1, 3))).toHaveAttribute("aria-live", "polite");
+    expect(screen.getByText(regiao.pergunta)).not.toHaveFocus();
+  });
+
+  it("três respostas levam ao resultado com aviso e sem procedimento", () => {
+    renderizar();
+    fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: limitacao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: tentativa.opcoes[0] }));
+    expect(screen.getByText(T.aviso)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/\bPRP\b|\bBMA\b|infiltra/i);
+  });
+
+  it("voltar e pular navegam, apagando a resposta omitida", () => {
+    renderizar();
+    fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: T.voltar }));
+    expect(screen.getByText(T.respostaAnterior(regiao.opcoes[0]))).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: T.pular }));
+    expect(screen.getByText(T.progresso(2, 3))).toBeInTheDocument();
+    expect(window.dataLayer).toContainEqual({ event: "autoavaliacao_pulada", etapa: 1 });
+    fireEvent.click(screen.getByRole("button", { name: limitacao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: tentativa.opcoes[0] }));
+    expect(screen.queryByText(T.resumo.semRespostas)).toBeNull();
+    expect(screen.getByText(montarResumo({ limitacao: limitacao.opcoes[0], tentativa: tentativa.opcoes[0] }))).toBeInTheDocument();
+  });
+
+  it("ao voltar, trocar a resposta atualiza o resumo", () => {
+    renderizar();
+    fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: T.voltar }));
+    fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[1] }));
+    fireEvent.click(screen.getByRole("button", { name: limitacao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: tentativa.opcoes[0] }));
+    const resumo = screen.getByText(/^Meu resumo:/).textContent!;
+    expect(resumo).toContain(T.resumo.regiao(regiao.opcoes[1]));
+    expect(resumo).not.toContain(T.resumo.regiao(regiao.opcoes[0]));
+  });
+
+  it("o resumo só segue ao WhatsApp após opt-in, fora do href e dos eventos", () => {
+    renderizar();
+    fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: limitacao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: tentativa.opcoes[0] }));
+    const cta = screen.getByRole("link", { name: T.cta });
+    fireEvent.click(cta);
+    const semResumo = window.dataLayer?.at(-1) as { eventCallback: () => void };
+    semResumo.eventCallback();
+    expect(vi.mocked(navegacao.ir).mock.lastCall?.[0]).not.toContain(regiao.opcoes[0]);
+    fireEvent.click(screen.getByRole("checkbox", { name: T.incluirResumo }));
+    expect(cta.getAttribute("href")).not.toContain(regiao.opcoes[0]);
+    fireEvent.click(cta);
+    const comResumo = window.dataLayer?.at(-1) as { eventCallback: () => void };
+    comResumo.eventCallback();
+    expect(new URL(vi.mocked(navegacao.ir).mock.lastCall![0]).searchParams.get("text")).toContain(T.resumo.regiao(regiao.opcoes[0]));
+    expect(JSON.stringify(window.dataLayer)).not.toContain(regiao.opcoes[0]);
+  });
+
+  it("nenhum evento recebe resposta e registra etapas sem dados de saúde", () => {
+    renderizar();
+    fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: limitacao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: tentativa.opcoes[0] }));
+    const eventos = JSON.stringify(window.dataLayer);
+    for (const etapa of T.etapas) for (const opcao of etapa.opcoes) expect(eventos).not.toContain(opcao);
+    expect(window.dataLayer).toContainEqual({ event: "autoavaliacao_concluida" });
+    expect(window.dataLayer).toContainEqual({ event: "autoavaliacao_etapa", etapa: 2 });
+  });
+
+  it("monta resumo apenas com fragmentos respondidos e omite a caixa sem respostas", () => {
+    expect(montarResumo({ limitacao: limitacao.opcoes[0] })).toBe(`${T.resumo.inicio} ${T.resumo.limitacao(limitacao.opcoes[0])}.`);
+    expect(montarResumo({})).toBe(T.resumo.semRespostas);
+    expect(montarResumo({ regiao: regiao.opcoes[0], tentativa: tentativa.opcoes[0] })).not.toMatch(/\s{2}|;\s*;/);
+    renderizar();
+    for (let i = 0; i < 3; i++) fireEvent.click(screen.getByRole("button", { name: T.pular }));
+    expect(screen.queryByRole("checkbox", { name: T.incluirResumo })).toBeNull();
+  });
+
+  it("botões são ações sem aria-pressed e o foco segue a pergunta após ação", () => {
+    renderizar();
+    expect(document.querySelector("[aria-pressed]")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
+    expect(screen.getByText(limitacao.pergunta)).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: T.voltar }));
+    expect(screen.getByText(regiao.pergunta)).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: T.pular }));
+    expect(screen.getByText(limitacao.pergunta)).toHaveFocus();
+  });
+});
