@@ -41,4 +41,13 @@ describe("S2Hero", () => {
     expect(img.getAttribute("width")).toBeTruthy();
     expect(img.getAttribute("height")).toBeTruthy();
   });
+
+  it("coloca a foto logo depois do CTA e preserva a assinatura no hero", () => {
+    renderizar();
+    const cta = document.getElementById("cta-hero")!;
+    const foto = screen.getByRole("img", { name: TEXTOS_HERO.altFoto });
+    const assinatura = screen.getByText(ASSINATURA);
+    expect(cta.compareDocumentPosition(foto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(foto.compareDocumentPosition(assinatura) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });
