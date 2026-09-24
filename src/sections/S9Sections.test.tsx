@@ -21,6 +21,13 @@ describe("seções finais", () => {
     expect(screen.getByRole("img", { name: TEXTOS_COMO_FUNCIONA.altFoto })).toBeInTheDocument();
   });
 
+  it("passo 3 fala só da leitura dos exames levados, sem lista do que levar (spec §17.13, parecer R13)", () => {
+    renderizar(<S4ComoFunciona />);
+    const passo3 = TEXTOS_COMO_FUNCIONA.passos[2].texto;
+    expect(passo3).toContain("leitura dos exames que você levar");
+    expect(document.body.textContent).not.toMatch(/Raio X|ressonância|leve junto/i);
+  });
+
   it("sobre mostra assinatura e oculta pendências sem valor", () => {
     const { container } = renderizar(<S5Sobre />);
     expect(container.querySelector("#sobre")).not.toBeNull();
