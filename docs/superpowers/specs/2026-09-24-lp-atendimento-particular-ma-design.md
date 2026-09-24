@@ -10,7 +10,7 @@ Landing page de captação para Google Ads (rede de pesquisa), tráfego principa
 - Público: só particular.
 - Metas técnicas: PageSpeed mobile acima de 90 e desktop acima de 95 no build publicado; LCP abaixo de 2,5 s e CLS até 0,1 em 4G simulado; INP abaixo de 200 ms.
 - Orçamento: JS inicial até 90 KB gzip; CSS até 25 KB; no máximo 2 fontes pré-carregadas somando até 60 KB; foto do hero até 70 KB (AVIF 720 px); nenhum iframe antes de ação do usuário.
-- Deploy: Vercel, projeto `lp-dr-santos`, domínio `lp-dr-santos.vercel.app` até o domínio definitivo. Deploy de produção a cada entrega aprovada pelo Revisor (exceção autorizada pelo André).
+- Deploy: Vercel, projeto `lp-dr-santos`, domínio `lp-dr-santos.vercel.app` até o domínio definitivo (exceção de publicação autorizada pelo André). Cada entrega aprovada pelo Revisor vai para um preview da Vercel até o marco de produção (seções 3 a 8 e consentimento na `main`, copy C1 e C2 aprovadas, QA sem falha crítica); a partir do marco, produção a cada entrega aprovada (seção 18).
 
 ## 2. Fontes e regra de dados
 
@@ -121,7 +121,7 @@ Só fatos do dossiê: assinatura completa; atua com infiltrações articulares e
 - Mobile: barra de abas com rolagem horizontal, scroll-snap, sombra indicando que há mais abas, e a aba focada rola para ficar visível.
 - Padrão ARIA de abas: `role="tablist"` com `aria-label`, `role="tab"` com `aria-selected`, `aria-controls` e roving `tabindex`; `role="tabpanel"` com `aria-labelledby`; setas, Home e End; ativação manual (Enter/Espaço) para não abrir mapas só por navegar com setas.
 - Cada local mostra, no HTML: nome, endereço por escrito exatamente como no brief e botão "Como chegar" com o link do brief. Dias de atendimento: campo existe nos dados, mas hoje nenhum local tem, então não aparece.
-- **Mapa:** o iframe `https://www.google.com/maps?q=<NOME ENDERECO>&output=embed` (com `URLSearchParams`) só recebe `src` quando o usuário abre a aba daquela cidade. Altura reservada. `title="Mapa: <local>"`, `loading="lazy"`, `referrerpolicy="no-referrer-when-downgrade"`.
+- **Mapa:** o iframe `https://www.google.com/maps?q=<NOME ENDERECO>&output=embed` (com `URLSearchParams`) só existe no painel aberto e só depois de ação real do usuário (clique na aba ou escolha no seletor da seção 5.4). Cidade vinda de `?cidade=` abre o painel sem mapa e mostra o botão "Ver mapa". Trocar de aba desmonta os mapas anteriores. Altura reservada. `title="Mapa: <local>"`, `loading="lazy"`, `referrerpolicy="no-referrer"` (a URL da página, com gclid e UTMs, não vai para o Google Maps).
 - Cada local tem CTA "Agendar em <cidade>" com cidade e local na mensagem.
 - Abrir uma aba é uma escolha explícita do usuário: a cidade dessa aba passa a ir na mensagem dos CTAs gerais (exigência do brief). O CTA de um local manda cidade e local.
 - Endereços exatamente como no brief (Mendesclin com o endereço escrito; divergência reportada no fim; Clinimed e CM LAB Graça Aranha sem número).
@@ -159,20 +159,22 @@ Barra inferior não bloqueante com "Aceitar" e "Recusar" e link para a política
 
 ## 7. Link do WhatsApp e origem
 
-- `lib/origem.ts`: na primeira carga lê `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `gclid` e `cidade` da URL e grava em `sessionStorage` (try/catch, com fallback em memória). Gera uma referência curta de 6 caracteres por sessão (`ref`).
+- `lib/origem.ts`: na primeira carga lê da URL só `utm_source`, `utm_medium`, `utm_campaign`, `utm_content` e `gclid`, aceitando apenas valores no padrão `[A-Za-z0-9_.-]` (até 100 caracteres; gclid até 200). `utm_term` nunca é lido (é a palavra buscada e pode conter sintoma). Uma campanha nova substitui o conjunto anterior. Guarda em `sessionStorage` (try/catch, com fallback em memória) e gera uma referência curta de 6 caracteres por sessão (`ref`). `cidade` vale só para a navegação atual e não é guardada. `urlLimpa()` monta a URL sem parâmetros fora da lista e sem âncora, para o `page_location` do GA4.
 - `lib/whatsapp.ts`: `montarLinkWhatsApp(pedido)` devolve `https://wa.me/5513996822680?text=<mensagem>`.
   - Sem cidade escolhida: mensagem base que pede para a pessoa informar a cidade.
   - Com cidade escolhida: mensagem com a cidade. Com local: cidade e local.
   - Com resumo da autoavaliação (só se a caixa estiver marcada): acrescenta o resumo.
-  - Toda mensagem termina com `(ref XXXXXX)`.
-- O `href` do HTML pré-renderizado é o link base, então o CTA funciona sem JavaScript. No clique, o handler troca o `href` pelo link completo antes da navegação (sem `preventDefault`, sem `window.open` assíncrono). `target="_blank"` e `rel="noopener"`.
+  - A mensagem termina com `(ref XXXXXX)`, exceto quando leva o resumo da autoavaliação: aí não leva `ref`, para a origem do clique não ficar ligada a respostas de saúde (e o evento também sai sem `ref`).
+- O `href` do HTML pré-renderizado é o link base, então o CTA funciona sem JavaScript (sem medição nesse caso; lacuna registrada). Com JavaScript, o clique simples monta o link completo, faz `preventDefault`, põe `clique_whatsapp` no `dataLayer` com `eventCallback` e `eventTimeout` de 800 ms e navega na mesma aba quando o GTM confirma o disparo das tags ou quando o tempo-limite vence (uma vez só). Clique com Ctrl, Cmd, Shift ou botão do meio segue o navegador (nova aba) e só registra o evento.
 
 ## 8. Consentimento e tracking
 
 Implementado pelo Tracking. Publicar versão do contêiner do GTM e criar ações de conversão no Google Ads: uma confirmação única do André, com a lista do que vai ser publicado.
 
 - **Consent Mode v2 (modo avançado):** `index.html` define `dataLayer` e `gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500})` antes de qualquer tag. "Aceitar" envia `consent update` com tudo `granted`; "Recusar" mantém negado. Validação jurídica do modelo: pendência para o André.
-- **Carregamento do GTM:** depois do primeiro frame, em `requestIdleCallback` (fallback 1,5 s), sem esperar gesto. Se o usuário clicar num CTA antes, o clique dispara o carregamento na hora. Eventos anteriores ficam na fila do `dataLayer`, que o GTM processa ao carregar. Teste obrigatório de clique imediato.
+- **Carregamento do GTM:** depois do primeiro frame, em `requestIdleCallback` (fallback 1,5 s), sem esperar gesto. Se o usuário clicar num CTA antes, o clique dispara o carregamento na hora, e a navegação espera o `eventCallback` do GTM ou 800 ms (seção 7). Eventos anteriores ficam na fila do `dataLayer`, que o GTM processa ao carregar.
+- **`page_location` limpo:** antes do GTM, a página põe `pagina_limpa` (de `urlLimpa()`) no `dataLayer`; a Google tag do GA4 usa essa variável como `page_location`. Nenhuma variável para `utm_term`.
+- **Critério de aceite da conversão:** com a aba de rede do Chrome (Preserve log), clique no CTA do hero em até 1 s após carregar: a requisição de conversão do Google Ads e o `collect?v=2` do GA4 aparecem antes da navegação para `wa.me`, com consentimento aceito e recusado, em 5 tentativas. Não basta o script do GTM ter sido injetado.
 - **Conversão primária única:** a tag de conversão do Google Ads disparada pelo evento `clique_whatsapp`. O evento de GA4 com o mesmo nome é evento-chave para análise e não é importado como conversão primária no Ads (evita contagem dupla).
 
 | Evento (dataLayer) | Parâmetros | Onde dispara |
@@ -273,3 +275,8 @@ Formulário, agendamento online, página por cidade, blog, depoimentos, Meta Pix
 Aceitos os 13 achados. Dois ajustes para cumprir o brief:
 - Achado 8 (mapa só por comando "Mostrar mapa"): o brief exige embed em toda aba, carregado quando a aba é aberta. Mantido o carregamento na abertura da aba, mas sem nenhuma aba aberta por padrão; abrir a aba já é ação explícita do usuário.
 - Achado 4 (aba não é escolha): o brief exige a cidade da aba vista na mensagem. Mantido, mas só depois que o usuário abre uma aba (nunca por padrão) ou vindo de `?cidade=` validado.
+
+## 19. Registro do parecer R2 (Revisor, plano)
+
+Aceitos os 11 achados: preview até o marco de produção; mapa só por ação real e só no painel aberto, com `no-referrer`; origem sanitizada e sem `utm_term`, `page_location` limpo; navegação do CTA depois do `eventCallback` do GTM ou de 800 ms, com critério de aceite pela requisição de conversão na rede; cidade da URL só para a navegação atual; "Pular" apaga a resposta da etapa; progresso com `aria-live`; checagem dos 14 nomes e endereços no HTML inicial; `vercel pull` antes de cada build; contagem do `verificar-build` corrigida. Ajuste no achado 7 (rádios): mantidos botões de resposta dentro de `fieldset`/`legend`, porque rádios avançariam a etapa ao navegar com as setas; o padrão completo está na Tarefa 8 do plano.
+Ajuste no achado 1: o brief pede produção a cada entrega aprovada; a produção começa no marco e, dali em diante, segue a cada entrega aprovada. A validação jurídica do consentimento continua como pendência (§17, item 10) e não bloqueia o marco, porque o André autorizou a publicação.
