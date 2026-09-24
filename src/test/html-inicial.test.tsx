@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ASSINATURA } from "@/config";
 import { todosOsLocais } from "@/data/locais";
 import { render } from "@/entry-server";
 
@@ -20,5 +21,13 @@ describe("HTML inicial (sem JavaScript)", () => {
 
   it("tem CTA com o link base do WhatsApp", () => {
     expect(html).toMatch(/href="https:\/\/wa\.me\/5513996822680\?text=/);
+  });
+
+  it("tem topbar de particular, assinatura completa e link para os locais", () => {
+    expect(html).toContain(ASSINATURA);
+    expect(html.toLowerCase()).toContain("particular");
+    expect(html).toContain('href="#onde-atende"');
+    expect(html).toContain('fetchpriority="high"');
+    expect(html).not.toMatch(/\bBMA\b|Instituto Patrick Santos/);
   });
 });
