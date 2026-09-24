@@ -10,12 +10,14 @@ export function S3Identificacao() {
     <Secao id="para-quem" tituloId="titulo-para-quem" fundo="bege">
       <h2 id="titulo-para-quem" className="text-3xl font-semibold sm:text-4xl">{T.titulo}</h2>
       <p className="mt-4 max-w-3xl">{T.intro}</p>
-      <div className="mt-8 grid gap-5 md:grid-cols-3">
+      <div className="mt-10 grid items-stretch gap-5 md:grid-cols-3">
         {T.grupos.map((grupo, indice) => (
-          <article key={grupo.rotulo} className="premium-card h-full bg-creme p-6 md:p-7">
-            <Icone nome={(["joelho", "coluna", "tendaoTreino"] as const)[indice]} className="mb-5 h-10 w-10 text-dourado" />
+          <article key={grupo.rotulo} className="premium-card identificacao-cartao flex h-full flex-col bg-creme p-6 md:p-7">
+            <span className="identificacao-cartao__icone mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-bege">
+              <Icone nome={(["joelho", "coluna", "tendaoTreino"] as const)[indice]} className="h-9 w-9 text-dourado" />
+            </span>
             <h3 className="text-xl font-semibold">{grupo.rotulo}</h3>
-            <ul className="mt-4 list-disc space-y-3 pl-5">
+            <ul className="mt-5 flex-1 list-disc space-y-3 pl-5">
               {grupo.exemplos.map((exemplo) => <li key={exemplo}>{exemplo}</li>)}
             </ul>
           </article>
@@ -23,7 +25,7 @@ export function S3Identificacao() {
       </div>
       <p className="mt-8 max-w-3xl">{T.fechamento}</p>
       <CtaWhatsApp localCta="identificacao" className={`${classeCta} premium-cta mt-5`}>{T.cta}</CtaWhatsApp>
-      <div className="mt-12">
+      <div className="autoavaliacao mx-auto mt-14 max-w-4xl">
         <Autoavaliacao />
       </div>
       <CtaWhatsApp localCta="identificacao" className={`${classeCta} premium-cta mt-8`}>{T.cta}</CtaWhatsApp>
