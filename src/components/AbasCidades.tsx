@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { CartaoLocal } from "@/components/CartaoLocal";
 import { TEXTOS_ONDE_ATENDE as T } from "@/content/ondeAtende";
 import { useCidade } from "@/context/CidadeContext";
-import { CIDADES, REGIOES, cidadesDaRegiao, type Cidade } from "@/data/locais";
+import { CIDADES, REGIOES, cidadesDaRegiao, type Cidade, type RegiaoId } from "@/data/locais";
 import { track } from "@/lib/analytics";
 
 export function AbasCidades() {
@@ -10,6 +10,8 @@ export function AbasCidades() {
   const [visaoGeral, setVisaoGeral] = useState(true);
   /** Cidade cujo mapa o usuário liberou com uma ação real. */
   const [mapaLiberado, setMapaLiberado] = useState<string | undefined>();
+  /** Roving tabindex: última aba focada em cada tablist (por região). */
+  const [focadaPorRegiao, setFocadaPorRegiao] = useState<Partial<Record<RegiaoId, string>>>({});
   const refsAbas = useRef(new Map<string, HTMLButtonElement>());
 
   useEffect(() => {
@@ -18,7 +20,13 @@ export function AbasCidades() {
     if (fonte === "aba" || fonte === "seletor") setMapaLiberado(aberta.id);
   }, [aberta, fonte]);
 
+  // Nova cidade selecionada (aba, seletor ou URL): a selecionada volta a ser a parada do Tab.
+  useEffect(() => setFocadaPorRegiao({}), [aberta]);
+
   function abrir(cidade: Cidade) {
+    // Sai da visão geral aqui mesmo: reabrir a mesma cidade não muda o contexto e o efeito não rodaria.
+    setVisaoGeral(false);
+    setMapaLiberado(cidade.id);
     escolherCidade(cidade.id, "aba");
     const regiao = REGIOES.find((r) => r.id === cidade.regiaoId)!;
     track("troca_aba_cidade", { cidade: cidade.nome, regiao: regiao.nome });
@@ -50,7 +58,8 @@ export function AbasCidades() {
             <div role="tablist" aria-labelledby={`regiao-${regiao.id}`} className="abas-cidades__lista">
               {lista.map((cidade, indice) => {
                 const selecionada = indice === indiceAberto;
-                const focavel = indiceAberto >= 0 ? selecionada : indice === 0;
+                const focada = focadaPorRegiao[regiao.id];
+                const focavel = focada ? cidade.id === focada : indiceAberto >= 0 ? selecionada : indice === 0;
                 return (
                   <button
                     key={cidade.id}
@@ -66,7 +75,10 @@ export function AbasCidades() {
                     tabIndex={focavel ? 0 : -1}
                     onClick={() => abrir(cidade)}
                     onKeyDown={(e) => aoTeclar(e, lista, indice)}
-                    onFocus={(e) => e.currentTarget.scrollIntoView?.({ block: "nearest", inline: "nearest" })}
+                    onFocus={(e) => {
+                      setFocadaPorRegiao((atual) => ({ ...atual, [regiao.id]: cidade.id }));
+                      e.currentTarget.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+                    }}
                   >
                     {cidade.nome}
                   </button>

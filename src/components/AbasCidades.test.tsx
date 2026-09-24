@@ -92,4 +92,48 @@ describe("AbasCidades", () => {
     fireEvent.click(screen.getByRole("button", { name: /ver mapa/i }));
     expect(container.querySelectorAll("iframe")).toHaveLength(1);
   });
+
+  it("reabre a mesma cidade depois de 'Ver todas as cidades', com o mapa", () => {
+    const { container } = renderizar();
+    fireEvent.click(screen.getByRole("tab", { name: "Tuntum" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ver todas as cidades" }));
+    expect(screen.queryByRole("tabpanel")).toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: "Tuntum" }));
+    expect(screen.getByRole("tabpanel", { name: "Tuntum" })).toBeVisible();
+    expect(container.querySelectorAll("iframe")).toHaveLength(1);
+  });
+
+  describe("roving tabindex", () => {
+    const abasDoSul = () => within(screen.getByRole("tablist", { name: "Sul Maranhense" })).getAllByRole("tab");
+    const focavel = () => abasDoSul().filter((aba) => aba.tabIndex === 0);
+
+    it("sem aba selecionada, a aba focada por ArrowRight e por End fica com tabIndex 0", () => {
+      renderizar();
+      const balsas = screen.getByRole("tab", { name: "Balsas" });
+      balsas.focus();
+      fireEvent.keyDown(balsas, { key: "ArrowRight" });
+      expect(focavel()).toEqual([screen.getByRole("tab", { name: "São Domingos do Azeitão" })]);
+      fireEvent.keyDown(document.activeElement!, { key: "End" });
+      expect(focavel()).toEqual([screen.getByRole("tab", { name: "Loreto" })]);
+    });
+
+    it("com aba selecionada, a aba focada por ArrowRight e por End fica com tabIndex 0", () => {
+      renderizar();
+      const balsas = screen.getByRole("tab", { name: "Balsas" });
+      fireEvent.click(balsas);
+      balsas.focus();
+      fireEvent.keyDown(balsas, { key: "ArrowRight" });
+      expect(focavel()).toEqual([screen.getByRole("tab", { name: "São Domingos do Azeitão" })]);
+      expect(balsas).toHaveAttribute("aria-selected", "true");
+      fireEvent.keyDown(document.activeElement!, { key: "End" });
+      expect(focavel()).toEqual([screen.getByRole("tab", { name: "Loreto" })]);
+      expect(balsas).toHaveAttribute("aria-selected", "true");
+    });
+
+    it("antes de o foco passar pela lista, a aba selecionada tem tabIndex 0", () => {
+      renderizar();
+      fireEvent.click(screen.getByRole("tab", { name: "Loreto" }));
+      expect(focavel()).toEqual([screen.getByRole("tab", { name: "Loreto" })]);
+    });
+  });
 });
