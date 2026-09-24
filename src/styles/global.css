@@ -1,1 +1,39 @@
 @import "tailwindcss";
+@import "./tokens.css";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 4rem;
+  }
+
+  body {
+    background: var(--color-creme);
+    color: var(--color-grafite);
+    font-family: var(--font-corpo);
+    font-size: 1.125rem;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-titulo);
+    line-height: 1.2;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-grafite);
+    outline-offset: 3px;
+  }
+
+  .bg-grafite :focus-visible {
+    outline-color: var(--color-creme);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
