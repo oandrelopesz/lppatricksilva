@@ -76,6 +76,81 @@
     box-shadow: inset 0 0 0 1px rgb(185 143 78 / 25%);
   }
 
+  .autoavaliacao-painel {
+    border-top: 4px solid var(--color-dourado);
+    box-shadow: 0 24px 60px rgb(21 23 27 / 9%);
+  }
+
+  .autoavaliacao-progresso {
+    height: .6rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgb(185 143 78 / 22%);
+  }
+
+  .autoavaliacao-progresso > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--color-cta);
+    transition: width 180ms ease;
+  }
+
+  .autoavaliacao-etapa,
+  .autoavaliacao-resultado {
+    animation: etapa-entrar 180ms ease-out both;
+  }
+
+  @keyframes etapa-entrar {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .autoavaliacao-opcao {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    border: 1px solid rgb(21 23 27 / 20%);
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgb(21 23 27 / 4%);
+    transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
+  }
+
+  .autoavaliacao-opcao:hover {
+    border-color: var(--color-dourado);
+    background: var(--color-creme);
+    transform: translateY(-2px);
+  }
+
+  .autoavaliacao-opcao__icone {
+    display: inline-flex;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: .75rem;
+    background: var(--color-bege);
+  }
+
+  .autoavaliacao-nav {
+    border: 1px solid rgb(21 23 27 / 30%);
+    color: var(--color-grafite);
+    background: transparent;
+  }
+
+  .autoavaliacao-nav:hover {
+    background: var(--color-bege);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .autoavaliacao-etapa,
+    .autoavaliacao-resultado { animation: none; }
+    .autoavaliacao-progresso > span,
+    .autoavaliacao-opcao { transition: none; }
+    .autoavaliacao-opcao:hover { transform: none; }
+  }
+
   .premium-photo {
     border: 1px solid rgb(185 143 78 / 65%);
     border-radius: 1.5rem;

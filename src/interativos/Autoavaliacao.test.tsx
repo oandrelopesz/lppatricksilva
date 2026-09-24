@@ -27,6 +27,18 @@ describe("Autoavaliacao", () => {
     expect(screen.getByText(regiao.pergunta)).not.toHaveFocus();
   });
 
+  it("mostra barra de progresso que acompanha a etapa e opções em cartões", () => {
+    renderizar();
+    const progresso = screen.getByRole("progressbar");
+    expect(progresso).toHaveAttribute("aria-valuenow", "1");
+    expect(progresso).toHaveAttribute("aria-valuemax", "3");
+    expect(screen.getByRole("button", { name: regiao.opcoes[0] })).toHaveClass("autoavaliacao-opcao");
+    fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "2");
+    fireEvent.click(screen.getByRole("button", { name: T.voltar }));
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "1");
+  });
+
   it("três respostas levam ao resultado com aviso e sem procedimento", () => {
     renderizar();
     fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
