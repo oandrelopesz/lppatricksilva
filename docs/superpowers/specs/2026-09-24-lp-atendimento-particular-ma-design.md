@@ -10,7 +10,7 @@ Landing page de captação para Google Ads (rede de pesquisa), tráfego principa
 - Público: só particular.
 - Metas técnicas: PageSpeed mobile acima de 90 e desktop acima de 95 no build publicado; LCP abaixo de 2,5 s e CLS até 0,1 em 4G simulado; INP abaixo de 200 ms.
 - Orçamento: JS inicial até 90 KB gzip; CSS até 25 KB; no máximo 2 fontes pré-carregadas somando até 60 KB; foto do hero até 70 KB (AVIF 720 px); nenhum iframe antes de ação do usuário.
-- Deploy: Vercel, projeto `lp-dr-santos`, domínio `lp-dr-santos.vercel.app` até o domínio definitivo (exceção de publicação autorizada pelo André). Cada entrega aprovada pelo Revisor vai para um preview da Vercel até o marco de produção (seções 3 a 8 e consentimento na `main`, copy C1 e C2 aprovadas, QA sem falha crítica); a partir do marco, produção a cada entrega aprovada (seção 18).
+- Deploy: Vercel, projeto `lp-dr-santos`, domínio `lp-dr-santos.vercel.app` até o domínio definitivo (exceção de publicação autorizada pelo André). Cada entrega aprovada pelo Revisor vai para um preview da Vercel até o marco de produção (seções 3 a 8 e consentimento na `main`, copy C1 e C2 aprovadas, QA sem falha crítica e fatos da política de privacidade confirmados pelo André: controlador, bases legais, compartilhamentos, retenção e atendimento a direitos, com o modo avançado do consentimento descrito como é); a partir do marco, produção a cada entrega aprovada (seção 18).
 
 ## 2. Fontes e regra de dados
 
@@ -96,7 +96,8 @@ Fixa no topo em mobile, tablet e desktop. Fundo dourado claro com texto grafite 
 1. Três exemplos estáticos com o mesmo peso visual: articulação (joelho, quadril, ombro), coluna (lombar, ciática, pescoço) e esporte (calcanhar, tendão, cotovelo), com sinais que a pessoa reconhece nela mesma (textos do copy a partir de ICPs e personas).
 2. CTA direto visível antes e depois do interativo.
 3. **Interativo A (opcional, curto):** autoavaliação em 3 toques, com "Pular" e "Voltar" em toda etapa.
-   - Etapas: onde dói; o que a dor já atrapalha; o que já tentou. Cada etapa é um `<fieldset>` com `<legend>`, opções como botões de rádio grandes (48 px), foco movido para a próxima legenda após responder, progresso anunciado ("Etapa 2 de 3").
+   - Etapas: onde dói; o que a dor já atrapalha; o que já tentou. Cada etapa é um `<fieldset>` com `<legend>`, opções como botões de resposta grandes (48 px, sem `aria-pressed`: cada um é uma ação que responde e avança), foco movido para a próxima pergunta após responder, voltar ou pular, progresso em `aria-live` ("Etapa 2 de 3"). Ao voltar, a resposta anterior aparece em texto ("Sua resposta: ...").
+   - "Pular" apaga a resposta da etapa. O resumo é montado por fragmentos condicionais (região, limitação, tentativa), com texto próprio para cada combinação de respostas omitidas e para nenhuma resposta, sem inferir condição nem tratamento.
    - Resultado: resume o que a pessoa marcou e diz o que a consulta avalia. Não dá diagnóstico, não sugere procedimento (nem PRP, nem infiltração) e traz "isso não substitui a avaliação na consulta".
    - CTA do resultado com a caixa "Incluir meu resumo na mensagem do WhatsApp", desmarcada por padrão, com aviso curto de privacidade. Só com a caixa marcada o resumo entra na mensagem.
    - As respostas ficam só em memória do componente: não vão para storage, dataLayer, GA4 nem Ads.
@@ -171,7 +172,7 @@ Barra inferior não bloqueante com "Aceitar" e "Recusar" e link para a política
 
 Implementado pelo Tracking. Publicar versão do contêiner do GTM e criar ações de conversão no Google Ads: uma confirmação única do André, com a lista do que vai ser publicado.
 
-- **Consent Mode v2 (modo avançado):** `index.html` define `dataLayer` e `gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500})` antes de qualquer tag. "Aceitar" envia `consent update` com tudo `granted`; "Recusar" mantém negado. Validação jurídica do modelo: pendência para o André.
+- **Consent Mode v2 (modo avançado):** `index.html` define `dataLayer` e `gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500})` antes de qualquer tag. "Aceitar" envia `consent update` com tudo `granted`; "Recusar" mantém negado. **Transparência:** no modo avançado o GTM carrega e as tags do Google enviam sinais sem cookies e sem identificadores mesmo com consentimento negado. O aviso de cookies e a política dizem isso com essas palavras simples; nenhum texto afirma que "nada é ativado antes da escolha". Validação jurídica formal do modelo: recomendada, pendência do André.
 - **Carregamento do GTM:** depois do primeiro frame, em `requestIdleCallback` (fallback 1,5 s), sem esperar gesto. Se o usuário clicar num CTA antes, o clique dispara o carregamento na hora, e a navegação espera o `eventCallback` do GTM ou 800 ms (seção 7). Eventos anteriores ficam na fila do `dataLayer`, que o GTM processa ao carregar.
 - **`page_location` limpo:** antes do GTM, a página põe `pagina_limpa` (de `urlLimpa()`) no `dataLayer`; a Google tag do GA4 usa essa variável como `page_location`. Nenhuma variável para `utm_term`.
 - **Critério de aceite da conversão:** com a aba de rede do Chrome (Preserve log), clique no CTA do hero em até 1 s após carregar: a requisição de conversão do Google Ads e o `collect?v=2` do GA4 aparecem antes da navegação para `wa.me`, com consentimento aceito e recusado, em 5 tentativas. Não basta o script do GTM ter sido injetado.
@@ -266,9 +267,10 @@ Formulário, agendamento online, página por cidade, blog, depoimentos, Meta Pix
 7. Arquivo do logo (monograma): não recebido.
 8. "Instituto Patrick Santos": confirmar se é pessoa jurídica anunciante; se for, a página precisa do registro da PJ e do diretor técnico antes de usar a marca.
 9. Oferta de PRP e BMA: confirmar com o médico o que ele faz dentro da Resolução CFM 2.464/2026; BMA fica fora da página até confirmação médica e jurídica.
-10. Modelo de consentimento (Consent Mode v2 com padrão negado): validar com o jurídico.
+10. **Fatos da política de privacidade (bloqueia a produção):** controlador (Dr. Patrick como pessoa física ou uma empresa), bases legais, repasse das conversas às clínicas parceiras, retenção dos dados e canal e prazo para pedidos de direitos. Revisão jurídica formal do texto e do Consent Mode v2: recomendada, não bloqueia.
 11. Razão social e CNPJ (fonte externa no dossiê): confirmar antes de usar na política de privacidade.
 12. Hermes (Braçal e Git Manager): provider opencode-go sem credencial, sem perfis `bracal` e `git`, sem aprovação automática.
+13. **Fatos operacionais sem fonte** (a copy não afirma até confirmar): se valor, formas de pagamento e duração são informados antes de marcar; como o retorno é marcado; orientação depois de procedimento; quais procedimentos cada cidade oferece; lista do que levar na consulta.
 
 ## 18. Registro do parecer R1 (Revisor)
 
@@ -280,3 +282,8 @@ Aceitos os 13 achados. Dois ajustes para cumprir o brief:
 
 Aceitos os 11 achados: preview até o marco de produção; mapa só por ação real e só no painel aberto, com `no-referrer`; origem sanitizada e sem `utm_term`, `page_location` limpo; navegação do CTA depois do `eventCallback` do GTM ou de 800 ms, com critério de aceite pela requisição de conversão na rede; cidade da URL só para a navegação atual; "Pular" apaga a resposta da etapa; progresso com `aria-live`; checagem dos 14 nomes e endereços no HTML inicial; `vercel pull` antes de cada build; contagem do `verificar-build` corrigida. Ajuste no achado 7 (rádios): mantidos botões de resposta dentro de `fieldset`/`legend`, porque rádios avançariam a etapa ao navegar com as setas; o padrão completo está na Tarefa 8 do plano.
 Ajuste no achado 1: o brief pede produção a cada entrega aprovada; a produção começa no marco e, dali em diante, segue a cada entrega aprovada. A validação jurídica do consentimento continua como pendência (§17, item 10) e não bloqueia o marco, porque o André autorizou a publicação.
+
+## 20. Registro dos pareceres R2b e R3 (Revisor)
+
+- R2b: aceito que os **fatos** da política (controlador, bases, compartilhamentos, retenção, direitos e descrição exata do modo avançado) precisam estar confirmados pelo André antes da produção; só o parecer jurídico formal segue como pendência não bloqueante. `utm_term` removido também da lista de variáveis do GTM. Autoavaliação sem `aria-pressed`, com a resposta anterior em texto. Marcador `(ref ...)` só no código (`whatsapp.ts`), nunca nos textos da copy. Rótulos de botão nos testes vêm do conteúdo, não de texto fixo. Comandos de verificação de deploy em Git Bash.
+- R3: aviso e política reescritos para o modo avançado; sem `ref` com resumo; PRP só no FAQ e só nas quatro indicações da Resolução CFM 2.464/2026; garantias operacionais sem fonte retiradas (§17, item 13); primeira dobra e meta com sinal do ICP esporte; modelos de resumo para respostas omitidas; C2 é a fonte final de meta e alts; rótulos "Ver mapa" e do seletor definidos na copy; assinatura com "MÉDICO" em maiúsculas.
