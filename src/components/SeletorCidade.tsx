@@ -1,20 +1,38 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TEXTOS_COMO_FUNCIONA as T } from "@/content/comoFunciona";
 import { useCidade } from "@/context/CidadeContext";
 import { REGIOES, buscarCidade, cidadesDaRegiao } from "@/data/locais";
 import { track } from "@/lib/analytics";
 
+function rolarParaLocais(): void {
+  const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+  document.getElementById("onde-atende")?.scrollIntoView({ behavior: reduzir ? "auto" : "smooth" });
+}
+
 export function SeletorCidade() {
-  const { escolherCidade } = useCidade();
+  const { cidade: escolhida, escolherCidade, pedirVisaoGeral } = useCidade();
   const [valor, setValor] = useState("");
+  /** Escolha feita no select e ainda não aplicada pelo botão: a cidade do contexto não a atropela. */
+  const pendente = useRef(false);
+
+  // Acompanha a cidade escolhida em outro lugar (?cidade= ou aba).
+  useEffect(() => {
+    if (!pendente.current) setValor(escolhida?.id ?? "");
+  }, [escolhida]);
 
   function verLocais() {
+    pendente.current = false;
     const cidade = buscarCidade(valor);
-    if (!cidade) return;
+    if (!cidade) {
+      // Opção vazia: leva à visão geral de todas as cidades.
+      pedirVisaoGeral();
+      rolarParaLocais();
+      document.querySelector<HTMLElement>('#onde-atende [role="tab"][tabindex="0"]')?.focus({ preventScroll: true });
+      return;
+    }
     escolherCidade(cidade.id, "seletor");
     track("seletor_cidade", { cidade: cidade.nome });
-    const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
-    document.getElementById("onde-atende")?.scrollIntoView({ behavior: reduzir ? "auto" : "smooth" });
+    rolarParaLocais();
     document.getElementById(`aba-${cidade.id}`)?.focus({ preventScroll: true });
   }
 
@@ -28,7 +46,10 @@ export function SeletorCidade() {
           aria-describedby="apoio-seletor-cidade"
           className="min-h-12 min-w-0 flex-1 rounded-lg border border-grafite/30 bg-white px-3 py-2"
           value={valor}
-          onChange={(evento) => setValor(evento.target.value)}
+          onChange={(evento) => {
+            pendente.current = true;
+            setValor(evento.target.value);
+          }}
         >
           <option value="">{T.opcaoVazia}</option>
           {REGIOES.map((regiao) => (

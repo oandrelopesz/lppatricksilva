@@ -1,7 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TEXTOS_COMO_FUNCIONA } from "@/content/comoFunciona";
+import { TEXTOS_ONDE_ATENDE } from "@/content/ondeAtende";
 import { CidadeProvider, useCidade } from "@/context/CidadeContext";
+import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
+import { S6OndeAtende } from "@/sections/S6OndeAtende";
 import { SeletorCidade } from "./SeletorCidade";
 
 function MostrarCidade() {
@@ -30,5 +33,57 @@ describe("SeletorCidade", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Tuntum:seletor");
     expect(window.dataLayer).toContainEqual({ event: "seletor_cidade", cidade: "Tuntum" });
     expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+  });
+});
+
+describe("SeletorCidade sincronizado com a cidade escolhida (parecer R13)", () => {
+  beforeEach(() => {
+    document.body.innerHTML = "";
+    window.dataLayer = [];
+    reiniciarOrigemParaTestes();
+    capturarOrigem("", null);
+    Element.prototype.scrollIntoView = vi.fn();
+  });
+
+  function renderizarComAbas() {
+    return render(
+      <CidadeProvider>
+        <SeletorCidade />
+        <S6OndeAtende />
+      </CidadeProvider>,
+    );
+  }
+
+  const seletor = () => screen.getByRole("combobox") as HTMLSelectElement;
+
+  it("?cidade= válido aparece no seletor", () => {
+    reiniciarOrigemParaTestes();
+    capturarOrigem("?cidade=loreto", null);
+    renderizarComAbas();
+    expect(seletor().value).toBe("loreto");
+  });
+
+  it("escolha feita na aba aparece no seletor", () => {
+    renderizarComAbas();
+    fireEvent.click(screen.getByRole("tab", { name: "Tuntum" }));
+    expect(seletor().value).toBe("tuntum");
+  });
+
+  it("não atropela uma escolha ainda não aplicada", () => {
+    renderizarComAbas();
+    fireEvent.change(seletor(), { target: { value: "balsas" } });
+    fireEvent.click(screen.getByRole("tab", { name: "Tuntum" }));
+    expect(seletor().value).toBe("balsas");
+  });
+
+  it("com a opção vazia, o botão leva à visão geral de onde atende", () => {
+    renderizarComAbas();
+    fireEvent.click(screen.getByRole("tab", { name: "Tuntum" }));
+    fireEvent.change(seletor(), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: TEXTOS_COMO_FUNCIONA.botaoVerLocais }));
+    expect(screen.queryByRole("tabpanel")).toBeNull();
+    expect(screen.getAllByRole("link", { name: TEXTOS_ONDE_ATENDE.clinica.comoChegar })).toHaveLength(14);
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
+    expect(document.activeElement).toHaveAttribute("role", "tab");
   });
 });
