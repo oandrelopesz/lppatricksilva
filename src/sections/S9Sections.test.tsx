@@ -49,6 +49,11 @@ describe("seções finais", () => {
     expect(container.querySelectorAll("#sobre .sobre-fatos li")).toHaveLength(3);
     for (const texto of TEXTOS_SOBRE.paragrafos) expect(screen.getByText(texto)).toBeInTheDocument();
     expect(container.querySelector('#sobre img[src="/ilustracao-joelho.svg"][aria-hidden="true"]')).not.toBeNull();
+    const foto = container.querySelector("#sobre figure")!;
+    const desenho = container.querySelector("#sobre .sobre-ilustracao")!;
+    expect(desenho.parentElement).toHaveClass("sobre-ilustracao-faixa");
+    expect(foto.contains(desenho)).toBe(false);
+    expect(foto.compareDocumentPosition(desenho) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("FAQ contém 11 perguntas e o CTA de dúvida", () => {

@@ -13,9 +13,12 @@ export function S3Identificacao() {
       <div className="mt-10 grid items-stretch gap-5 md:grid-cols-3">
         {T.grupos.map((grupo, indice) => (
           <article key={grupo.rotulo} className="premium-card identificacao-cartao flex h-full flex-col bg-creme p-6 md:p-7">
-            <span className="identificacao-cartao__icone mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-bege">
-              <Icone nome={(["joelho", "coluna", "tendaoTreino"] as const)[indice]} className="h-9 w-9 text-dourado" />
-            </span>
+            <div className="identificacao-cartao__artes mb-6">
+              <span className="identificacao-cartao__icone inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-bege">
+                <Icone nome={(["joelho", "coluna", "tendaoTreino"] as const)[indice]} className="h-9 w-9 text-dourado" />
+              </span>
+              <img src={`/ilustracao-${(["joelho", "coluna", "ombro"] as const)[indice]}.svg`} alt="" aria-hidden="true" width="104" height="104" className="identificacao-cartao__arte" />
+            </div>
             <h3 className="text-xl font-semibold">{grupo.rotulo}</h3>
             <ul className="mt-5 flex-1 list-disc space-y-3 pl-5">
               {grupo.exemplos.map((exemplo) => <li key={exemplo}>{exemplo}</li>)}
