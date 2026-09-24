@@ -1,0 +1,41 @@
+/** Dados do médico e da página. Só fatos das fontes da spec (§2). */
+export const MEDICO = {
+  nome: "Dr. Patrick Santos",
+  profissao: "MÉDICO",
+  especialidade: "Ortopedia e Traumatologia",
+  crmUf: "MA",
+  crmNumero: "16520",
+  rqeNumero: "7389",
+} as const;
+
+export const ASSINATURA = `${MEDICO.nome} · ${MEDICO.profissao} · CRM-${MEDICO.crmUf} ${MEDICO.crmNumero} · ${MEDICO.especialidade} · RQE ${MEDICO.rqeNumero}`;
+
+export const WHATSAPP_NUMERO = "5513996822680";
+export const WHATSAPP_EXIBICAO = "(13) 99682-2680";
+
+/** Muda quando o domínio definitivo chegar. */
+export const SITE_URL = "https://lp-dr-santos.vercel.app";
+
+export const GTM_ID: string = import.meta.env.VITE_GTM_ID ?? "";
+
+/**
+ * Pendências da spec §17. null = a página não mostra o dado e orienta a perguntar no WhatsApp.
+ * Nunca exibir placeholder ao público.
+ */
+export const PENDENCIAS: {
+  valorConsulta: string | null;
+  formasPagamento: string | null;
+  duracaoConsulta: string | null;
+  regraRetorno: string | null;
+  graduacao: string | null;
+  residencia: string | null;
+  anosExperiencia: string | null;
+} = {
+  valorConsulta: null,
+  formasPagamento: null,
+  duracaoConsulta: null,
+  regraRetorno: null,
+  graduacao: null,
+  residencia: null,
+  anosExperiencia: null,
+};
