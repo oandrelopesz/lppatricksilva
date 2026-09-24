@@ -1,5 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { TEXTOS_COMO_FUNCIONA } from "@/content/comoFunciona";
+import { TEXTOS_ONDE_ATENDE } from "@/content/ondeAtende";
 import { TEXTOS_TOPBAR } from "@/content/topbar";
 import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
 import App from "./App";
@@ -63,5 +65,22 @@ describe("App", () => {
     expect(screen.getByRole("tab", { name: "Tuntum" })).toHaveAttribute("aria-selected", "false");
     expect(container.querySelector("#painel-tuntum iframe")).toBeNull();
     expect(window.dataLayer).not.toContainEqual(expect.objectContaining({ event: "troca_aba_cidade" }));
+  });
+
+  it("seletor reaplica a mesma cidade depois de 'Ver todas as cidades' e reabre a aba (parecer R15)", () => {
+    reiniciarOrigemParaTestes();
+    capturarOrigem("", null);
+    Element.prototype.scrollIntoView = vi.fn();
+    render(<App />);
+    const botaoVerLocais = screen.getByRole("button", { name: TEXTOS_COMO_FUNCIONA.botaoVerLocais });
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "tuntum" } });
+    fireEvent.click(botaoVerLocais);
+    expect(screen.getByRole("tabpanel", { name: "Tuntum" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: TEXTOS_ONDE_ATENDE.verTodas }));
+    expect(screen.queryByRole("tabpanel")).toBeNull();
+    expect((screen.getByRole("combobox") as HTMLSelectElement).value).toBe("tuntum");
+    fireEvent.click(botaoVerLocais);
+    expect(screen.getByRole("tabpanel", { name: "Tuntum" })).toBeVisible();
+    expect(screen.getByRole("tab", { name: "Tuntum" })).toHaveAttribute("aria-selected", "true");
   });
 });

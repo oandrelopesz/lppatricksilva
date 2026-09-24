@@ -8,7 +8,7 @@ import { CIDADES, REGIOES, cidadesDaRegiao, type Cidade, type RegiaoId } from "@
 import { track } from "@/lib/analytics";
 
 export function AbasCidades() {
-  const { cidade: escolhida, escolherCidade, pedidosVisaoGeral } = useCidade();
+  const { cidade: escolhida, escolherCidade, pedidosAbertura, pedidosVisaoGeral } = useCidade();
   // A primeira aba é só visual: não altera a cidade dos CTAs gerais.
   const [aberta, setAberta] = useState<Cidade>(CIDADES[0]);
   const [visaoGeral, setVisaoGeral] = useState(false);
@@ -25,7 +25,7 @@ export function AbasCidades() {
     setAberta(escolhida);
     setVisaoGeral(false);
     setFocadaPorRegiao({});
-  }, [escolhida]);
+  }, [escolhida, pedidosAbertura]);
 
   useEffect(() => { if (pedidosVisaoGeral > 0) setVisaoGeral(true); }, [pedidosVisaoGeral]);
 
