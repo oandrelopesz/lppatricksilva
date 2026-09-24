@@ -1,21 +1,77 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { CartaoLocal } from "@/components/CartaoLocal";
+import { CtaWhatsApp } from "@/components/CtaWhatsApp";
 import { MapaMaranhao } from "@/components/MapaMaranhao";
 import { TEXTOS_ONDE_ATENDE as T } from "@/content/ondeAtende";
 import { useCidade } from "@/context/CidadeContext";
 import { CIDADES, REGIOES, cidadesDaRegiao, type Cidade, type RegiaoId } from "@/data/locais";
 import { track } from "@/lib/analytics";
 
+/** Os mapas carregam quando a seção chega a esta distância da viewport (spec §21). */
+const MARGEM_MAPAS_PX = 400;
+const INTERVALO_FALLBACK_MS = 200;
+
+function secaoPerto(secao: Element): boolean {
+  const { top, bottom } = secao.getBoundingClientRect();
+  return top < window.innerHeight + MARGEM_MAPAS_PX && bottom > -MARGEM_MAPAS_PX;
+}
+
+/** Evento da troca de aba, também usado quando a cidade é aberta de fora da seção (rodapé). */
+export function registrarTrocaAba(cidade: Cidade): void {
+  const regiao = REGIOES.find((item) => item.id === cidade.regiaoId)!;
+  track("troca_aba_cidade", { cidade: cidade.nome, regiao: regiao.nome });
+}
+
+/**
+ * Barra de abas com sombra nas bordas só onde ainda há cidades para rolar. Recalcula no scroll da
+ * lista (inclusive o causado pelo foco por teclado) e no resize.
+ */
+function ListaComSombra({ rotuloId, children }: { rotuloId: string; children: ReactNode }) {
+  const refLista = useRef<HTMLDivElement>(null);
+  const [sombras, setSombras] = useState({ esquerda: false, direita: false });
+
+  useEffect(() => {
+    const lista = refLista.current;
+    if (!lista) return;
+    const medir = () => {
+      const maximo = lista.scrollWidth - lista.clientWidth;
+      const esquerda = maximo > 1 && lista.scrollLeft > 1;
+      const direita = maximo > 1 && lista.scrollLeft < maximo - 1;
+      setSombras((atual) => (atual.esquerda === esquerda && atual.direita === direita ? atual : { esquerda, direita }));
+    };
+    medir();
+    lista.addEventListener("scroll", medir, { passive: true });
+    window.addEventListener("resize", medir);
+    return () => {
+      lista.removeEventListener("scroll", medir);
+      window.removeEventListener("resize", medir);
+    };
+  }, []);
+
+  return (
+    <div
+      className="abas-cidades__lista-wrap"
+      data-sombra-esquerda={sombras.esquerda ? "" : undefined}
+      data-sombra-direita={sombras.direita ? "" : undefined}
+    >
+      <div ref={refLista} role="tablist" aria-labelledby={rotuloId} className="abas-cidades__lista">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function AbasCidades() {
-  const { cidade: escolhida, escolherCidade, pedidosVisaoGeral } = useCidade();
+  const { cidade: escolhida, escolherCidade, pedidosAbertura, pedidosVisaoGeral } = useCidade();
   // A primeira aba é só visual: não altera a cidade dos CTAs gerais.
   const [aberta, setAberta] = useState<Cidade>(CIDADES[0]);
   const [visaoGeral, setVisaoGeral] = useState(false);
   const [mapasVisiveis, setMapasVisiveis] = useState(false);
+  // Sem JavaScript (e no HTML do servidor), a lista geral fica visível; só some depois de montar.
+  const [montado, setMontado] = useState(false);
+  useEffect(() => setMontado(true), []);
   const [focadaPorRegiao, setFocadaPorRegiao] = useState<Partial<Record<RegiaoId, string>>>({});
-  const [sombras, setSombras] = useState<Partial<Record<RegiaoId, { esquerda: boolean; direita: boolean }>>>({});
   const refsAbas = useRef(new Map<string, HTMLButtonElement>());
-  const refsListas = useRef(new Map<RegiaoId, HTMLDivElement>());
   const raiz = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,7 +79,7 @@ export function AbasCidades() {
     setAberta(escolhida);
     setVisaoGeral(false);
     setFocadaPorRegiao({});
-  }, [escolhida]);
+  }, [escolhida, pedidosAbertura]);
 
   useEffect(() => { if (pedidosVisaoGeral > 0) setVisaoGeral(true); }, [pedidosVisaoGeral]);
 
@@ -31,42 +87,47 @@ export function AbasCidades() {
     const secao = raiz.current?.closest("section") ?? raiz.current;
     if (!secao) return;
     if (typeof IntersectionObserver === "undefined") {
-      setMapasVisiveis(true);
-      return;
+      // Sem observer: mede a distância no scroll, com throttling.
+      if (secaoPerto(secao)) {
+        setMapasVisiveis(true);
+        return;
+      }
+      let espera: ReturnType<typeof setTimeout> | undefined;
+      const conferir = () => {
+        espera = undefined;
+        if (!secaoPerto(secao)) return;
+        setMapasVisiveis(true);
+        parar();
+      };
+      const agendar = () => {
+        if (espera === undefined) espera = setTimeout(conferir, INTERVALO_FALLBACK_MS);
+      };
+      const parar = () => {
+        window.removeEventListener("scroll", agendar);
+        window.removeEventListener("resize", agendar);
+        if (espera !== undefined) clearTimeout(espera);
+      };
+      window.addEventListener("scroll", agendar, { passive: true });
+      window.addEventListener("resize", agendar);
+      return parar;
     }
     const observador = new IntersectionObserver((entradas) => {
       if (entradas.some((entrada) => entrada.isIntersecting)) {
         setMapasVisiveis(true);
         observador.disconnect();
       }
-    }, { rootMargin: "400px 0px", threshold: 0 });
+    }, { rootMargin: `${MARGEM_MAPAS_PX}px 0px`, threshold: 0 });
     observador.observe(secao);
     return () => observador.disconnect();
   }, []);
 
-  function atualizarSombras(id: RegiaoId, lista: HTMLDivElement) {
-    const esquerda = lista.scrollLeft > 1;
-    const direita = lista.scrollLeft + lista.clientWidth < lista.scrollWidth - 1;
-    setSombras((atual) => {
-      if (atual[id]?.esquerda === esquerda && atual[id]?.direita === direita) return atual;
-      return { ...atual, [id]: { esquerda, direita } };
-    });
-  }
-
-  useEffect(() => {
-    const atualizar = () => refsListas.current.forEach((lista, id) => atualizarSombras(id, lista));
-    atualizar();
-    window.addEventListener("resize", atualizar);
-    return () => window.removeEventListener("resize", atualizar);
-  }, []);
-
+  /** Clique na aba ou no mapa ilustrado: a seção já está na tela, então os mapas podem montar. */
   function abrir(cidade: Cidade) {
     setAberta(cidade);
     setVisaoGeral(false);
     setMapasVisiveis(true);
     escolherCidade(cidade.id, "aba");
-    const regiao = REGIOES.find((item) => item.id === cidade.regiaoId)!;
-    track("troca_aba_cidade", { cidade: cidade.nome, regiao: regiao.nome });
+    registrarTrocaAba(cidade);
   }
 
   function aoTeclar(evento: KeyboardEvent<HTMLButtonElement>, lista: Cidade[], indice: number) {
@@ -88,8 +149,7 @@ export function AbasCidades() {
         const indiceAberto = visaoGeral ? -1 : lista.findIndex((cidade) => cidade.id === aberta.id);
         return <div key={regiao.id} className="abas-cidades__regiao">
           <h3 id={`regiao-${regiao.id}`}>{regiao.nome}</h3>
-          <div className="abas-cidades__lista-wrap" data-more-left={sombras[regiao.id]?.esquerda ? "" : undefined} data-more-right={sombras[regiao.id]?.direita ? "" : undefined}><div role="tablist" aria-labelledby={`regiao-${regiao.id}`} className="abas-cidades__lista"
-            ref={(el) => { if (el) refsListas.current.set(regiao.id, el); else refsListas.current.delete(regiao.id); }} onScroll={(evento) => atualizarSombras(regiao.id, evento.currentTarget)}>
+          <ListaComSombra rotuloId={`regiao-${regiao.id}`}>
             {lista.map((cidade, indice) => {
               const selecionada = indice === indiceAberto;
               const focada = focadaPorRegiao[regiao.id];
@@ -100,13 +160,14 @@ export function AbasCidades() {
                 onFocus={(evento) => { setFocadaPorRegiao((atual) => ({ ...atual, [regiao.id]: cidade.id })); evento.currentTarget.scrollIntoView?.({ block: "nearest", inline: "nearest" }); }}>
                 {cidade.nome}</button>;
             })}
-          </div></div>
+          </ListaComSombra>
         </div>;
       })}
-      <div className="abas-cidades__geral" hidden={!visaoGeral}>{CIDADES.map((cidade) => <div key={cidade.id}>
+      <div className="abas-cidades__geral" hidden={montado && !visaoGeral}>{CIDADES.map((cidade) => <div key={cidade.id}>
         <h4>{cidade.nome}</h4><ul>{cidade.locais.map((local) => <li key={local.id}>
           <strong>{local.nome}</strong> {local.endereco}{" "}
-          <a href={local.linkComoChegar} target="_blank" rel="noreferrer" onClick={() => track("como_chegar", { local: local.nome, cidade: cidade.nome })}>{T.clinica.comoChegar}</a>
+          <a href={local.linkComoChegar} target="_blank" rel="noreferrer" onClick={() => track("como_chegar", { local: local.nome, cidade: cidade.nome })}>{T.clinica.comoChegar}</a>{" "}
+          <CtaWhatsApp localCta="onde_atende" cidadeFixa={cidade.nome} local={local.nome}>{T.clinica.cta(cidade.nome)}</CtaWhatsApp>
         </li>)}</ul>
       </div>)}</div>
       {CIDADES.map((cidade) => {

@@ -1,27 +1,34 @@
 import type { MouseEvent } from "react";
+import { registrarTrocaAba } from "@/components/AbasCidades";
 import { CtaWhatsApp } from "@/components/CtaWhatsApp";
 import { Foto } from "@/components/Foto";
 import { ASSINATURA } from "@/config";
 import { TEXTOS_RODAPE as T } from "@/content/rodape";
-import { REGIOES, cidadesDaRegiao } from "@/data/locais";
-
-/**
- * Abre a aba da cidade com a mesma ação do clique na aba (contexto com fonte "aba", evento e mapa
- * liberado por ação real) e leva o foco a ela. Sem JavaScript, o href #aba-... continua levando à aba.
- */
-function abrirAba(evento: MouseEvent<HTMLAnchorElement>, cidadeId: string) {
-  // Clique com modificador ou outro botão: o navegador segue o href (nova aba, janela etc.).
-  if (evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
-  const aba = document.getElementById(`aba-${cidadeId}`);
-  if (!aba) return;
-  evento.preventDefault();
-  aba.click();
-  const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
-  aba.scrollIntoView?.({ behavior: reduzir ? "auto" : "smooth", block: "center" });
-  aba.focus({ preventScroll: true });
-}
+import { useCidade } from "@/context/CidadeContext";
+import { REGIOES, buscarCidade, cidadesDaRegiao } from "@/data/locais";
 
 export function S8Rodape() {
+  const { escolherCidade } = useCidade();
+
+  /**
+   * Abre a aba da cidade pelo contexto (fonte "aba", com o evento da troca de aba), rola até ela e
+   * leva o foco. Os mapas não montam aqui: só quando a seção se aproxima (spec §21, parecer R15).
+   * Sem JavaScript, o href #aba-... continua levando à aba.
+   */
+  function abrirAba(evento: MouseEvent<HTMLAnchorElement>, cidadeId: string) {
+    // Clique com modificador ou outro botão: o navegador segue o href (nova aba, janela etc.).
+    if (evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
+    const aba = document.getElementById(`aba-${cidadeId}`);
+    const cidade = buscarCidade(cidadeId);
+    if (!aba || !cidade) return;
+    evento.preventDefault();
+    escolherCidade(cidade.id, "aba");
+    registrarTrocaAba(cidade);
+    const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+    aba.scrollIntoView?.({ behavior: reduzir ? "auto" : "smooth", block: "center" });
+    aba.focus({ preventScroll: true });
+  }
+
   return (
     <footer id="rodape" className="premium-texture bg-grafite px-4 py-20 text-creme md:py-28">
       <div className="rodape-fecho mx-auto grid max-w-6xl gap-12 md:grid-cols-2">

@@ -1,5 +1,7 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { TEXTOS_COMO_FUNCIONA } from "@/content/comoFunciona";
+import { TEXTOS_ONDE_ATENDE } from "@/content/ondeAtende";
 import { TEXTOS_TOPBAR } from "@/content/topbar";
 import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
 import App from "./App";
@@ -34,21 +36,40 @@ describe("App", () => {
     expect(container.querySelector("main#conteudo")?.contains(rodape)).toBe(true);
   });
 
-  it("cidade do rodapé abre a aba, leva o foco e libera o mapa (parecer R13)", () => {
+  it("cidade do rodapé marca a aba e leva o foco; os mapas só montam quando a seção se aproxima (parecer R15)", () => {
     reiniciarOrigemParaTestes();
     capturarOrigem("", null);
     window.dataLayer = [];
-    const { container } = render(<App />);
-    const rodape = container.querySelector("#rodape") as HTMLElement;
-    const link = within(rodape).getByRole("link", { name: "Tuntum" });
-    expect(link).toHaveAttribute("href", "#aba-tuntum");
-    fireEvent.click(link);
-    const aba = screen.getByRole("tab", { name: "Tuntum" });
-    expect(aba).toHaveAttribute("aria-selected", "true");
-    expect(aba).toHaveFocus();
-    expect(screen.getByRole("tabpanel", { name: "Tuntum" })).toBeVisible();
-    expect(container.querySelectorAll("#onde-atende iframe")).toHaveLength(1);
-    expect(window.dataLayer).toContainEqual({ event: "troca_aba_cidade", cidade: "Tuntum", regiao: "Centro Maranhense" });
+    const observados: Array<{ alvo: Element; retorno: IntersectionObserverCallback; observador: IntersectionObserver }> = [];
+    class ObservadorFalso {
+      constructor(private retorno: IntersectionObserverCallback) {}
+      observe = (alvo: Element) => void observados.push({ alvo, retorno: this.retorno, observador: this as unknown as IntersectionObserver });
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+    }
+    vi.stubGlobal("IntersectionObserver", ObservadorFalso);
+    try {
+      const { container } = render(<App />);
+      const secao = container.querySelector("#onde-atende")!;
+      const rodape = container.querySelector("#rodape") as HTMLElement;
+      const link = within(rodape).getByRole("link", { name: "Tuntum" });
+      expect(link).toHaveAttribute("href", "#aba-tuntum");
+      fireEvent.click(link);
+      const aba = screen.getByRole("tab", { name: "Tuntum" });
+      expect(aba).toHaveAttribute("aria-selected", "true");
+      expect(aba).toHaveFocus();
+      expect(screen.getByRole("tabpanel", { name: "Tuntum" })).toBeVisible();
+      expect(window.dataLayer).toContainEqual({ event: "troca_aba_cidade", cidade: "Tuntum", regiao: "Centro Maranhense" });
+      expect(container.querySelectorAll("#onde-atende iframe")).toHaveLength(0);
+      const daSecao = observados.filter((o) => o.alvo === secao);
+      expect(daSecao.length).toBeGreaterThan(0);
+      act(() => {
+        for (const o of daSecao) o.retorno([{ isIntersecting: true, target: secao } as unknown as IntersectionObserverEntry], o.observador);
+      });
+      expect(container.querySelectorAll("#painel-tuntum iframe")).toHaveLength(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("cidade do rodapé com Ctrl segue o link sem abrir a aba na página (parecer R13b)", () => {
@@ -63,5 +84,22 @@ describe("App", () => {
     expect(screen.getByRole("tab", { name: "Tuntum" })).toHaveAttribute("aria-selected", "false");
     expect(container.querySelector("#painel-tuntum iframe")).toBeNull();
     expect(window.dataLayer).not.toContainEqual(expect.objectContaining({ event: "troca_aba_cidade" }));
+  });
+
+  it("seletor reaplica a mesma cidade depois de 'Ver todas as cidades' e reabre a aba (parecer R15)", () => {
+    reiniciarOrigemParaTestes();
+    capturarOrigem("", null);
+    Element.prototype.scrollIntoView = vi.fn();
+    render(<App />);
+    const botaoVerLocais = screen.getByRole("button", { name: TEXTOS_COMO_FUNCIONA.botaoVerLocais });
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "tuntum" } });
+    fireEvent.click(botaoVerLocais);
+    expect(screen.getByRole("tabpanel", { name: "Tuntum" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: TEXTOS_ONDE_ATENDE.verTodas }));
+    expect(screen.queryByRole("tabpanel")).toBeNull();
+    expect((screen.getByRole("combobox") as HTMLSelectElement).value).toBe("tuntum");
+    fireEvent.click(botaoVerLocais);
+    expect(screen.getByRole("tabpanel", { name: "Tuntum" })).toBeVisible();
+    expect(screen.getByRole("tab", { name: "Tuntum" })).toHaveAttribute("aria-selected", "true");
   });
 });

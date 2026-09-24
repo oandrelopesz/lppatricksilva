@@ -83,20 +83,4 @@ describe("mapas e mapa ilustrado V3", () => {
     act(() => acionarIntersecao?.(true));
     expect(container.querySelectorAll("iframe")).toHaveLength(1);
   });
-
-  it("mostra a sombra só no lado com cidades fora da área visível", () => {
-    const { container } = renderizar();
-    const lista = within(screen.getByRole("tablist", { name: "Sul Maranhense" })).getAllByRole("tab")[0].parentElement!;
-    const envoltorio = lista.parentElement!;
-    Object.defineProperty(lista, "scrollWidth", { configurable: true, value: 740 });
-    Object.defineProperty(lista, "clientWidth", { configurable: true, value: 340 });
-    fireEvent.scroll(lista);
-    expect(envoltorio).toHaveAttribute("data-more-right");
-    expect(envoltorio).not.toHaveAttribute("data-more-left");
-    lista.scrollLeft = 400;
-    fireEvent.scroll(lista);
-    expect(envoltorio).toHaveAttribute("data-more-left");
-    expect(envoltorio).not.toHaveAttribute("data-more-right");
-    expect(container.querySelectorAll(".abas-cidades__lista-wrap")).toHaveLength(2);
-  });
 });

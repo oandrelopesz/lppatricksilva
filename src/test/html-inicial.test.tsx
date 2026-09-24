@@ -1,8 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { act } from "@testing-library/react";
+import { hydrateRoot } from "react-dom/client";
+import { describe, expect, it, vi } from "vitest";
+import App from "@/App";
 import { ASSINATURA } from "@/config";
 import { todosOsLocais } from "@/data/locais";
 import { render } from "@/entry-server";
 import { TEXTOS_FAQ } from "@/content/faq";
+import { TEXTOS_ONDE_ATENDE } from "@/content/ondeAtende";
+import { LINK_WHATSAPP_BASE } from "@/lib/whatsapp";
 
 describe("HTML inicial (sem JavaScript)", () => {
   const html = render();
@@ -41,5 +46,41 @@ describe("HTML inicial (sem JavaScript)", () => {
     }
     expect((html.match(/role="region"/g) || [])).toHaveLength(11);
     expect(html).toContain('href="/politica-de-privacidade.html"');
+  });
+
+  it("sem JavaScript, a lista dos 14 locais fica visível, com Como chegar e CTA base (parecer R15)", () => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const lista = doc.querySelector(".abas-cidades__geral")!;
+    expect(lista).not.toBeNull();
+    expect(lista.hasAttribute("hidden")).toBe(false);
+    for (let pai: Element | null = lista.parentElement; pai; pai = pai.parentElement) {
+      expect(pai.hasAttribute("hidden")).toBe(false);
+    }
+    expect(lista.className).not.toMatch(/\b(hidden|sr-only|invisible)\b/);
+    const itens = lista.querySelectorAll("li");
+    expect(itens).toHaveLength(14);
+    for (const { cidade, local } of todosOsLocais()) {
+      const item = [...itens].find((li) => li.textContent!.includes(local.nome))!;
+      expect(item.textContent).toContain(local.endereco);
+      expect(item.querySelector(`a[href="${local.linkComoChegar}"]`)).not.toBeNull();
+      const cta = [...item.querySelectorAll("a")].find((a) => a.getAttribute("href")!.startsWith("https://wa.me/"))!;
+      expect(cta.getAttribute("href")).toBe(LINK_WHATSAPP_BASE);
+      expect(cta.textContent).toBe(TEXTOS_ONDE_ATENDE.clinica.cta(cidade.nome));
+    }
+  });
+
+  it("hidrata o HTML do servidor sem divergência e só então esconde a lista geral (parecer R15)", async () => {
+    const erros = vi.spyOn(console, "error").mockImplementation(() => {});
+    const raiz = document.createElement("div");
+    raiz.innerHTML = html;
+    document.body.append(raiz);
+    expect(raiz.querySelector(".abas-cidades__geral")!.hasAttribute("hidden")).toBe(false);
+    await act(async () => {
+      hydrateRoot(raiz, <App />);
+    });
+    expect(erros).not.toHaveBeenCalled();
+    expect(raiz.querySelector(".abas-cidades__geral")!.hasAttribute("hidden")).toBe(true);
+    erros.mockRestore();
+    raiz.remove();
   });
 });

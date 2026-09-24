@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CidadeProvider } from "@/context/CidadeContext";
 import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
 import { TEXTOS_ONDE_ATENDE as T } from "@/content/ondeAtende";
@@ -168,5 +168,115 @@ describe("AbasCidades", () => {
       fireEvent.click(screen.getByRole("tab", { name: "Tuntum" }));
       expect(within(screen.getByRole("tabpanel", { name: "Tuntum" })).queryByText(/locais nesta cidade/)).toBeNull();
     });
+  });
+});
+
+describe("AbasCidades sem IntersectionObserver (parecer R15)", () => {
+  let topoDaSecao = 5000;
+
+  beforeEach(() => {
+    reiniciarOrigemParaTestes();
+    capturarOrigem("", null);
+    window.dataLayer = [];
+    vi.stubGlobal("IntersectionObserver", undefined);
+    vi.useFakeTimers();
+    topoDaSecao = 5000;
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const topo = this.tagName === "SECTION" ? topoDaSecao : 0;
+      return { top: topo, bottom: topo + 800, left: 0, right: 390, width: 390, height: 800, x: 0, y: topo, toJSON: () => ({}) } as DOMRect;
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  function renderizarNaSecao() {
+    return render(
+      <CidadeProvider>
+        <section id="onde-atende">
+          <AbasCidades />
+        </section>
+      </CidadeProvider>,
+    );
+  }
+
+  it("com a seção longe, não monta mapa; ao rolar até 400 px dela, monta depois do throttle", () => {
+    const { container } = renderizarNaSecao();
+    expect(container.querySelector("iframe")).toBeNull();
+    topoDaSecao = window.innerHeight + 300;
+    fireEvent.scroll(window);
+    fireEvent.scroll(window);
+    expect(container.querySelector("iframe")).toBeNull();
+    act(() => vi.advanceTimersByTime(250));
+    expect(container.querySelectorAll("iframe")).toHaveLength(3);
+  });
+
+  it("rolar sem chegar a 400 px da seção não monta mapa", () => {
+    const { container } = renderizarNaSecao();
+    topoDaSecao = window.innerHeight + 600;
+    fireEvent.scroll(window);
+    act(() => vi.advanceTimersByTime(250));
+    expect(container.querySelector("iframe")).toBeNull();
+  });
+});
+
+describe("sombra das bordas da barra de abas (parecer R15)", () => {
+  let larguraRolavel = 800;
+
+  beforeEach(() => {
+    reiniciarOrigemParaTestes();
+    capturarOrigem("", null);
+    larguraRolavel = 800;
+    vi.stubGlobal("IntersectionObserver", ObservadorFalso);
+    vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockImplementation(function (this: HTMLElement) {
+      return this.getAttribute("role") === "tablist" ? larguraRolavel : 0;
+    });
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(function (this: HTMLElement) {
+      return this.getAttribute("role") === "tablist" ? 300 : 0;
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  const listaDoSul = () => screen.getByRole("tablist", { name: "Sul Maranhense" });
+  const moldura = () => listaDoSul().parentElement!;
+  function rolarPara(posicao: number) {
+    listaDoSul().scrollLeft = posicao;
+    fireEvent.scroll(listaDoSul());
+  }
+
+  it("no início só a borda direita tem sombra; no meio, as duas; no fim, só a esquerda", () => {
+    renderizar();
+    expect(moldura()).toHaveAttribute("data-sombra-direita");
+    expect(moldura()).not.toHaveAttribute("data-sombra-esquerda");
+    rolarPara(250);
+    expect(moldura()).toHaveAttribute("data-sombra-direita");
+    expect(moldura()).toHaveAttribute("data-sombra-esquerda");
+    rolarPara(500);
+    expect(moldura()).not.toHaveAttribute("data-sombra-direita");
+    expect(moldura()).toHaveAttribute("data-sombra-esquerda");
+  });
+
+  it("o foco por teclado que rola a lista atualiza a sombra", () => {
+    renderizar();
+    const balsas = screen.getByRole("tab", { name: "Balsas" });
+    balsas.focus();
+    fireEvent.keyDown(balsas, { key: "End" });
+    rolarPara(500);
+    expect(moldura()).not.toHaveAttribute("data-sombra-direita");
+    expect(moldura()).toHaveAttribute("data-sombra-esquerda");
+  });
+
+  it("sem largura rolável, nenhuma sombra", () => {
+    larguraRolavel = 300;
+    renderizar();
+    expect(moldura()).not.toHaveAttribute("data-sombra-direita");
+    expect(moldura()).not.toHaveAttribute("data-sombra-esquerda");
   });
 });
