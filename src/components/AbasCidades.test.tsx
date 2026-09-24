@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CidadeProvider } from "@/context/CidadeContext";
 import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
 import { TEXTOS_ONDE_ATENDE as T } from "@/content/ondeAtende";
@@ -13,23 +13,36 @@ function renderizar() {
   );
 }
 
+let mostrarSecao: (() => void) | undefined;
+class ObservadorFalso {
+  constructor(retorno: IntersectionObserverCallback) {
+    mostrarSecao = () => retorno([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+  }
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
 describe("AbasCidades", () => {
   beforeEach(() => {
     reiniciarOrigemParaTestes();
     capturarOrigem("", null);
     window.dataLayer = [];
+    mostrarSecao = undefined;
+    vi.stubGlobal("IntersectionObserver", ObservadorFalso);
   });
 
-  it("mostra 11 abas em 2 listas por região, nenhuma aberta", () => {
+  it("mostra 11 abas em 2 listas por região, com Balsas aberta", () => {
     renderizar();
     expect(screen.getAllByRole("tablist")).toHaveLength(2);
     expect(screen.getAllByRole("tab")).toHaveLength(11);
-    expect(screen.getAllByRole("tab").some((aba) => aba.getAttribute("aria-selected") === "true")).toBe(false);
+    expect(screen.getAllByRole("tab").filter((aba) => aba.getAttribute("aria-selected") === "true")).toEqual([screen.getByRole("tab", { name: "Balsas" })]);
   });
 
-  it("estado inicial: visão geral com 14 'Como chegar' e nenhum iframe", () => {
+  it("estado inicial: 14 endereços no HTML, Balsas visível e nenhum iframe", () => {
     const { container } = renderizar();
-    expect(screen.getAllByRole("link", { name: /como chegar/i })).toHaveLength(14);
+    expect(container.querySelectorAll(".abas-cidades__geral li")).toHaveLength(14);
+    expect(screen.getAllByRole("link", { name: /como chegar/i })).toHaveLength(3);
     expect(container.querySelector("iframe")).toBeNull();
   });
 
@@ -84,13 +97,13 @@ describe("AbasCidades", () => {
     expect(window.dataLayer).toContainEqual({ event: "como_chegar", local: "Clínica Risalva Carvalho", cidade: "Fortuna" });
   });
 
-  it("cidade do anúncio (?cidade=) abre o painel sem carregar mapa até o clique em 'Ver mapa'", () => {
+  it("cidade do anúncio (?cidade=) abre o painel e espera a seção entrar na viewport", () => {
     reiniciarOrigemParaTestes();
     capturarOrigem("?cidade=loreto", null);
     const { container } = renderizar();
     expect(screen.getByRole("tab", { name: "Loreto" })).toHaveAttribute("aria-selected", "true");
     expect(container.querySelector("iframe")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /ver mapa/i }));
+    act(() => mostrarSecao?.());
     expect(container.querySelectorAll("iframe")).toHaveLength(1);
   });
 
@@ -145,7 +158,7 @@ describe("AbasCidades", () => {
       const painel = screen.getByRole("tabpanel", { name: "Tuntum" });
       expect(within(painel).getByText(T.clinica.enderecoRotulo)).toBeInTheDocument();
       expect(within(painel).getByText(T.clinica.disponibilidade)).toBeInTheDocument();
-      expect(within(painel).getByRole("link", { name: T.clinica.cta("Tuntum") })).toBeInTheDocument();
+      expect(within(painel).getByRole("link", { name: T.clinica.ctaCurto("Tuntum") })).toBeInTheDocument();
     });
 
     it("cidade com mais de um local mostra o aviso de múltiplos locais; com um só, não", () => {

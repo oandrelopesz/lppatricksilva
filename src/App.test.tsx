@@ -61,7 +61,7 @@ describe("App", () => {
     const naoCancelado = fireEvent.click(link, { ctrlKey: true });
     expect(naoCancelado).toBe(true);
     expect(screen.getByRole("tab", { name: "Tuntum" })).toHaveAttribute("aria-selected", "false");
-    expect(container.querySelector("#onde-atende iframe")).toBeNull();
+    expect(container.querySelector("#painel-tuntum iframe")).toBeNull();
     expect(window.dataLayer).not.toContainEqual(expect.objectContaining({ event: "troca_aba_cidade" }));
   });
 });

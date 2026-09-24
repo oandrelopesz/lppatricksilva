@@ -6,7 +6,7 @@ import { track } from "@/lib/analytics";
 interface Props {
   cidade: Cidade;
   local: Local;
-  /** true só no painel aberto e depois de ação real do usuário. */
+  /** true no painel aberto, quando a seção se aproxima da viewport. */
   mostrarMapa: boolean;
 }
 
@@ -44,7 +44,7 @@ export function CartaoLocal({ cidade, local, mostrarMapa }: Props) {
         {T.clinica.comoChegar}
       </a>
       <CtaWhatsApp localCta="onde_atende" cidadeFixa={cidade.nome} local={local.nome}>
-        {T.clinica.cta(cidade.nome)}
+        {T.clinica.ctaCurto(cidade.nome)}
       </CtaWhatsApp>
     </article>
   );
