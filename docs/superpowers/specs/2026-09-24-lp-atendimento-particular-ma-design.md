@@ -95,7 +95,7 @@ Fixa no topo em mobile, tablet e desktop. Fundo dourado claro com texto grafite 
 ### 5.3 Identificação: para quem é
 1. Três exemplos estáticos com o mesmo peso visual: articulação (joelho, quadril, ombro), coluna (lombar, ciática, pescoço) e esporte (calcanhar, tendão, cotovelo), com sinais que a pessoa reconhece nela mesma (textos do copy a partir de ICPs e personas).
 2. CTA direto visível antes e depois do interativo.
-3. **Interativo A (opcional, curto):** autoavaliação em 3 toques, com "Pular" e "Voltar" em toda etapa.
+3. **Interativo A (opcional, curto):** autoavaliação em 3 toques, com "Pular" em toda etapa e "Voltar" nas etapas 2 e 3 (na primeira não há etapa anterior).
    - Etapas: onde dói; o que a dor já atrapalha; o que já tentou. Cada etapa é um `<fieldset>` com `<legend>`, opções como botões de resposta grandes (48 px, sem `aria-pressed`: cada um é uma ação que responde e avança), foco movido para a próxima pergunta após responder, voltar ou pular, progresso em `aria-live` ("Etapa 2 de 3"). Ao voltar, a resposta anterior aparece em texto ("Sua resposta: ...").
    - "Pular" apaga a resposta da etapa. O resumo é montado por fragmentos condicionais (região, limitação, tentativa), com texto próprio para cada combinação de respostas omitidas e para nenhuma resposta, sem inferir condição nem tratamento.
    - Resultado: resume o que a pessoa marcou e diz o que a consulta avalia. Não dá diagnóstico, não sugere procedimento (nem PRP, nem infiltração) e traz "isso não substitui a avaliação na consulta".
