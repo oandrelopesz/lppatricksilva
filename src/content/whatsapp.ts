@@ -1,6 +1,6 @@
 export const MENSAGENS_WHATSAPP = {
-  base: "Olá! Vim pelo site do Dr. Patrick Santos e quero agendar uma consulta particular. Minha cidade: (escreva aqui).",
-  comCidade: (cidade: string) => `Olá! Vim pelo site do Dr. Patrick Santos e quero agendar uma consulta particular em ${cidade}.`,
+  base: "Olá! Vim do site e gostaria de agendar uma consulta.",
+  comCidade: (cidade: string) => `Olá! Vim do site e gostaria de agendar uma consulta em ${cidade}.`,
   comLocal: (cidade: string, local: string) =>
-    `Olá! Vim pelo site do Dr. Patrick Santos e quero agendar uma consulta particular em ${cidade}. Local: ${local}.`,
+    `Olá! Vim do site e gostaria de agendar uma consulta em ${cidade} (${local}).`,
 };

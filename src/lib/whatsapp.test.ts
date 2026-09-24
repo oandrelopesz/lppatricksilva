@@ -3,6 +3,16 @@ import { MENSAGENS_WHATSAPP } from "@/content/whatsapp";
 import { LINK_WHATSAPP_BASE, montarLinkWhatsApp, montarMensagem } from "./whatsapp";
 
 describe("whatsapp", () => {
+  it("usa exatamente as mensagens aprovadas na copy C1e", () => {
+    expect(MENSAGENS_WHATSAPP.base).toBe("Olá! Vim do site e gostaria de agendar uma consulta.");
+    expect(MENSAGENS_WHATSAPP.comCidade("Balsas")).toBe(
+      "Olá! Vim do site e gostaria de agendar uma consulta em Balsas.",
+    );
+    expect(MENSAGENS_WHATSAPP.comLocal("Balsas", "Hospital São José")).toBe(
+      "Olá! Vim do site e gostaria de agendar uma consulta em Balsas (Hospital São José).",
+    );
+  });
+
   it("o link base aponta para o número único", () => {
     expect(LINK_WHATSAPP_BASE.startsWith("https://wa.me/5513996822680?text=")).toBe(true);
   });
