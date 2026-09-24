@@ -3172,6 +3172,7 @@ git commit -m "feat: adiciona como funciona, sobre, FAQ, rodape e politica de pr
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'denied', wait_for_update: 500 });
+  gtag('set', 'ads_data_redaction', true);
   try { if (localStorage.getItem('lp_consentimento_v1') === 'aceito') gtag('consent', 'update', { ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted', analytics_storage: 'granted' }); } catch (e) {}
 </script>
 ```
