@@ -1,6 +1,7 @@
 import { CidadeProvider } from "@/context/CidadeContext";
 import { JsonLd } from "@/components/JsonLd";
 import { BotaoFlutuante } from "@/components/BotaoFlutuante";
+import { RevelarSecoes } from "@/components/RevelarSecoes";
 import { S1Topbar } from "@/sections/S1Topbar";
 import { S2Hero } from "@/sections/S2Hero";
 import { S3Identificacao } from "@/sections/S3Identificacao";
@@ -24,6 +25,7 @@ export default function App() {
           <S7Faq />
           <S8Rodape />
           <BotaoFlutuante />
+          <RevelarSecoes />
         </CidadeProvider>
         <JsonLd />
       </main>

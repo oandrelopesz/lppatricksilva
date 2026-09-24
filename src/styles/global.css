@@ -62,6 +62,13 @@
     background-size: 320px 320px;
   }
 
+  .revelar-alvo { transition: opacity 360ms ease, transform 360ms ease; }
+  .revelar-pendente { opacity: 0; transform: translateY(18px); }
+  @media (prefers-reduced-motion: reduce) {
+    .revelar-alvo { transition: none; }
+    .revelar-pendente { opacity: 1; transform: none; }
+  }
+
   .premium-card {
     border: 1px solid rgb(185 143 78 / 32%);
     border-radius: 1.25rem;
