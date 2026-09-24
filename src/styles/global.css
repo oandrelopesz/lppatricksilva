@@ -312,11 +312,51 @@
   .cartao-local__mapa { overflow: hidden; border-radius: .875rem; margin-top: 1rem; background: rgb(185 143 78 / 10%); }
   [role="tabpanel"] > button { min-height: 3rem; margin-top: 1.5rem; padding: .65rem 1rem; border: 1px solid rgb(21 23 27 / 30%); border-radius: .75rem; }
 
+  .abas-cidades__geral[hidden], [role="tabpanel"][hidden] { display: none; }
+  .mapa-ma { margin: 2.5rem 0 0; padding: 1rem; border: 1px solid rgb(185 143 78 / 36%); border-radius: 1.5rem; background: var(--color-creme); }
+  .mapa-ma__rolagem { overflow-x: auto; overscroll-behavior-inline: contain; }
+  .mapa-ma__quadro { position: relative; width: 600px; height: 700px; margin-inline: auto; background: radial-gradient(circle at 50% 48%, #f4ecdF, #f8f4ec 68%); }
+  .mapa-ma__quadro svg { display: block; width: 100%; height: 100%; }
+  .mapa-ma__contorno { fill: #e8d6b6; stroke: #8c6938; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+  .mapa-ma__guia { fill: none; stroke: #796c5a; stroke-width: 1; }
+  .mapa-ma__centroide { fill: var(--color-grafite); }
+  .mapa-ma__ponto { position: absolute; z-index: 1; display: grid; place-items: center; width: 48px; height: 48px; transform: translate(-50%, -50%); border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+  .mapa-ma__ponto span { display: grid; place-items: center; width: 33px; height: 33px; border: 1.5px solid var(--color-creme); border-radius: 50%; background: var(--color-grafite); color: white; font-size: .75rem; font-weight: 700; box-shadow: 0 2px 8px rgb(21 23 27 / 25%); }
+  .mapa-ma__ponto:hover span, .mapa-ma__ponto[aria-current="location"] span { background: var(--color-cta-escuro); box-shadow: 0 0 0 3px var(--color-dourado); }
+  .mapa-ma__ponto:focus-visible { outline: 3px solid var(--color-cta-escuro); outline-offset: 2px; }
+  .mapa-ma__legenda { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: .4rem 1rem; margin: 1rem 0; padding: 0; list-style: none; font-size: .9rem; }
+  .mapa-ma__legenda li { padding: .2rem .45rem; border-radius: .4rem; }
+  .mapa-ma__legenda li span { margin-right: .4rem; font-weight: 700; color: #705021; }
+  .mapa-ma__legenda-ativa { background: #e6f0e9; font-weight: 700; }
+  .mapa-ma figcaption { padding-top: .85rem; border-top: 1px solid rgb(21 23 27 / 14%); color: #454545; font-size: .8rem; line-height: 1.5; }
+  .mapa-ma figcaption a { text-decoration: underline; text-underline-offset: .2em; }
+
+  .abas-cidades__lista-wrap { position: relative; }
+  .abas-cidades__lista-wrap::after { content: ""; position: absolute; inset: 0 0 0 auto; width: 2.5rem; pointer-events: none; background: linear-gradient(90deg, transparent, var(--color-bege)); }
+  .abas-cidades__lista { scroll-snap-type: x proximity; scrollbar-width: thin; }
+  .abas-cidades__lista button { scroll-snap-align: start; font-weight: 600; transition: background-color .15s ease, border-color .15s ease; }
+  .abas-cidades__lista button:hover { border-color: var(--color-grafite); }
+  .abas-cidades__lista button[aria-selected="true"] { box-shadow: inset 0 -3px var(--color-dourado-claro); }
+  .abas-cidades__lista button:focus-visible { outline: 3px solid var(--color-cta-escuro); outline-offset: 2px; }
+  .abas-cidades__cartoes { display: grid; gap: 1.25rem; margin-top: 1.25rem; }
+  .cartao-local { display: flex; flex-direction: column; min-width: 0; margin-top: 0; }
+  .cartao-local__mapa { min-height: 240px; border: 1px solid rgb(185 143 78 / 45%); border-radius: 1.25rem; }
+  .cartao-local__mapa iframe { display: block; width: 100%; height: 240px; border: 0; }
+  .cartao-local > a { min-height: 48px; }
+  .cartao-local > a[href^="https://wa.me/"] { justify-content: center; margin: .75rem 0 0; border-radius: .7rem; text-align: center; }
+  .cartao-local > a[href^="https://wa.me/"]:hover { background: var(--color-cta-escuro); }
+  .abas-cidades__ver-todas { background: var(--color-creme); }
+
   #duvidas .accordion { max-width: 58rem; }
   #duvidas .accordion button:hover { background: rgb(237 227 210 / 55%); }
 
   @media (min-width: 768px) {
     #onde-atende { padding-block: 7rem; }
+    .abas-cidades__cartoes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (min-width: 1180px) {
+    .abas-cidades__cartoes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
 
   @media (prefers-reduced-motion: reduce) {

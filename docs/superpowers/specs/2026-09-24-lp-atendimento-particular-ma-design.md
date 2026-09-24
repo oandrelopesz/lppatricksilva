@@ -224,6 +224,7 @@ Opcional. O Designer pode propor um elemento que ajude a conversão (não decora
 | `src/components/icones/Icone.tsx`: joelho, quadril, ombro, coluna, pé e calcanhar, cotovelo, tendão e treino | Identificação e autoavaliação | Sinais anatômicos neutros em SVG de linha, sem diagnóstico nem representação de paciente |
 | `src/components/icones/Icone.tsx`: calendário, alfinete de mapa, conversa e ultrassom | Como funciona | Etapas e recursos da consulta em SVG de linha; ícones decorativos ocultos da árvore de acessibilidade |
 | `public/textura-linhas.svg` | Fundos amplos do Sobre e rodapé | Linhas abstratas douradas de baixa opacidade, sem imagem clínica ou marca de terceiros |
+| `src/components/MapaMaranhao.tsx` (contorno de `src/data/mapaMaranhao.ts`) | Seção Onde atende | Mapa ilustrado do Maranhão derivado da malha e centroides do IBGE, com 11 marcadores numerados e clicáveis; pontos próximos têm área de toque separada por linha guia |
 
 ## 13. Compliance
 
