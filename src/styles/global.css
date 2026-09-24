@@ -354,8 +354,26 @@
   .cartao-local > a[href^="https://wa.me/"]:hover { background: var(--color-cta-escuro); }
   .abas-cidades__ver-todas { background: var(--color-creme); }
 
-  #duvidas .accordion { max-width: 58rem; }
-  #duvidas .accordion button:hover { background: rgb(237 227 210 / 55%); }
+  .faq-acordeao { overflow: hidden; max-width: 58rem; }
+  .faq-item { transition: background-color 160ms ease; }
+  .faq-item:has(.faq-pergunta[aria-expanded="true"]) { background: #fbf7ef; }
+  .faq-pergunta { min-height: 4.25rem; transition: background-color 160ms ease; }
+  .faq-pergunta:hover { background: rgb(237 227 210 / 55%); }
+  .faq-pergunta:focus-visible { position: relative; z-index: 1; outline: 3px solid var(--color-cta-escuro); outline-offset: -3px; }
+  .faq-icone { flex: none; color: #705021; }
+  .faq-icone__vertical { transition: opacity 160ms ease; }
+  .faq-pergunta[aria-expanded="true"] .faq-icone__vertical { opacity: 0; }
+  .faq-fecho { max-width: 58rem; border-top: 3px solid var(--color-dourado); box-shadow: 0 18px 40px rgb(21 23 27 / 7%); }
+  .faq-fecho .premium-cta { box-shadow: 0 8px 24px rgb(17 88 52 / 20%); }
+
+  .rodape-fecho > div:first-child { align-self: center; }
+  .rodape-fecho h2 { font-size: clamp(2.15rem, 4vw, 3.5rem); line-height: 1.12; }
+  .rodape-fecho figure { position: relative; }
+  .rodape-fecho figure::after { content: ""; position: absolute; inset: auto -1rem -1rem 1rem; z-index: -1; height: 40%; border: 1px solid var(--color-dourado); border-radius: 1.5rem; }
+  .rodape-cidades { padding-top: 2.5rem; border-top: 1px solid rgb(212 176 106 / 45%); }
+  .rodape-cidades h3, .rodape-cidades h4 { color: var(--color-dourado-claro); }
+  .rodape-cidades a:hover { color: var(--color-dourado-claro); }
+  .rodape-cidades a:focus-visible { outline-color: var(--color-dourado-claro); }
 
   @media (min-width: 768px) {
     #onde-atende { padding-block: 7rem; }
@@ -369,5 +387,6 @@
   @media (prefers-reduced-motion: reduce) {
     a.premium-cta { transition: none; }
     a.premium-cta:hover { transform: none; }
+    .faq-item, .faq-pergunta, .faq-icone__vertical { transition: none; }
   }
 }

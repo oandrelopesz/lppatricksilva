@@ -18,22 +18,26 @@ export function Accordion({ itens }: { itens: ItemAccordion[] }) {
   }
 
   return (
-    <div className="premium-card divide-y divide-grafite/20 bg-white">
+    <div className="faq-acordeao premium-card divide-y divide-grafite/20 bg-white">
       {itens.map((item) => {
         const expandido = aberto === item.id;
         return (
-          <div key={item.id}>
+          <div key={item.id} className="faq-item">
             <h3>
               <button
                 type="button"
                 id={`faq-${item.id}`}
                 aria-expanded={expandido}
                 aria-controls={`faq-${item.id}-resposta`}
-                className="flex min-h-12 w-full items-center justify-between gap-4 px-5 py-4 text-left text-lg font-semibold"
+                className="faq-pergunta flex min-h-12 w-full items-center justify-between gap-4 px-5 py-4 text-left text-lg font-semibold"
                 onClick={() => alternar(item.id)}
               >
                 {item.pergunta}
-                <span aria-hidden="true">{expandido ? "−" : "+"}</span>
+                <svg className="faq-icone" aria-hidden="true" width="32" height="32" viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="16" r="15" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M10 16h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  <path className="faq-icone__vertical" d="M16 10v12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
               </button>
             </h3>
             <div
