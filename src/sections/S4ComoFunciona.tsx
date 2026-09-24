@@ -8,7 +8,7 @@ export function S4ComoFunciona() {
   return (
     <Secao id="como-funciona" tituloId="titulo-como-funciona">
       <h2 id="titulo-como-funciona" className="text-3xl font-semibold sm:text-4xl">{T.titulo}</h2>
-      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)]">
+      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)]">
         <ol className="space-y-5">
           {T.passos.map((passo, indice) => (
             <li key={passo.titulo} className="rounded-xl border border-grafite/15 p-5">
