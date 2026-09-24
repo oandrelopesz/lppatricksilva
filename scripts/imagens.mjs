@@ -14,7 +14,7 @@ const LARGURAS = [480, 720, 960, 1280];
 const FOTOS = [
   { nome: "hero", arquivo: "_DSC2060.jpg", y: 600 },
   { nome: "sobre", arquivo: "_DSC2069.jpg", y: 1000 },
-  { nome: "consulta", arquivo: "_DSC2001.jpg", y: 1000 },
+  { nome: "consulta", arquivo: "_DSC2001.jpg", y: 1000, webpQualidade: 72 },
   { nome: "cta-final", arquivo: "_DSC1992.jpg", y: 900 },
 ];
 
@@ -25,8 +25,8 @@ for (const foto of FOTOS) {
   if (!fs.existsSync(entrada)) throw new Error(`Foto não encontrada: ${entrada}`);
   for (const largura of LARGURAS) {
     const filtro = `crop=3376:4220:0:${foto.y},scale=${largura}:-2:flags=lanczos`;
-    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", entrada, "-vf", filtro, "-c:v", "libwebp", "-quality", "78", path.join(destino, `${foto.nome}-${largura}.webp`)]);
-    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", entrada, "-vf", filtro, "-pix_fmt", "yuv420p", "-c:v", "libaom-av1", "-still-picture", "1", "-crf", "34", "-cpu-used", "6", path.join(destino, `${foto.nome}-${largura}.avif`)]);
+    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", entrada, "-vf", filtro, "-c:v", "libwebp", "-quality", `${foto.webpQualidade ?? 82}`, path.join(destino, `${foto.nome}-${largura}.webp`)]);
+    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", entrada, "-vf", filtro, "-pix_fmt", "yuv420p", "-c:v", "libaom-av1", "-still-picture", "1", "-crf", "28", "-cpu-used", "6", path.join(destino, `${foto.nome}-${largura}.avif`)]);
   }
   console.log(`imagens: ${foto.nome} ok`);
 }
