@@ -10,7 +10,6 @@ export function S5Sobre() {
       <div className="grid items-center gap-8 md:grid-cols-2">
         <figure className="mx-auto w-full max-w-md">
           <Foto nome="sobre" alt={T.altFoto} sizes="(min-width: 768px) 480px, 100vw" className="aspect-[4/5] h-auto w-full rounded-2xl object-cover" />
-          <figcaption className="mt-2">{T.legendaFoto}</figcaption>
         </figure>
         <div>
           <h2 id="titulo-sobre" className="text-3xl font-semibold sm:text-4xl">{T.titulo}</h2>

@@ -11,5 +11,5 @@ export const TEXTOS_RODAPE = {
   avisoMedico: "As informações desta página têm caráter educativo e não substituem a consulta médica.",
   whatsapp: "WhatsApp: (13) 99682-2680",
   copyright: (ano: number) => `© ${ano} Dr. Patrick Santos. Todos os direitos reservados.`,
-  altFoto: "Dr. Patrick Santos de pé na sala de ultrassom",
+  altFoto: "Dr. Patrick Santos sentado ao lado do aparelho de ultrassom, sorrindo",
 } as const;
