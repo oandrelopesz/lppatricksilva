@@ -32,7 +32,7 @@ export function S8Rodape() {
   return (
     <footer id="rodape" className="premium-texture bg-grafite px-4 py-20 text-creme md:py-28">
       <div className="rodape-fecho mx-auto grid max-w-6xl gap-12 md:grid-cols-2">
-        <div>
+        <div id="agendar">
           <h2 className="text-2xl font-semibold">{T.ctaTitulo}</h2>
           <p className="mt-3">{T.ctaTexto}</p>
           <CtaWhatsApp

@@ -127,7 +127,7 @@ export function Autoavaliacao() {
             <button
               key={opcao}
               type="button"
-              className="autoavaliacao-opcao min-h-12 bg-white px-4 py-4 text-left focus-visible:outline-cta"
+              className="autoavaliacao-opcao min-h-12 bg-white px-4 py-4 text-left"
               onClick={() => responder(atual.chave, opcao)}
             >
               {etapa === 0 ? <span className="autoavaliacao-opcao__icone"><Icone nome={(["joelho", "quadril", "ombro", "coluna", "coluna", "peCalcanhar", "cotovelo"] as const)[indice]} className="h-8 w-8 text-eco" /></span> : null}
