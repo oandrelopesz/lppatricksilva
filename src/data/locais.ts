@@ -14,7 +14,7 @@ export interface Local {
   /** Parte do endereço antes da cidade (streetAddress do JSON-LD). */
   logradouro: string;
   cep?: string;
-  /** Link "Como chegar", exatamente como no brief. */
+  /** Link "Como chegar": o do brief, ou a busca de rua conferida (porRua) quando o do brief leva a outro lugar. */
   linkComoChegar: string;
   /** Nome da ficha no Google Maps, quando difere do nome exibido. Usado só no embed. */
   nomeNoMaps?: string;
@@ -40,6 +40,14 @@ export const REGIOES: Regiao[] = [
   { id: "sul-maranhense", nome: "Sul Maranhense" },
   { id: "centro-maranhense", nome: "Centro Maranhense" },
 ];
+
+/**
+ * Mapa e "Como chegar" pela mesma busca de rua, conferida no navegador (parecer R37, achado A1). Troca
+ * o link do brief quando ele leva a outro lugar (outra clínica, outro laboratório ou ficha sem endereço).
+ */
+function porRua(q: string): Pick<Local, "linkComoChegar" | "embed"> {
+  return { linkComoChegar: `https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", query: q })}`, embed: { q } };
+}
 
 export const CIDADES: Cidade[] = [
   {
@@ -122,9 +130,8 @@ export const CIDADES: Cidade[] = [
         endereco: "Rua 28 de Julho, Centro, Loreto-MA, 65895-000",
         logradouro: "Rua 28 de Julho, Centro",
         cep: "65895-000",
-        linkComoChegar: "https://www.google.com/maps/search/?api=1&query=Clinimed+Rua+28+de+Julho+Centro+Loreto+MA",
         // Com o nome, a busca mostra outra clínica da mesma rua.
-        embed: { q: "Rua 28 de Julho, Loreto - MA" },
+        ...porRua("Rua 28 de Julho, Loreto - MA"),
         observacao: "Sem número (confirmado no Instagram) e sem ficha no Google Maps.",
       },
     ],
@@ -189,9 +196,8 @@ export const CIDADES: Cidade[] = [
         endereco: "R. Quinze de Novembro, 49B, Centro, São Domingos do Maranhão-MA, 65790-000",
         logradouro: "R. Quinze de Novembro, 49B, Centro",
         cep: "65790-000",
-        linkComoChegar: "https://maps.google.com/?cid=8715891456907011906",
-        // A ficha (cid) não tem endereço: o mapa ficava na cidade, sem pino.
-        embed: { q: "R. Quinze de Novembro, 49B, São Domingos do Maranhão - MA" },
+        // A ficha (cid 8715891456907011906) não tem endereço: o mapa ficava na cidade, sem pino.
+        ...porRua("R. Quinze de Novembro, 49B, São Domingos do Maranhão - MA"),
       },
     ],
   },
@@ -224,9 +230,8 @@ export const CIDADES: Cidade[] = [
         endereco: "Rua São Francisco, s/n, Centro, Graça Aranha-MA, 65785-000",
         logradouro: "Rua São Francisco, s/n, Centro",
         cep: "65785-000",
-        linkComoChegar: "https://www.google.com/maps/search/?api=1&query=CM+LAB+Rua+Sao+Francisco+Centro+Graca+Aranha+MA",
         // Com "CM LAB", a busca leva a um laboratório de outra cidade.
-        embed: { q: "R. São Francisco, Graça Aranha - MA, 65785-000" },
+        ...porRua("R. São Francisco, Graça Aranha - MA, 65785-000"),
         observacao: "Sem número (confirmado no Instagram) e sem ficha no Google Maps.",
       },
     ],

@@ -120,6 +120,36 @@ describe("locais", () => {
     });
   });
 
+  describe("Como chegar leva ao mesmo destino do mapa (parecer R37, achado A1)", () => {
+    const local = (id: string) => todosOsLocais().find(({ local }) => local.id === id)!.local;
+    const busca = (q: string) => `https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", query: q })}`;
+    /** "Rua" e "R." são a mesma coisa no endereço escrito. */
+    const normalizar = (texto: string) => texto.replace(/^Rua\b/, "R.").trim();
+
+    it("Clinimed, CM LAB de Graça Aranha e SD MED: busca da mesma rua do embed", () => {
+      expect(local("clinimed").linkComoChegar).toBe(busca("Rua 28 de Julho, Loreto - MA"));
+      expect(local("cm-lab-graca-aranha").linkComoChegar).toBe(busca("R. São Francisco, Graça Aranha - MA, 65785-000"));
+      expect(local("sd-med").linkComoChegar).toBe(busca("R. Quinze de Novembro, 49B, São Domingos do Maranhão - MA"));
+    });
+
+    it("todo embed por busca tem o Como chegar com a mesma busca, e a rua é a do endereço escrito", () => {
+      for (const { cidade, local: l } of todosOsLocais()) {
+        if (!l.embed || !("q" in l.embed)) continue;
+        expect(l.linkComoChegar).toBe(busca(l.embed.q));
+        const [rua] = l.embed.q.split(",");
+        expect(normalizar(l.endereco).startsWith(normalizar(rua))).toBe(true);
+        expect(l.embed.q).toContain(cidade.nome);
+      }
+    });
+
+    it("todo embed pela ficha (cid) tem o Como chegar pela mesma ficha", () => {
+      for (const { local: l } of todosOsLocais()) {
+        if (!l.embed || !("cid" in l.embed)) continue;
+        expect(l.linkComoChegar).toBe(`https://maps.google.com/?cid=${l.embed.cid}`);
+      }
+    });
+  });
+
   describe("endereços confirmados no destaque Clínicas do Instagram", () => {
     const local = (id: string) => todosOsLocais().find(({ local }) => local.id === id)!.local;
 
