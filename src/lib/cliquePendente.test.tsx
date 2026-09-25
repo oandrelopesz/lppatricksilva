@@ -189,6 +189,63 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
     expect(w.__lpCliquePendente).toBeUndefined();
   });
 
+  describe("teto pelo estado do GTM no clique original (R29, item 1)", () => {
+    afterEach(() => {
+      delete (window as { google_tag_manager?: unknown }).google_tag_manager;
+    });
+
+    /** Clique segurado em 0 ms; o GTM fica pronto aos gtmMs (ou já estava); hidratação aos hidratacaoMs. */
+    async function cenario(gtmNoClique: boolean, gtmMs: number | null, hidratacaoMs: number) {
+      instalarSegurador();
+      if (gtmNoClique) (window as { google_tag_manager?: unknown }).google_tag_manager = {};
+      const raiz = document.createElement("div");
+      raiz.innerHTML = renderToString(<Cta />);
+      document.body.append(raiz);
+      fireEvent.click(raiz.querySelector("a")!);
+      if (gtmMs !== null) {
+        act(() => vi.advanceTimersByTime(gtmMs));
+        (window as { google_tag_manager?: unknown }).google_tag_manager = {};
+      }
+      act(() => vi.advanceTimersByTime(hidratacaoMs - (gtmMs ?? 0)));
+      await act(async () => {
+        hydrateRoot(raiz, <Cta />);
+      });
+      act(() => processarCliquePendente());
+    }
+
+    it("o segurador guarda se o GTM estava pronto no clique", () => {
+      instalarSegurador();
+      const raiz = document.createElement("div");
+      raiz.innerHTML = renderToString(<Cta />);
+      document.body.append(raiz);
+      fireEvent.click(raiz.querySelector("a")!);
+      expect(w.__lpCliquePendente).toMatchObject({ gtmPronto: false });
+    });
+
+    it("GTM ausente no clique e pronto aos 1.100 ms, hidratação aos 1.600 ms: teto de 3.000 ms do clique", async () => {
+      await cenario(false, 1100, 1600);
+      act(() => vi.advanceTimersByTime(1399));
+      expect(navegacao.ir).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(1));
+      expect(navegacao.ir).toHaveBeenCalledTimes(1);
+    });
+
+    it("GTM ausente no clique e pronto antes, hidratação aos 1.200 ms (antes de 1.500): continua o teto de 3.000 ms", async () => {
+      await cenario(false, 500, 1200);
+      act(() => vi.advanceTimersByTime(1799));
+      expect(navegacao.ir).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(1));
+      expect(navegacao.ir).toHaveBeenCalledTimes(1);
+    });
+
+    it("GTM pronto no clique, hidratação aos 1.600 ms: o teto de 1.500 ms venceu e navega na hora, uma vez", async () => {
+      await cenario(true, null, 1600);
+      expect(navegacao.ir).toHaveBeenCalledTimes(1);
+      act(() => vi.advanceTimersByTime(5000));
+      expect(navegacao.ir).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("prazo único do clique segurado (R28, item 4)", () => {
     /**
      * window real (flags e relógio), mas com location falso para contar a navegação de segurança. O

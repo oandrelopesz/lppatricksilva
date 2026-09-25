@@ -19,7 +19,7 @@
           e.stopPropagation();
           if (w.__lpCliquePendente) return;
           var h = a.href;
-          w.__lpCliquePendente = { href: h, localCta: a.dataset.localCta, t: w.performance.now(), alvo: a };
+          w.__lpCliquePendente = { href: h, localCta: a.dataset.localCta, t: w.performance.now(), gtmPronto: !!w.google_tag_manager, alvo: a };
           w.__lpSeguranca = w.setTimeout(function () { w.__lpCliquePendente = null; w.location.assign(h); }, 3500);
         }, true);
       })(window);

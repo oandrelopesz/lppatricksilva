@@ -7,6 +7,8 @@ export interface CliquePendente {
   localCta?: string;
   /** performance.now() do clique original. */
   t: number;
+  /** Se o GTM já estava na página no clique (decide o teto, contado do clique). */
+  gtmPronto?: boolean;
   alvo?: Element;
 }
 
@@ -39,7 +41,7 @@ export function processarCliquePendente(): void {
   const alvo = pendente.alvo?.isConnected ? pendente.alvo : undefined;
   const tratadoPeloCta =
     alvo !== undefined &&
-    !alvo.dispatchEvent(new CustomEvent(EVENTO_CLIQUE_SEGURADO, { cancelable: true, detail: { t: pendente.t } }));
+    !alvo.dispatchEvent(new CustomEvent(EVENTO_CLIQUE_SEGURADO, { cancelable: true, detail: { t: pendente.t, gtmPronto: pendente.gtmPronto } }));
   if (tratadoPeloCta) return;
-  track("clique_whatsapp", { local_cta: pendente.localCta }, { inicioMs: pendente.t, aoConcluir: () => navegacao.ir(pendente.href) });
+  track("clique_whatsapp", { local_cta: pendente.localCta }, { inicioMs: pendente.t, gtmProntoNoClique: pendente.gtmPronto, aoConcluir: () => navegacao.ir(pendente.href) });
 }

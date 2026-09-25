@@ -304,6 +304,18 @@ describe("analytics", () => {
       expect(navegar).toHaveBeenCalledTimes(1);
     });
 
+    it("gtmProntoNoClique vale sobre o estado de agora: GTM presente, mas ausente no clique, teto de 3.000 ms (R29)", async () => {
+      vi.stubGlobal("PerformanceObserver", undefined);
+      (window as { google_tag_manager?: unknown }).google_tag_manager = {};
+      const { track } = await import("./analytics");
+      const navegar = vi.fn();
+      track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: navegar, inicioMs: performance.now() - 1600, gtmProntoNoClique: false });
+      vi.advanceTimersByTime(1399);
+      expect(navegar).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(navegar).toHaveBeenCalledTimes(1);
+    });
+
     it("com inicioMs, o prazo conta do clique original e nunca passa do teto; vencido, navega na hora (R28, item 4)", async () => {
       vi.stubGlobal("PerformanceObserver", undefined);
       const { track } = await import("./analytics");

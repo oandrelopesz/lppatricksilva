@@ -53,11 +53,12 @@ export function CtaWhatsApp({
   const navegando = useRef(false);
 
   /** Registra o clique e navega pela regra do clique (analytics.track), com o link ocupado na espera. */
-  function registrarENavegar(url: string, params: Parameters<typeof track>[1], inicioMs?: number) {
+  function registrarENavegar(url: string, params: Parameters<typeof track>[1], inicioMs?: number, gtmProntoNoClique?: boolean) {
     navegando.current = true;
     setAguardando(true);
     track("clique_whatsapp", params, {
       inicioMs,
+      gtmProntoNoClique,
       aoConcluir: () => {
         navegando.current = false;
         setAguardando(false);
@@ -123,7 +124,8 @@ export function CtaWhatsApp({
       evento.preventDefault();
       if (navegando.current) return;
       const { url, params } = preparar(elemento);
-      registrarENavegar(url, params, (evento as CustomEvent<{ t: number }>).detail.t);
+      const { t, gtmPronto } = (evento as CustomEvent<{ t: number; gtmPronto?: boolean }>).detail;
+      registrarENavegar(url, params, t, gtmPronto);
     };
     elemento.addEventListener("lp:clique-segurado", aoSegurado);
     return () => elemento.removeEventListener("lp:clique-segurado", aoSegurado);

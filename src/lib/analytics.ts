@@ -11,6 +11,8 @@ export interface OpcoesEvento {
   aoConcluir?: () => void;
   /** performance.now() do clique original (clique segurado antes da hidratação); o teto conta dele. */
   inicioMs?: number;
+  /** Se o GTM estava pronto no clique original (clique segurado); sem isso, vale o estado de agora. */
+  gtmProntoNoClique?: boolean;
 }
 
 declare global {
@@ -120,7 +122,8 @@ export function track(evento: string, params: ParametrosEvento = {}, opcoes: Opc
   const limpo = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ""));
   window.dataLayer = window.dataLayer || [];
   // Com o GTM já na página, a conversão sai mais cedo (teto de 1.500 ms); carregando agora, 3.000 ms.
-  const gtmPronto = Boolean(window.google_tag_manager);
+  // O teto depende do GTM no clique: no clique segurado, o estado guardado pelo segurador (parecer R29).
+  const gtmPronto = opcoes.gtmProntoNoClique ?? Boolean(window.google_tag_manager);
   if (evento === "clique_whatsapp") {
     // O clique pode vir antes do carregamento agendado: carrega o GTM na hora.
     carregarGtm();
