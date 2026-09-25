@@ -75,4 +75,27 @@ describe("locais", () => {
     const local = buscarCidade("tuntum")!.locais[0];
     expect(new URL(urlEmbedMapa(local)).searchParams.get("q")).toContain("CMT Centro Médico de Tuntum e Laboratório");
   });
+describe("endereços confirmados no destaque Clínicas do Instagram", () => {
+    const local = (id: string) => todosOsLocais().find(({ local }) => local.id === id)!.local;
+
+    it("Levive confirmada: sem a observação sobre a Pró Saúde", () => {
+      expect(local("clinica-levive").observacao).toBeUndefined();
+    });
+
+    it("Mendesclin: endereço do Instagram, com a divergência da ficha do Maps anotada", () => {
+      expect(local("mendesclin").observacao).toBe(
+        "Endereço confirmado no Instagram do médico (Praça do Mercado Central, nº 14); a ficha do Google Maps mostra R. Gonçalves Dias.",
+      );
+    });
+
+    it("CM LAB de Graça Aranha com o CEP", () => {
+      expect(local("cm-lab-graca-aranha").endereco).toBe("Rua São Francisco, s/n, Centro, Graça Aranha-MA, 65785-000");
+      expect(local("cm-lab-graca-aranha").cep).toBe("65785-000");
+      expect(local("cm-lab-graca-aranha").observacao).toBe("Sem número (confirmado no Instagram) e sem ficha no Google Maps.");
+    });
+
+    it("Clinimed sem número, confirmado no Instagram", () => {
+      expect(local("clinimed").observacao).toBe("Sem número (confirmado no Instagram) e sem ficha no Google Maps.");
+    });
+  });
 });

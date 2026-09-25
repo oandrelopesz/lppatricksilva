@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { gerarJsonLd, idDoLocal, jsonLdComoTexto } from "./jsonld";
+import { todosOsLocais } from "./locais";
 
 type No = { "@type": string; "@id": string; [chave: string]: unknown };
 
@@ -27,10 +28,17 @@ describe("jsonld", () => {
     ]);
   });
 
-  it("local sem CEP não ganha postalCode", () => {
+  it("CM LAB de Graça Aranha ganha o CEP confirmado no Instagram", () => {
     const graca = grafo.find((n) => n["@id"] === idDoLocal("cm-lab-graca-aranha")) as No & { address: Record<string, string> };
-    expect(graca.address.postalCode).toBeUndefined();
+    expect(graca.address.postalCode).toBe("65785-000");
     expect(graca.address.addressLocality).toBe("Graça Aranha");
+  });
+
+  it("postalCode segue o CEP de cada local", () => {
+    for (const { local } of todosOsLocais()) {
+      const no = grafo.find((n) => n["@id"] === idDoLocal(local.id)) as No & { address: Record<string, string> };
+      expect(no.address.postalCode).toBe(local.cep);
+    }
   });
 
   it("o texto não tem < cru", () => {
