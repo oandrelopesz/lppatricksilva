@@ -73,6 +73,7 @@ export function AbasCidades() {
   useEffect(() => setMontado(true), []);
   const [focadaPorRegiao, setFocadaPorRegiao] = useState<Partial<Record<RegiaoId, string>>>({});
   const refsAbas = useRef(new Map<string, HTMLButtonElement>());
+  const focoVindoDoMapa = useRef(false);
   const raiz = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -131,6 +132,23 @@ export function AbasCidades() {
     registrarTrocaAba(cidade);
   }
 
+  function abrirPeloMapa(cidade: Cidade) {
+    abrir(cidade);
+    const aba = refsAbas.current.get(cidade.id);
+    const painel = document.getElementById(`painel-${cidade.id}`);
+    const retangulo = painel?.getBoundingClientRect();
+    const recuo = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+    if (aba && (!retangulo || retangulo.bottom <= recuo || retangulo.top >= window.innerHeight)) {
+      const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+      aba.scrollIntoView?.({ behavior: reduzir ? "auto" : "smooth", block: "start", inline: "nearest" });
+    }
+    if (aba) {
+      focoVindoDoMapa.current = true;
+      aba.focus({ preventScroll: true });
+      focoVindoDoMapa.current = false;
+    }
+  }
+
   function aoTeclar(evento: KeyboardEvent<HTMLButtonElement>, lista: Cidade[], indice: number) {
     const destinos: Record<string, number> = { ArrowRight: (indice + 1) % lista.length, ArrowLeft: (indice - 1 + lista.length) % lista.length, Home: 0, End: lista.length - 1 };
     const destino = destinos[evento.key];
@@ -143,7 +161,7 @@ export function AbasCidades() {
     <div className="abas-cidades" ref={raiz}>
       <MapaMaranhao cidadeAberta={visaoGeral ? undefined : aberta.id} aoEscolher={(id) => {
         const cidade = CIDADES.find((item) => item.id === id);
-        if (cidade) abrir(cidade);
+        if (cidade) abrirPeloMapa(cidade);
       }} />
       {REGIOES.map((regiao) => {
         const lista = cidadesDaRegiao(regiao.id);
@@ -158,7 +176,7 @@ export function AbasCidades() {
               return <button key={cidade.id} ref={(el) => { if (el) refsAbas.current.set(cidade.id, el); else refsAbas.current.delete(cidade.id); }}
                 type="button" role="tab" id={`aba-${cidade.id}`} aria-selected={selecionada} aria-controls={`painel-${cidade.id}`}
                 tabIndex={focavel ? 0 : -1} onClick={() => abrir(cidade)} onKeyDown={(evento) => aoTeclar(evento, lista, indice)}
-                onFocus={(evento) => { setFocadaPorRegiao((atual) => ({ ...atual, [regiao.id]: cidade.id })); evento.currentTarget.scrollIntoView?.({ block: "nearest", inline: "nearest" }); }}>
+                onFocus={(evento) => { setFocadaPorRegiao((atual) => ({ ...atual, [regiao.id]: cidade.id })); if (!focoVindoDoMapa.current) evento.currentTarget.scrollIntoView?.({ block: "nearest", inline: "nearest" }); }}>
                 <Icone nome="mapa" className="h-5 w-5 shrink-0" />
                 <span>{cidade.nome}</span>
               </button>;
