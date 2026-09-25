@@ -53,7 +53,7 @@ describe("mapas e mapa ilustrado V3", () => {
     expect(iframes).toHaveLength(3);
     expect(iframes[0]).toHaveAttribute("loading", "lazy");
     expect(iframes[0]).toHaveAttribute("referrerpolicy", "no-referrer");
-    expect(iframes[0]).toHaveAttribute("height", "180");
+    expect(iframes[0]).toHaveAttribute("height", "240");
     expect(iframes[0].parentElement).toHaveClass("cartao-local__mapa");
     expect(desconectar).toHaveBeenCalled();
   });
