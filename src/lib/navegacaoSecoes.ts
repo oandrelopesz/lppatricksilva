@@ -1,9 +1,63 @@
 import { SECOES, atualizarUrl, ehSecao, irParaSecao, secaoDaUrl } from "@/lib/secoes";
 
+/** Intervalo mínimo entre trocas de URL durante a rolagem. */
+const INTERVALO_URL_MS = 300;
+/** Sem o evento scrollend, a atualização passiva volta depois deste tempo. */
+const RETOMAR_SEM_SCROLLEND_MS = 1000;
+/** Com scrollend, limite de segurança para o caso de a rolagem não acontecer (já estava no destino). */
+const RETOMAR_COM_SCROLLEND_MS = 3000;
+/** Posição da faixa observada, em fração da altura da viewport (a mesma do rootMargin do observer). */
+const FAIXA = 0.45;
+
+/**
+ * Navegação explícita (clique, Voltar/Avançar, carga em /<slug>) × atualização passiva pela rolagem:
+ * a explícita cancela a troca pendente e suspende a passiva até a rolagem programada terminar
+ * (spec §21, parecer R20).
+ */
+let suspensa = false;
+let cancelarTrocaPendente: () => void = () => {};
+let encerrarSuspensao: () => void = () => {};
+
+function suspenderAtualizacaoPassiva(): void {
+  cancelarTrocaPendente();
+  encerrarSuspensao();
+  suspensa = true;
+  const temScrollend = "onscrollend" in window;
+  const retomar = () => {
+    suspensa = false;
+    encerrarSuspensao();
+  };
+  const limite = setTimeout(retomar, temScrollend ? RETOMAR_COM_SCROLLEND_MS : RETOMAR_SEM_SCROLLEND_MS);
+  if (temScrollend) window.addEventListener("scrollend", retomar, { once: true });
+  encerrarSuspensao = () => {
+    clearTimeout(limite);
+    window.removeEventListener("scrollend", retomar);
+    encerrarSuspensao = () => {};
+  };
+}
+
+/** Seção que cruza a faixa do meio da viewport; no fim da página, a última (o id de agendar fica no rodapé). */
+function secaoDominante(): string | undefined {
+  const presentes = SECOES.filter((slug) => document.getElementById(slug));
+  const noFim = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+  if (noFim) return presentes[presentes.length - 1];
+  const faixa = window.innerHeight * FAIXA;
+  return presentes.find((slug) => {
+    const { top, bottom } = document.getElementById(slug)!.getBoundingClientRect();
+    return top <= faixa && bottom > faixa;
+  });
+}
+
+/** Rola até a seção da navegação explícita, suspendendo a atualização passiva. */
+function navegarExplicitamente(slug: string, suave: boolean): boolean {
+  suspenderAtualizacaoPassiva();
+  return irParaSecao(slug, { suave });
+}
+
 /** Carga em /<slug> (sitelink): rola até a seção sem animação. Só no navegador, depois da hidratação. */
 export function rolarParaSecaoDaUrl(): void {
   const slug = secaoDaUrl(window.location.pathname);
-  if (slug) irParaSecao(slug);
+  if (slug) navegarExplicitamente(slug, false);
 }
 
 /**
@@ -21,13 +75,13 @@ export function interceptarLinksDeSecao(): () => void {
     const slug = link.getAttribute("href")!.slice(1);
     if (!ehSecao(slug) || !document.getElementById(slug)) return;
     evento.preventDefault();
-    irParaSecao(slug, { suave: true });
+    navegarExplicitamente(slug, true);
     atualizarUrl(slug);
   }
 
   function aoNavegarNoHistorico() {
     const slug = secaoDaUrl(window.location.pathname) ?? "inicio";
-    if (!irParaSecao(slug)) window.scrollTo({ top: 0, behavior: "instant" });
+    if (!navegarExplicitamente(slug, false)) window.scrollTo({ top: 0, behavior: "instant" });
   }
 
   document.addEventListener("click", aoClicar);
@@ -38,28 +92,28 @@ export function interceptarLinksDeSecao(): () => void {
   };
 }
 
-/** Intervalo mínimo entre trocas de URL durante a rolagem. */
-const INTERVALO_URL_MS = 300;
-
 /**
- * Marca a seção dominante (a que cruza uma faixa fina no meio da viewport) e troca a URL para
- * /<slug> com replaceState, sem empilhar histórico, no máximo uma vez a cada 300 ms.
+ * A rolagem arma uma troca de URL (no máximo uma a cada 300 ms); no momento de aplicar, confirma de
+ * novo a seção dominante e troca para /<slug> com replaceState, sem empilhar histórico.
  */
 export function acompanharRolagem(): () => void {
   if (typeof IntersectionObserver === "undefined") return () => {};
-  let pendente: string | undefined;
   let espera: ReturnType<typeof setTimeout> | undefined;
 
   const aplicar = () => {
     espera = undefined;
-    if (pendente) atualizarUrl(pendente, { substituir: true });
+    if (suspensa) return;
+    const dominante = secaoDominante();
+    if (dominante) atualizarUrl(dominante, { substituir: true });
+  };
+  cancelarTrocaPendente = () => {
+    if (espera !== undefined) clearTimeout(espera);
+    espera = undefined;
   };
 
   const observador = new IntersectionObserver(
     (entradas) => {
-      const dominante = entradas.filter((entrada) => entrada.isIntersecting).pop();
-      if (!dominante) return;
-      pendente = dominante.target.id;
+      if (suspensa || !entradas.some((entrada) => entrada.isIntersecting)) return;
       if (espera === undefined) espera = setTimeout(aplicar, INTERVALO_URL_MS);
     },
     { rootMargin: "-45% 0px -54% 0px", threshold: 0 },
@@ -70,15 +124,18 @@ export function acompanharRolagem(): () => void {
   }
   return () => {
     observador.disconnect();
-    if (espera !== undefined) clearTimeout(espera);
+    cancelarTrocaPendente();
+    cancelarTrocaPendente = () => {};
+    encerrarSuspensao();
+    suspensa = false;
   };
 }
 
 /** Liga a navegação por seções. Devolve a função que desliga (efeito do React). */
 export function iniciarNavegacaoPorSecoes(): () => void {
-  rolarParaSecaoDaUrl();
-  const desligarLinks = interceptarLinksDeSecao();
   const desligarRolagem = acompanharRolagem();
+  const desligarLinks = interceptarLinksDeSecao();
+  rolarParaSecaoDaUrl();
   return () => {
     desligarLinks();
     desligarRolagem();
