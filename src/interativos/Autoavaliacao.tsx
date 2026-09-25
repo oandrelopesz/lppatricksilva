@@ -57,22 +57,22 @@ export function Autoavaliacao() {
     avancar(etapa + 1);
   }
 
-  const classeAcao = "inline-flex min-h-12 items-center justify-center rounded-lg px-5 py-3 text-lg font-semibold";
+  const classeAcao = "inline-flex min-h-12 items-center justify-center rounded px-5 py-3 text-lg font-semibold";
 
   if (etapa === T.etapas.length) {
     const resumo = montarResumo(respostas);
     const haRespostas = Object.values(respostas).some(Boolean);
     return (
-      <div className="premium-card autoavaliacao-painel autoavaliacao-resultado bg-creme p-6 sm:p-10">
+      <div className="premium-card autoavaliacao-painel autoavaliacao-resultado bg-white p-6 sm:p-10">
         <h3 ref={refPergunta as React.RefObject<HTMLHeadingElement>} tabIndex={-1} className="text-2xl font-semibold">
           {T.tituloResultado}
         </h3>
-        <p className="autoavaliacao-resumo mt-6 rounded-2xl bg-bege p-5">{resumo}</p>
+        <p className="autoavaliacao-resumo mt-6 bg-bege p-5">{resumo}</p>
         <p className="mt-4">{T.oQueAConsultaAvalia}</p>
         <p className="autoavaliacao-aviso mt-5 border-l-2 border-dourado pl-4 font-semibold">{T.aviso}</p>
         {haRespostas ? (
           <>
-            <label className="autoavaliacao-inclusao mt-6 flex min-h-12 items-center gap-3 rounded-2xl border border-grafite/20 p-4">
+            <label className="autoavaliacao-inclusao mt-6 flex min-h-12 items-center gap-3 border border-grafite/20 p-4">
               <input className="size-6 shrink-0 accent-cta" type="checkbox" checked={incluir} onChange={(e) => setIncluir(e.target.checked)} />
               <span>{T.incluirResumo}</span>
             </label>
@@ -103,7 +103,7 @@ export function Autoavaliacao() {
 
   const atual = T.etapas[etapa];
   return (
-    <div className="premium-card autoavaliacao-painel bg-creme p-6 sm:p-10">
+    <div className="premium-card autoavaliacao-painel bg-white p-6 sm:p-10">
       <h3 className="text-2xl font-semibold">{T.titulo}</h3>
       <p className="mt-3">{T.introducao}</p>
       <p className="mt-5 font-semibold" aria-live="polite">{T.progresso(etapa + 1, T.etapas.length)}</p>
@@ -115,7 +115,7 @@ export function Autoavaliacao() {
         aria-valuenow={etapa + 1}
         className="autoavaliacao-progresso mt-2"
       >
-        <span style={{ width: `${((etapa + 1) / T.etapas.length) * 100}%` }} />
+        {T.etapas.map((item, indice) => <span key={item.chave} data-completo={indice <= etapa} aria-hidden="true" />)}
       </div>
       <fieldset key={etapa} className="autoavaliacao-etapa mt-8">
         <legend className="text-xl font-semibold">
@@ -130,7 +130,7 @@ export function Autoavaliacao() {
               className="autoavaliacao-opcao min-h-12 bg-white px-4 py-4 text-left focus-visible:outline-cta"
               onClick={() => responder(atual.chave, opcao)}
             >
-              {etapa === 0 ? <span className="autoavaliacao-opcao__icone"><Icone nome={(["joelho", "quadril", "ombro", "coluna", "coluna", "peCalcanhar", "cotovelo"] as const)[indice]} className="h-8 w-8 text-dourado" /></span> : null}
+              {etapa === 0 ? <span className="autoavaliacao-opcao__icone"><Icone nome={(["joelho", "quadril", "ombro", "coluna", "coluna", "peCalcanhar", "cotovelo"] as const)[indice]} className="h-8 w-8 text-eco" /></span> : null}
               {opcao}
             </button>
           ))}

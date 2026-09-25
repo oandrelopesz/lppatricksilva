@@ -45,7 +45,7 @@ export function SeletorCidade() {
         <select
           id="seletor-cidade"
           aria-describedby="apoio-seletor-cidade"
-          className="min-h-12 min-w-0 flex-1 rounded-xl border border-grafite/30 bg-white px-4 py-3"
+          className="min-h-12 min-w-0 flex-1 rounded border border-grafite/30 bg-white px-4 py-3"
           value={valor}
           onChange={(evento) => {
             pendente.current = true;
@@ -63,7 +63,7 @@ export function SeletorCidade() {
         </select>
         <button
           type="button"
-          className="min-h-12 rounded-xl bg-grafite px-5 py-3 font-semibold text-creme"
+          className="min-h-12 rounded bg-grafite px-5 py-3 font-semibold text-creme"
           onClick={verLocais}
         >
           {T.botaoVerLocais}

@@ -8,14 +8,14 @@ import { TEXTOS_COMO_FUNCIONA as T } from "@/content/comoFunciona";
 export function S4ComoFunciona() {
   return (
     <Secao id="como-funciona" tituloId="titulo-como-funciona">
-      <h2 id="titulo-como-funciona" className="text-3xl font-semibold sm:text-4xl">{T.titulo}</h2>
+      <h2 id="titulo-como-funciona">{T.titulo}</h2>
       <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)]">
         <ol className="premium-timeline space-y-5 pl-14">
           {T.passos.map((passo, indice) => (
-            <li key={passo.titulo} className="premium-card relative bg-creme p-5 md:p-7">
+            <li key={passo.titulo} className="premium-card relative p-5 md:p-7">
               <span className="timeline-marker" aria-hidden="true">{indice + 1}</span>
               <div className="flex items-center gap-4">
-                <Icone nome={(["conversa", "calendario", "joelho", "ultrassom", "mapa", "conversa"] as const)[indice]} className="h-9 w-9 shrink-0 text-dourado" />
+                <Icone nome={(["conversa", "calendario", "joelho", "ultrassom", "mapa", "conversa"] as const)[indice]} className="h-9 w-9 shrink-0 text-eco" />
                 <h3 className="text-xl font-semibold">{passo.titulo}</h3>
               </div>
               <p className="mt-2">{passo.texto}</p>

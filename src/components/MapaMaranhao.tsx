@@ -35,6 +35,8 @@ export function MapaMaranhao({ cidadeAberta, aoEscolher }: Props) {
       <div className="mapa-ma__quadro" role="group" aria-label="Cidades no mapa ilustrado do Maranhão">
         <svg viewBox={MAPA_MA.viewBox} aria-hidden="true" focusable="false">
           <path className="mapa-ma__contorno" d={MAPA_MA.contorno} />
+          <path className="mapa-ma__rota" d={`M ${marcadores.slice(0, 4).map(({ ponto }) => `${ponto.x} ${ponto.y}`).join(" L ")}`} />
+          <path className="mapa-ma__rota" d={`M ${marcadores.slice(4).map(({ ponto }) => `${ponto.x} ${ponto.y}`).join(" L ")}`} />
           {marcadores.map(({ cidade, ponto, x, y }) => <g key={cidade.id}>
             {Math.hypot(ponto.x - x, ponto.y - y) > 6 ? <path className="mapa-ma__guia" d={`M ${ponto.x} ${ponto.y} L ${x} ${y}`} /> : null}
             <circle className="mapa-ma__centroide" cx={ponto.x} cy={ponto.y} r="3" />

@@ -41,7 +41,7 @@ export function S8Rodape() {
           >
             {T.ctaBotao}
           </CtaWhatsApp>
-          <p className="mt-8 text-dourado-claro">{ASSINATURA}</p>
+          <p className="mt-8 text-creme">{ASSINATURA}</p>
           <p className="mt-3">{T.particular}</p>
           <p className="mt-3">{T.whatsapp}</p>
         </div>
@@ -49,6 +49,7 @@ export function S8Rodape() {
           <Foto nome="cta-final" alt={T.altFoto} sizes="(min-width: 768px) 384px, 100vw" className="premium-photo aspect-[4/5] h-auto w-full object-cover" />
         </figure>
         <div className="rodape-cidades md:col-span-2">
+          <img src="/favicon.svg" alt="" aria-hidden="true" width="56" height="56" className="rodape-monograma" />
           <h3 className="text-xl font-semibold">{T.cidadesRotulo}</h3>
           <div className="mt-4 grid gap-5 sm:grid-cols-2">
             {REGIOES.map((regiao) => (

@@ -35,12 +35,12 @@ describe("S3Identificacao", () => {
     const cartoes = [...container.querySelectorAll("#para-quem article")];
     expect(cartoes).toHaveLength(3);
     for (const [indice, nome] of ["joelho", "coluna", "ombro"].entries()) {
-      const arte = cartoes[indice].querySelector(`img[src="/ilustracao-${nome}.svg"]`);
+      const arte = cartoes[indice].querySelector(`img[src="/prancha-${nome}.webp"]`);
       expect(arte).not.toBeNull();
       expect(arte).toHaveAttribute("alt", "");
       expect(arte).toHaveAttribute("aria-hidden", "true");
-      expect(arte).toHaveAttribute("width", "104");
-      expect(arte).toHaveAttribute("height", "104");
+      expect(arte).toHaveAttribute("width", "400");
+      expect(arte).toHaveAttribute("height", "400");
     }
   });
 });
