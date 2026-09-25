@@ -132,6 +132,39 @@ describe("origem", () => {
       expect(window.location.search).toBe("?utm_content=a01");
     });
 
+    it("valida o valor inteiro: '=' literal no valor não esconde texto livre (R24, crítico)", () => {
+      window.history.replaceState(null, "", "/?utm_content=a01=dor+no+joelho&gclid=Cj0.KCQ_a-1&utm_source=google");
+      limparEndereco();
+      expect(window.location.search).toBe("?gclid=Cj0.KCQ_a-1&utm_source=google");
+    });
+
+    it("'=' no valor também sai quando codificado (%3D)", () => {
+      window.history.replaceState(null, "", "/?utm_campaign=c01%3Djoelho&gclid=abc.1");
+      limparEndereco();
+      expect(window.location.search).toBe("?gclid=abc.1");
+    });
+
+    it("ignora a caixa: UTM_TERM, Utm_Term e UTM_CONTENT com texto livre saem (R24, importante)", () => {
+      window.history.replaceState(null, "", "/?UTM_TERM=dor+no+joelho&Utm_Term=artrose&UTM_CONTENT=dor+no+ombro&gclid=abc.1&GAD_SOURCE=1&gbraid=0AAA");
+      limparEndereco();
+      expect(window.location.search).toBe("?gclid=abc.1&GAD_SOURCE=1&gbraid=0AAA");
+    });
+
+    it("utm_* em maiúsculas sai mesmo com valor da convenção (só o nome minúsculo é aprovado)", () => {
+      window.history.replaceState(null, "", "/?UTM_SOURCE=google&utm_source=google");
+      limparEndereco();
+      expect(window.location.search).toBe("?utm_source=google");
+    });
+
+    it("urlLimpa (pagina_limpa) segue a mesma regra: valor inteiro e caixa", () => {
+      expect(urlLimpa("https://lp-dr-santos.vercel.app/?utm_content=a01=dor+no+joelho&utm_source=google")).toBe(
+        "https://lp-dr-santos.vercel.app/?utm_source=google",
+      );
+      expect(urlLimpa("https://lp-dr-santos.vercel.app/?UTM_TERM=dor&UTM_CONTENT=dor+no+ombro&Utm_Source=google&utm_medium=cpc")).toBe(
+        "https://lp-dr-santos.vercel.app/?utm_medium=cpc",
+      );
+    });
+
     it("sem nada a tirar, não chama o replaceState", () => {
       window.history.replaceState(null, "", "/?utm_source=google&utm_campaign=c01&gclid=abc.1");
       const trocar = vi.spyOn(window.history, "replaceState");
