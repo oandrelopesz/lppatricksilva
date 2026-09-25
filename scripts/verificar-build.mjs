@@ -5,10 +5,13 @@
 import fs from "node:fs";
 
 const html = fs.readFileSync(new URL("../dist/index.html", import.meta.url), "utf8");
+/** Slugs das URLs por seção (mesma lista de src/lib/secoes.ts). */
+const SECOES = JSON.parse(fs.readFileSync(new URL("../src/data/secoes.json", import.meta.url), "utf8"));
 
 const EXIGIDOS = [
   ["HTML pré-renderizado dentro do #root", /<div id="root"><[a-z]/],
   ["CSS embutido no head", /<style>/],
+  ["um canonical para a raiz do site", (h) => (h.match(/<link rel="canonical" href="https:\/\/[^"/]+\/">/g) || []).length === 1],
   ["JSON-LD no HTML inicial", /<script type="application\/ld\+json">/],
   ["14 locais ligados ao médico no JSON-LD", (h) => (h.match(/#local-/g) || []).length === 28],
   ["aviso de particular", /particular/i],
@@ -40,8 +43,15 @@ for (const [nome, teste] of EXIGIDOS) if (!passa(teste)) { console.error(`FALTA:
 for (const [nome, teste] of PROIBIDOS) if (passa(teste)) { console.error(`PROIBIDO: ${nome}`); falhas++; }
 if (fs.existsSync(new URL("../dist/__preview.html", import.meta.url))) { console.error("PROIBIDO: dist/__preview.html"); falhas++; }
 
+// URLs por seção: cada /<slug>/index.html é cópia exata do HTML da raiz (mesmo canonical).
+for (const slug of SECOES) {
+  const copia = new URL(`../dist/${slug}/index.html`, import.meta.url);
+  if (!fs.existsSync(copia)) { console.error(`FALTA: dist/${slug}/index.html`); falhas++; continue; }
+  if (fs.readFileSync(copia, "utf8") !== html) { console.error(`DIFERENTE: dist/${slug}/index.html`); falhas++; }
+}
+
 if (falhas) {
   console.error(`verificar-build: ${falhas} falha(s)`);
   process.exit(1);
 }
-console.log(`verificar-build: ${EXIGIDOS.length + PROIBIDOS.length + 1} checagens OK`);
+console.log(`verificar-build: ${EXIGIDOS.length + PROIBIDOS.length + 1 + SECOES.length} checagens OK`);
