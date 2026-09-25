@@ -49,6 +49,22 @@ export function CtaWhatsApp({
   const { cidade } = useCidade();
   /** Esperando a conversão sair antes de navegar: link ocupado, com aparência de pressionado. */
   const [aguardando, setAguardando] = useState(false);
+  /** Trava síncrona: do clique que navega por código até a navegação, outro clique simples é ignorado. */
+  const navegando = useRef(false);
+
+  /** Registra o clique e navega pela regra do clique (analytics.track), com o link ocupado na espera. */
+  function registrarENavegar(url: string, params: Parameters<typeof track>[1], inicioMs?: number) {
+    navegando.current = true;
+    setAguardando(true);
+    track("clique_whatsapp", params, {
+      inicioMs,
+      aoConcluir: () => {
+        navegando.current = false;
+        setAguardando(false);
+        navegacao.ir(url);
+      },
+    });
+  }
   const refLink = useRef<HTMLAnchorElement>(null);
   const linkBase = intencao === "duvida" ? LINK_WHATSAPP_DUVIDA : LINK_WHATSAPP_BASE;
 
@@ -82,21 +98,16 @@ export function CtaWhatsApp({
   }
 
   function aoClicar(evento: MouseEvent<HTMLAnchorElement>) {
-    const { url, params } = preparar(evento.currentTarget);
     const novaAba = evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.button !== 0;
     // Com resumo, o navegador abriria o link base: todo clique navega por código com a URL completa.
     if (novaAba && !resumo) {
-      track("clique_whatsapp", params);
+      track("clique_whatsapp", preparar(evento.currentTarget).params);
       return;
     }
     evento.preventDefault();
-    setAguardando(true);
-    track("clique_whatsapp", params, {
-      aoConcluir: () => {
-        setAguardando(false);
-        navegacao.ir(url);
-      },
-    });
+    if (navegando.current) return;
+    const { url, params } = preparar(evento.currentTarget);
+    registrarENavegar(url, params);
   }
 
   /**
@@ -110,16 +121,9 @@ export function CtaWhatsApp({
     if (!elemento) return;
     const aoSegurado = (evento: Event) => {
       evento.preventDefault();
-      const { t } = (evento as CustomEvent<{ t: number }>).detail;
+      if (navegando.current) return;
       const { url, params } = preparar(elemento);
-      setAguardando(true);
-      track("clique_whatsapp", params, {
-        inicioMs: t,
-        aoConcluir: () => {
-          setAguardando(false);
-          navegacao.ir(url);
-        },
-      });
+      registrarENavegar(url, params, (evento as CustomEvent<{ t: number }>).detail.t);
     };
     elemento.addEventListener("lp:clique-segurado", aoSegurado);
     return () => elemento.removeEventListener("lp:clique-segurado", aoSegurado);

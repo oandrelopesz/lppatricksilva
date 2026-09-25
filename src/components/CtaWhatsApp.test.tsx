@@ -313,4 +313,39 @@ describe("CtaWhatsApp", () => {
     expect(evento).not.toHaveProperty("ref");
     expect(`${link.getAttribute("href")} ${JSON.stringify(window.dataLayer)}`).not.toContain("joelho");
   });
+
+  describe("trava por clique até a navegação (R28, item 3)", () => {
+    it("dois cliques simples rápidos: um evento e uma navegação; o segundo é ignorado", () => {
+      render(
+        <CidadeProvider>
+          <CtaWhatsApp localCta="hero">Agendar</CtaWhatsApp>
+        </CidadeProvider>,
+      );
+      const link = screen.getByRole("link", { name: "Agendar" });
+      fireEvent.click(link);
+      const seguiu = fireEvent.click(link);
+      expect(seguiu).toBe(false);
+      expect(window.dataLayer!.filter((e) => e.event === "clique_whatsapp")).toHaveLength(1);
+      act(() => vi.advanceTimersByTime(3000));
+      expect(navegacao.ir).toHaveBeenCalledTimes(1);
+      // Depois da navegação, a trava sai: um novo clique volta a valer.
+      fireEvent.click(link);
+      expect(window.dataLayer!.filter((e) => e.event === "clique_whatsapp")).toHaveLength(2);
+    });
+
+    it("durante a espera, Ctrl e botão do meio continuam abrindo pelo navegador", () => {
+      render(
+        <CidadeProvider>
+          <CtaWhatsApp localCta="hero">Agendar</CtaWhatsApp>
+        </CidadeProvider>,
+      );
+      const link = screen.getByRole("link", { name: "Agendar" });
+      fireEvent.click(link);
+      expect(fireEvent.click(link, { ctrlKey: true })).toBe(true);
+      fireEvent(link, new MouseEvent("auxclick", { bubbles: true, cancelable: true, button: 1 }));
+      expect(window.dataLayer!.filter((e) => e.event === "clique_whatsapp")).toHaveLength(3);
+      act(() => vi.advanceTimersByTime(3000));
+      expect(navegacao.ir).toHaveBeenCalledTimes(1);
+    });
+  });
 });

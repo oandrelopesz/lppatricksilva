@@ -141,4 +141,21 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
     expect(w.__lpHidratado).toBe(true);
     expect(window.dataLayer!.some((e) => e.event === "clique_whatsapp")).toBe(false);
   });
+
+  it("clique segurado entregue na hidratação e novo toque logo depois: um evento e uma navegação (R28, item 3)", async () => {
+    new Function("w", corpo)(window);
+    const raiz = document.createElement("div");
+    raiz.innerHTML = renderToString(<Cta />);
+    document.body.append(raiz);
+    const link = raiz.querySelector("a")!;
+    fireEvent.click(link);
+    await act(async () => {
+      hydrateRoot(raiz, <Cta />);
+    });
+    act(() => processarCliquePendente());
+    expect(fireEvent.click(link)).toBe(false);
+    expect(window.dataLayer!.filter((e) => e.event === "clique_whatsapp")).toHaveLength(1);
+    act(() => vi.advanceTimersByTime(5000));
+    expect(navegacao.ir).toHaveBeenCalledTimes(1);
+  });
 });
