@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CidadeProvider } from "@/context/CidadeContext";
 import { useCidade } from "@/context/CidadeContext";
 import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
+import { CIDADES } from "@/data/locais";
+import { PONTOS_CIDADES } from "@/data/mapaMaranhao";
 import { AbasCidades } from "./AbasCidades";
 
 let acionarIntersecao: ((visivel: boolean) => void) | undefined;
@@ -70,7 +72,7 @@ describe("mapas e mapa ilustrado V3", () => {
   it("separa as áreas de toque dos pontos no quadro compacto e no desktop", () => {
     renderizar();
     const botoes = screen.getAllByRole("button", { name: /no mapa/ });
-    for (const [sufixo, largura, altura] of [["compacto", 244, 285], ["amplo", 600, 700]] as const) {
+    for (const [sufixo, largura, altura] of [["compacto", 246, 287], ["amplo", 600, 700]] as const) {
       const pontos = botoes.map((botao) => ({
         x: parseFloat(botao.style.getPropertyValue(`--x-${sufixo}`)) * largura / 100,
         y: parseFloat(botao.style.getPropertyValue(`--y-${sufixo}`)) * altura / 100,
@@ -88,6 +90,60 @@ describe("mapas e mapa ilustrado V3", () => {
         }
       }
     }
+  });
+
+  it("liga cada chamada deslocada ao centroide real sem cruzar as outras", () => {
+    const { container } = renderizar();
+    const botoes = screen.getAllByRole("button", { name: /no mapa/ });
+    const segmentos = CIDADES.map((cidade, indice) => {
+      const botao = botoes[indice];
+      const fim = PONTOS_CIDADES[cidade.id];
+      const inicio = {
+        x: parseFloat(botao.style.getPropertyValue("--x-compacto")) * 6,
+        y: parseFloat(botao.style.getPropertyValue("--y-compacto")) * 7,
+      };
+      const guia = container.querySelector<SVGPathElement>(`.mapa-ma__guia--compacta[data-cidade="${cidade.id}"]`);
+      if (Math.hypot(inicio.x - fim.x, inicio.y - fim.y) > 6) {
+        expect(guia).not.toBeNull();
+        const coordenadas = guia?.getAttribute("d")?.match(/-?\d+(?:\.\d+)?/g)?.map(Number);
+        expect(coordenadas).toHaveLength(4);
+        expect(coordenadas?.[0]).toBeCloseTo(inicio.x);
+        expect(coordenadas?.[1]).toBeCloseTo(inicio.y);
+        expect(coordenadas?.[2]).toBeCloseTo(fim.x);
+        expect(coordenadas?.[3]).toBeCloseTo(fim.y);
+        expect(guia).not.toHaveAttribute("hidden");
+      }
+      expect(container.querySelector(`.mapa-ma__centroide[data-cidade="${cidade.id}"]`)).not.toBeNull();
+      return { inicio, fim };
+    });
+    const lado = (a: { x: number; y: number }, b: { x: number; y: number }, c: { x: number; y: number }) =>
+      (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    for (let i = 0; i < segmentos.length; i++) for (let j = i + 1; j < segmentos.length; j++) {
+      const a = segmentos[i], b = segmentos[j];
+      const cruza = lado(a.inicio, a.fim, b.inicio) * lado(a.inicio, a.fim, b.fim) < 0 &&
+        lado(b.inicio, b.fim, a.inicio) * lado(b.inicio, b.fim, a.fim) < 0;
+      expect(cruza, `${CIDADES[i].nome} / ${CIDADES[j].nome}`).toBe(false);
+    }
+    expect(container.querySelector('.mapa-ma__guia--compacta[data-cidade="balsas"]')).toHaveAttribute("data-ativa");
+    expect(container.querySelector('.mapa-ma__centroide[data-cidade="balsas"]')).toHaveAttribute("data-ativa");
+  });
+
+  it("toque na posição real da cidade escolhe sua aba", () => {
+    renderizar();
+    const quadro = screen.getByRole("group", { name: /cidades no mapa ilustrado/i });
+    vi.spyOn(quadro, "getBoundingClientRect").mockReturnValue({
+      left: 0, top: 0, right: 246, bottom: 287, width: 246, height: 287,
+      x: 0, y: 0, toJSON: () => ({}),
+    });
+    for (const botao of screen.getAllByRole("button", { name: /no mapa/ })) {
+      vi.spyOn(botao, "getBoundingClientRect").mockReturnValue({
+        left: 1000, top: 1000, right: 1048, bottom: 1048, width: 48, height: 48,
+        x: 1000, y: 1000, toJSON: () => ({}),
+      });
+    }
+    const real = PONTOS_CIDADES["graca-aranha"];
+    fireEvent.click(quadro, { clientX: real.x * 246 / 600, clientY: real.y * 287 / 700 });
+    expect(screen.getByRole("tab", { name: "Graça Aranha" })).toHaveAttribute("aria-selected", "true");
   });
 
   it("toque perto de um ponto escolhe a cidade; longe de todos não escolhe", () => {

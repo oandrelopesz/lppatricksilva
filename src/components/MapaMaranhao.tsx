@@ -7,8 +7,55 @@ interface Props {
   aoEscolher: (id: string) => void;
 }
 
-const LARGURA_COMPACTA = 244;
-const ALTURA_COMPACTA = 285;
+const LARGURA_COMPACTA = 246;
+const ALTURA_COMPACTA = 287;
+
+type Posicao = { x: number; y: number };
+
+function lado(a: Posicao, b: Posicao, c: Posicao) {
+  return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+}
+
+function cruzam(a: { origem: Posicao; marcador: Posicao }, b: { origem: Posicao; marcador: Posicao }) {
+  return lado(a.origem, a.marcador, b.origem) * lado(a.origem, a.marcador, b.marcador) < 0 &&
+    lado(b.origem, b.marcador, a.origem) * lado(b.origem, b.marcador, a.marcador) < 0;
+}
+
+function distanciaDaLinha(ponto: Posicao, inicio: Posicao, fim: Posicao) {
+  const dx = fim.x - inicio.x, dy = fim.y - inicio.y;
+  const proporcao = Math.max(0, Math.min(1, ((ponto.x - inicio.x) * dx + (ponto.y - inicio.y) * dy) / (dx * dx + dy * dy)));
+  return Math.hypot(ponto.x - inicio.x - proporcao * dx, ponto.y - inicio.y - proporcao * dy);
+}
+
+// As chamadas seguem o ângulo dos centroides. Entre os encaixes válidos, usa o de menor linha total.
+function distribuirCompacto() {
+  const cidades = CIDADES.map((cidade) => ({ cidade, origem: {
+    x: PONTOS_CIDADES[cidade.id].x * LARGURA_COMPACTA / 600,
+    y: PONTOS_CIDADES[cidade.id].y * ALTURA_COMPACTA / 700,
+  } }));
+  const centro = { x: cidades.reduce((soma, item) => soma + item.origem.x, 0) / cidades.length,
+    y: cidades.reduce((soma, item) => soma + item.origem.y, 0) / cidades.length };
+  cidades.sort((a, b) => Math.atan2(a.origem.y - centro.y, a.origem.x - centro.x) -
+    Math.atan2(b.origem.y - centro.y, b.origem.x - centro.x));
+  const encaixes: Posicao[] = [
+    [54, 72], [110, 72], [166, 72], [222, 72], [222, 128], [222, 184],
+    [222, 240], [166, 240], [110, 240], [54, 240], [54, 184], [54, 128],
+  ].map(([x, y]) => ({ x, y }));
+  let melhor: { custo: number; posicoes: Map<string, Posicao> } | undefined;
+  for (let ignorado = 0; ignorado < encaixes.length; ignorado++) {
+    const disponiveis = encaixes.filter((_, indice) => indice !== ignorado);
+    for (let inicio = 0; inicio < disponiveis.length; inicio++) {
+      const chamadas = cidades.map((item, indice) => ({ ...item,
+        marcador: disponiveis[(inicio + indice) % disponiveis.length] }));
+      if (chamadas.some((a, i) => chamadas.some((b, j) => i !== j &&
+        (cruzam(a, b) || distanciaDaLinha(b.marcador, a.origem, a.marcador) < 25)))) continue;
+      const custo = chamadas.reduce((soma, item) => soma + Math.hypot(item.marcador.x - item.origem.x, item.marcador.y - item.origem.y), 0);
+      if (!melhor || custo < melhor.custo) melhor = { custo, posicoes: new Map(chamadas.map(({ cidade, marcador }) => [cidade.id, marcador])) };
+    }
+  }
+  if (!melhor) throw new Error("Não foi possível distribuir os pontos do mapa");
+  return CIDADES.map((cidade) => melhor.posicoes.get(cidade.id)!);
+}
 
 // Distribui áreas de toque de 48 px com ao menos 8 px livres, inclusive na menor tela (320 px).
 function distribuir(largura: number, altura: number, passo: number, anguloPasso: number) {
@@ -37,7 +84,7 @@ function distribuir(largura: number, altura: number, passo: number, anguloPasso:
   return marcadores;
 }
 
-const posicoesCompactas = distribuir(LARGURA_COMPACTA, ALTURA_COMPACTA, 6, 15);
+const posicoesCompactas = distribuirCompacto();
 const posicoesAmplas = distribuir(600, 700, 12, 30);
 const marcadores = CIDADES.map((cidade, indice) => ({
   cidade,
@@ -50,6 +97,15 @@ const marcadores = CIDADES.map((cidade, indice) => ({
 export function MapaMaranhao({ cidadeAberta, aoEscolher }: Props) {
   function escolherPeloQuadro(evento: MouseEvent<HTMLDivElement>) {
     if ((evento.target as Element).closest(".mapa-ma__ponto")) return;
+    const quadro = evento.currentTarget.getBoundingClientRect();
+    if (quadro.width && quadro.height) {
+      const x = (evento.clientX - quadro.left) * 600 / quadro.width;
+      const y = (evento.clientY - quadro.top) * 700 / quadro.height;
+      const proximo = marcadores.map(({ cidade, ponto }) => ({ id: cidade.id,
+        distancia: Math.hypot((x - ponto.x) * quadro.width / 600, (y - ponto.y) * quadro.height / 700) }))
+        .sort((a, b) => a.distancia - b.distancia)[0];
+      if (proximo.distancia <= 18) { aoEscolher(proximo.id); return; }
+    }
     const botoes = evento.currentTarget.querySelectorAll<HTMLButtonElement>(".mapa-ma__ponto");
     let maisPerto: { id: string; distancia: number } | undefined;
     botoes.forEach((botao, indice) => {
@@ -69,13 +125,15 @@ export function MapaMaranhao({ cidadeAberta, aoEscolher }: Props) {
             <path className="mapa-ma__rota" d={`M ${marcadores.slice(0, 4).map(({ ponto }) => `${ponto.x} ${ponto.y}`).join(" L ")}`} />
             <path className="mapa-ma__rota" d={`M ${marcadores.slice(4).map(({ ponto }) => `${ponto.x} ${ponto.y}`).join(" L ")}`} />
           </g>
-          {marcadores.map(({ cidade, ponto, compacto, amplo }) => <g key={cidade.id}>
+          {[...marcadores].sort((a, b) => Number(a.cidade.id === cidadeAberta) - Number(b.cidade.id === cidadeAberta)).map(({ cidade, ponto, compacto, amplo }) => <g key={cidade.id}>
             {Math.hypot(ponto.x - compacto.x * 600 / LARGURA_COMPACTA, ponto.y - compacto.y * 700 / ALTURA_COMPACTA) > 6 ?
-              <path className="mapa-ma__guia mapa-ma__guia--compacta" data-ativa={cidade.id === cidadeAberta ? "" : undefined}
-                d={`M ${ponto.x} ${ponto.y} L ${compacto.x * 600 / LARGURA_COMPACTA} ${compacto.y * 700 / ALTURA_COMPACTA}`} /> : null}
+              <path className="mapa-ma__guia mapa-ma__guia--compacta" data-cidade={cidade.id} data-ativa={cidade.id === cidadeAberta ? "" : undefined}
+                d={`M ${compacto.x * 600 / LARGURA_COMPACTA} ${compacto.y * 700 / ALTURA_COMPACTA} L ${ponto.x} ${ponto.y}`} /> : null}
             {Math.hypot(ponto.x - amplo.x, ponto.y - amplo.y) > 6 ?
-              <path className="mapa-ma__guia mapa-ma__guia--ampla" d={`M ${ponto.x} ${ponto.y} L ${amplo.x} ${amplo.y}`} /> : null}
-            <circle className="mapa-ma__centroide" cx={ponto.x} cy={ponto.y} r="3" />
+              <path className="mapa-ma__guia mapa-ma__guia--ampla" data-ativa={cidade.id === cidadeAberta ? "" : undefined}
+                d={`M ${ponto.x} ${ponto.y} L ${amplo.x} ${amplo.y}`} /> : null}
+            <circle className="mapa-ma__centroide" data-cidade={cidade.id} data-ativa={cidade.id === cidadeAberta ? "" : undefined}
+              cx={ponto.x} cy={ponto.y} r="7" />
           </g>)}
         </svg>
         {marcadores.map(({ cidade, numero, compacto, amplo }) => <button key={cidade.id} className="mapa-ma__ponto" type="button"
