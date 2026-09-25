@@ -210,7 +210,7 @@ export function AbasCidades() {
               <p>{T.mapaSemConsentimento.texto}</p>
               <button type="button" onClick={() => setMapasPedidos((atual) => new Set(atual).add(cidade.id))}>{T.mapaSemConsentimento.botao}</button>
             </div> : null}
-            <div className="abas-cidades__cartoes">{cidade.locais.map((local) => <CartaoLocal key={local.id} cidade={cidade} local={local} mostrarMapa={mostrarMapa} />)}</div>
+            <div className="abas-cidades__cartoes">{cidade.locais.map((local) => <CartaoLocal key={local.id} cidade={cidade} local={local} mostrarMapa={mostrarMapa} reservarMapa={aceite || pedido} />)}</div>
             <button className="abas-cidades__ver-todas" type="button" onClick={() => setVisaoGeral(true)}>{T.verTodas}</button>
           </> : null}
         </div>;

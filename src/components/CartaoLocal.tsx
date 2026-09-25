@@ -8,9 +8,14 @@ interface Props {
   local: Local;
   /** true no painel aberto, quando a seção se aproxima da viewport. */
   mostrarMapa: boolean;
+  /**
+   * Reserva a moldura do mapa (com aceite ou depois do Ver mapa), para o iframe entrar sem salto de
+   * layout. Sem isso, o cartão fica sem caixa vazia (parecer R38).
+   */
+  reservarMapa: boolean;
 }
 
-export function CartaoLocal({ cidade, local, mostrarMapa }: Props) {
+export function CartaoLocal({ cidade, local, mostrarMapa, reservarMapa }: Props) {
   return (
     <article className="cartao-local" aria-labelledby={`local-${local.id}`}>
       <h4 id={`local-${local.id}`}>{local.nome}</h4>
@@ -23,7 +28,7 @@ export function CartaoLocal({ cidade, local, mostrarMapa }: Props) {
         </p>
       ) : null}
       <p>{T.clinica.disponibilidade}</p>
-      <div className="cartao-local__mapa">
+      {reservarMapa || mostrarMapa ? <div className="cartao-local__mapa">
         {mostrarMapa ? (
           <iframe
             src={urlEmbedMapa(local)}
@@ -34,7 +39,7 @@ export function CartaoLocal({ cidade, local, mostrarMapa }: Props) {
             height="240"
           />
         ) : null}
-      </div>
+      </div> : null}
       <a
         href={local.linkComoChegar}
         target="_blank"

@@ -267,6 +267,32 @@ describe("mapas e consentimento (textos-lgpd, item D; parecer R36, item 8)", () 
     expect(within(painel("Balsas")).getAllByRole("link", { name: /como chegar/i })).toHaveLength(3);
   });
 
+  it("sem aceite, Balsas mostra o placeholder uma vez e os 3 cartões sem moldura vazia (parecer R38)", () => {
+    const { container } = renderizar();
+    act(() => mostrarSecao?.());
+    const balsas = container.querySelector("#painel-balsas")!;
+    expect(balsas.querySelectorAll(".abas-cidades__mapa-consentimento")).toHaveLength(1);
+    expect(balsas.querySelectorAll(".cartao-local")).toHaveLength(3);
+    expect(balsas.querySelectorAll(".cartao-local__mapa")).toHaveLength(0);
+    expect(within(painel("Balsas")).getAllByRole("link", { name: /como chegar/i })).toHaveLength(3);
+    expect(within(painel("Balsas")).getAllByRole("link", { name: /agendar em balsas/i })).toHaveLength(3);
+    fireEvent.click(within(painel("Balsas")).getByRole("button", { name: T.mapaSemConsentimento.botao }));
+    const molduras = balsas.querySelectorAll(".cartao-local__mapa");
+    expect(molduras).toHaveLength(3);
+    for (const moldura of molduras) expect(moldura.querySelector("iframe")).not.toBeNull();
+    expect(balsas.querySelectorAll(".abas-cidades__mapa-consentimento")).toHaveLength(0);
+  });
+
+  it("com aceite, a moldura já fica reservada antes do iframe (sem salto de layout) e recebe o mapa", () => {
+    localStorage.setItem("lp_consentimento_v2", JSON.stringify({ visitas: true, anuncios: false, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" }));
+    const { container } = renderizar();
+    const balsas = container.querySelector("#painel-balsas")!;
+    expect(balsas.querySelectorAll(".cartao-local__mapa")).toHaveLength(3);
+    expect(balsas.querySelector("iframe")).toBeNull();
+    act(() => mostrarSecao?.());
+    expect(balsas.querySelectorAll(".cartao-local__mapa iframe")).toHaveLength(3);
+  });
+
   it("Ver mapa carrega só os mapas daquele painel", () => {
     const { container } = renderizar();
     act(() => mostrarSecao?.());
