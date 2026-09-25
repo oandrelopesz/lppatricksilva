@@ -52,12 +52,14 @@ export function AvisoCookies() {
       className="aviso-cookies fixed inset-x-0 bottom-0 z-50 border-t border-dourado bg-grafite px-3 py-[7px] text-creme shadow-lg sm:px-4 sm:py-4"
     >
       <div className="mx-auto flex max-w-5xl flex-col gap-1 sm:flex-row sm:items-center sm:gap-6">
-        {/* Na segunda camada, título, texto e chaves rolam aqui dentro e os botões ficam fixos no pé
-            (parecer R38); a área é focável para rolar pelo teclado. A primeira camada não rola. */}
+        {/* Nas duas camadas, o conteúdo rola aqui dentro e os botões ficam fixos no pé, com a barra limitada
+            à viewport (pareceres R38 e R40); a área é focável e nomeada para rolar pelo teclado. */}
         <div
           ref={refConteudo}
           className="aviso-cookies__conteudo min-w-0 flex-1"
-          {...(escolhendo ? { role: "group", "aria-labelledby": `${id}-titulo`, tabIndex: 0 } : {})}
+          role="group"
+          tabIndex={0}
+          {...(escolhendo ? { "aria-labelledby": `${id}-titulo` } : { "aria-label": T.rotulo })}
         >
           {escolhendo ? (
             <>

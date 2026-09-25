@@ -110,19 +110,24 @@ describe("AvisoCookies", () => {
       expect(screen.getByRole("group", { name: T.titulo })).toHaveFocus();
     });
 
-    it("a primeira camada continua sem área rolável nem tabindex", () => {
+    it("a primeira camada também põe texto e política numa área rolável, focável e nomeada, com os botões fora (parecer R40)", () => {
       render(<AvisoCookies />);
-      expect(screen.queryByRole("group")).toBeNull();
-      expect(document.querySelector(".aviso-cookies__conteudo")).not.toHaveAttribute("tabindex");
+      const area = screen.getByRole("group", { name: T.rotulo });
+      expect(area).toHaveClass("aviso-cookies__conteudo");
+      expect(area).toHaveAttribute("tabindex", "0");
+      expect(area).toContainElement(screen.getByText(T.texto));
+      expect(area).toContainElement(screen.getByRole("link", { name: T.linkPolitica }));
+      for (const nome of [T.recusarTudo, T.escolher, T.aceitarTudo]) expect(area.contains(screen.getByRole("button", { name: nome }))).toBe(false);
     });
 
-    it("o CSS limita a segunda camada à viewport (dvh com fallback em vh) e rola só o conteúdo", async () => {
+    it("o CSS limita as duas camadas à viewport (dvh com fallback em vh) e rola só o conteúdo", async () => {
       const { readFileSync } = await import("node:fs");
       const css = readFileSync(`${process.cwd()}/src/styles/global.css`, "utf8").replace(/\s+/g, " ");
-      const regra = css.match(/\.aviso-cookies\[data-escolhendo\] \{([^}]*)\}/)![1];
+      const regra = css.match(/\.aviso-cookies \{ display: flex;([^}]*)\}/)![1];
       expect(regra).toMatch(/max-height: 100vh;.*max-height: 100dvh;/);
-      expect(css).toMatch(/\.aviso-cookies\[data-escolhendo\] \.aviso-cookies__conteudo \{[^}]*overflow-y: auto;/);
-      expect(css).toMatch(/\.aviso-cookies\[data-escolhendo\] \.aviso-cookies__acoes \{[^}]*flex: none;/);
+      expect(css).toMatch(/ \.aviso-cookies__conteudo \{[^}]*overflow-y: auto;/);
+      expect(css).toMatch(/ \.aviso-cookies__acoes \{[^}]*flex: none;/);
+      expect(css).not.toMatch(/\.aviso-cookies\[data-escolhendo\] \.aviso-cookies__conteudo/);
     });
   });
 
