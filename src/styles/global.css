@@ -10,7 +10,7 @@
   h3, h4 { letter-spacing: -.015em; }
   section h2, #onde-atende > h2 { font-size: clamp(2.25rem, 6vw, 3.9rem); max-width: 20ch; }
   section h3 { line-height: 1.2; }
-  :focus-visible { outline: 3px solid var(--color-dourado); outline-offset: 4px; }
+  :focus-visible { outline: 3px solid var(--color-foco-claro); outline-offset: 4px; }
   a, button { -webkit-tap-highlight-color: transparent; }
   @media (min-width: 640px) { html { scroll-padding-top: 51px; } }
   @media (min-width: 768px) { body { font-size: 1.125rem; } }
@@ -23,7 +23,9 @@
   .premium-photo { display: block; border: 1px solid var(--color-dourado); border-radius: 12px; box-shadow: none; }
   a.premium-cta { min-height: 48px; border-radius: 4px; box-shadow: none; transition: background-color 160ms ease, transform 160ms ease; }
   a.premium-cta:hover { background: var(--color-cta-escuro); transform: translateY(-1px); }
-  a.premium-cta:focus-visible { outline: 3px solid var(--color-dourado); outline-offset: 4px; }
+  a.premium-cta:focus-visible { outline: 3px solid var(--color-foco-claro); outline-offset: 4px; }
+  #onde-atende :focus-visible, #rodape :focus-visible { outline-color: var(--color-dourado-claro); }
+  #para-quem .autoavaliacao-opcao:focus-visible { outline-color: var(--color-foco-claro); }
 
   .premium-topbar { padding-block: 11px; border-bottom: 1px solid var(--color-dourado); box-shadow: none; }
   .premium-topbar p { line-height: 24px; }
