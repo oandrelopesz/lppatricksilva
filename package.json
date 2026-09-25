@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs && node scripts/verificar-build.mjs",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:reflow": "node scripts/verificar-reflow.mjs",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "imagens": "node scripts/imagens.mjs"
