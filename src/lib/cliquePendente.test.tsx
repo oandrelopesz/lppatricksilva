@@ -24,6 +24,27 @@ const Cta = () => (
 type JanelaDoTeste = Window & { __lpHidratado?: boolean; __lpCliquePendente?: unknown; __lpSeguranca?: number };
 const w = window as JanelaDoTeste;
 
+/** Listeners dos seguradores instalados na window real, removidos no teardown (parecer R29, item 3). */
+const removedores: Array<() => void> = [];
+
+/** Instala o segurador real na window, guardando o listener para o teardown. */
+function instalarSegurador(): void {
+  const alvo = new Proxy(window, {
+    get: (janela, chave) => {
+      if (chave === "addEventListener") {
+        return (tipo: string, ouvinte: EventListener, captura?: boolean) => {
+          window.addEventListener(tipo, ouvinte, captura);
+          removedores.push(() => window.removeEventListener(tipo, ouvinte, captura));
+        };
+      }
+      const valor = Reflect.get(janela, chave);
+      return typeof valor === "function" ? valor.bind(janela) : valor;
+    },
+    set: (janela, chave, valor) => Reflect.set(janela, chave, valor),
+  });
+  new Function("w", corpo)(alvo);
+}
+
 describe("segurador de clique antes da hidratação (validação do Tracking, achado 3)", () => {
   beforeEach(() => {
     reiniciarOrigemParaTestes();
@@ -37,6 +58,7 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
   });
 
   afterEach(() => {
+    removedores.splice(0).forEach((remover) => remover());
     w.__lpHidratado = true;
     vi.useRealTimers();
     vi.unstubAllGlobals();
@@ -49,7 +71,7 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
 
   it("clique antes da hidratação é segurado e, na hidratação, registrado e navegado pela regra do clique", async () => {
     // eslint-disable-next-line no-new-func
-    new Function("w", corpo)(window);
+    instalarSegurador();
     const raiz = document.createElement("div");
     raiz.innerHTML = renderToString(<Cta />);
     document.body.append(raiz);
@@ -81,7 +103,7 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
   });
 
   it("com o React já ouvindo e o efeito da Raiz pendente, o clique tem um só responsável (R28, item 2)", async () => {
-    new Function("w", corpo)(window);
+    instalarSegurador();
     const raiz = document.createElement("div");
     raiz.innerHTML = renderToString(<Cta />);
     document.body.append(raiz);
@@ -125,7 +147,7 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
   });
 
   it("clique com modificador ou outro botão não é segurado", () => {
-    new Function("w", corpo)(window);
+    instalarSegurador();
     const raiz = document.createElement("div");
     raiz.innerHTML = renderToString(<Cta />);
     document.body.append(raiz);
@@ -143,7 +165,7 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
   });
 
   it("clique segurado entregue na hidratação e novo toque logo depois: um evento e uma navegação (R28, item 3)", async () => {
-    new Function("w", corpo)(window);
+    instalarSegurador();
     const raiz = document.createElement("div");
     raiz.innerHTML = renderToString(<Cta />);
     document.body.append(raiz);
@@ -157,6 +179,14 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
     expect(window.dataLayer!.filter((e) => e.event === "clique_whatsapp")).toHaveLength(1);
     act(() => vi.advanceTimersByTime(5000));
     expect(navegacao.ir).toHaveBeenCalledTimes(1);
+  });
+
+  it("sem segurador instalado neste teste, nenhum clique é segurado (isolamento entre testes)", () => {
+    const raiz = document.createElement("div");
+    raiz.innerHTML = renderToString(<Cta />);
+    document.body.append(raiz);
+    expect(fireEvent.click(raiz.querySelector("a")!)).toBe(true);
+    expect(w.__lpCliquePendente).toBeUndefined();
   });
 
   describe("prazo único do clique segurado (R28, item 4)", () => {
