@@ -68,6 +68,7 @@ describe("App", () => {
   });
 
   it("cidade do rodapé marca a aba e leva o foco; os mapas só montam quando a seção se aproxima (parecer R15)", () => {
+    localStorage.setItem("lp_consentimento_v2", JSON.stringify({ visitas: true, anuncios: true, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" }));
     reiniciarOrigemParaTestes();
     capturarOrigem("", null);
     window.dataLayer = [];
