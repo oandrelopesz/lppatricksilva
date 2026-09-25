@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { capturarOrigem, gerarRef, reiniciarOrigemParaTestes, sanitizar, urlLimpa } from "./origem";
+import { capturarOrigem, reiniciarOrigemParaTestes, sanitizar, urlLimpa } from "./origem";
 
 function storageFalso(): Storage {
   const mapa = new Map<string, string>();
@@ -18,8 +18,17 @@ function storageFalso(): Storage {
 describe("origem", () => {
   beforeEach(() => reiniciarOrigemParaTestes());
 
-  it("gera ref de 6 caracteres sem caracteres ambíguos", () => {
-    expect(gerarRef()).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
+  it("a origem não tem código de referência (spec §21, sem ref)", () => {
+    expect(capturarOrigem("?utm_source=google", storageFalso())).not.toHaveProperty("ref");
+  });
+
+  it("sessão antiga gravada com ref continua funcionando e ignora o campo", () => {
+    const storage = storageFalso();
+    storage.setItem("lp_origem_v1", JSON.stringify({ ref: "ABC234", utm_source: "google", utm_content: "a01" }));
+    const origem = capturarOrigem("", storage);
+    expect(origem).toMatchObject({ utm_source: "google", utm_content: "a01" });
+    expect(origem).not.toHaveProperty("ref");
+    expect(storage.getItem("lp_origem_v1")).not.toContain("ref");
   });
 
   it("captura UTMs permitidos e gclid, e nunca utm_term", () => {
@@ -36,12 +45,11 @@ describe("origem", () => {
     expect(sanitizar("utm_source", "google")).toBe("google");
   });
 
-  it("mantém ref e UTMs da sessão quando a URL vem sem parâmetros", () => {
+  it("mantém as UTMs da sessão quando a URL vem sem parâmetros", () => {
     const storage = storageFalso();
-    const primeira = capturarOrigem("?utm_source=google&utm_content=a01", storage);
+    capturarOrigem("?utm_source=google&utm_content=a01", storage);
     reiniciarOrigemParaTestes();
     const segunda = capturarOrigem("", storage);
-    expect(segunda.ref).toBe(primeira.ref);
     expect(segunda).toMatchObject({ utm_source: "google", utm_content: "a01" });
   });
 

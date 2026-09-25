@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { navegacao } from "@/components/CtaWhatsApp";
 import { TEXTOS_AUTOAVALIACAO as T } from "@/content/autoavaliacao";
 import { CidadeProvider } from "@/context/CidadeContext";
-import { reiniciarOrigemParaTestes } from "@/lib/origem";
+import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
 import { LINK_WHATSAPP_BASE } from "@/lib/whatsapp";
 import { Autoavaliacao, montarResumo } from "./Autoavaliacao";
 
@@ -82,6 +82,8 @@ describe("Autoavaliacao", () => {
   });
 
   it("depois de um clique sem opt-in, marcar a caixa volta o href ao link base (parecer R10)", () => {
+    // Com a cidade da URL, o link completo difere do base (sem código de referência, só a cidade o distingue).
+    capturarOrigem("?cidade=tuntum", null);
     renderizar();
     fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
     fireEvent.click(screen.getByRole("button", { name: limitacao.opcoes[0] }));
