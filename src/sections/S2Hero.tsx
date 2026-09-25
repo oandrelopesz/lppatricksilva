@@ -6,7 +6,7 @@ import { TEXTOS_HERO as T } from "@/content/hero";
 
 export function S2Hero() {
   return (
-    <header id="inicio" className="atlas-hero bg-creme px-4 pb-16 pt-8 text-grafite max-[374px]:pt-2 md:py-20">
+    <header id="inicio" className="atlas-hero bg-creme px-4 text-grafite">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-x-16 gap-y-6 md:grid-cols-2 md:items-center">
         <div className="min-w-0">
           <p className="mb-5 inline-block rounded-full border border-dourado/50 bg-bege px-4 py-2 text-base font-semibold leading-snug tracking-wide max-[374px]:mb-2">
@@ -33,7 +33,7 @@ export function S2Hero() {
           </CtaWhatsApp>
           <p className="mt-5 max-w-xl border-t border-dourado/40 pt-4 text-[18px] leading-snug text-grafite">{ASSINATURA}</p>
         </div>
-        <figure className="hero-media mx-auto w-full max-w-[31rem] md:col-start-2 md:row-start-1">
+        <figure className="hero-media md:col-start-2 md:row-start-1">
           <Foto
             nome="hero"
             alt={T.altFoto}
