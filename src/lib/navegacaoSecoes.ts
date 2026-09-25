@@ -36,6 +36,12 @@ function suspenderAtualizacaoPassiva(): void {
   };
 }
 
+/** Encerra a suspensão (desligar a navegação não pode deixar a atualização passiva presa). */
+function retomarAtualizacaoPassiva(): void {
+  encerrarSuspensao();
+  suspensa = false;
+}
+
 /** Seção que cruza a faixa do meio da viewport; no fim da página, a última (o id de agendar fica no rodapé). */
 function secaoDominante(): string | undefined {
   const presentes = SECOES.filter((slug) => document.getElementById(slug));
@@ -48,10 +54,24 @@ function secaoDominante(): string | undefined {
   });
 }
 
-/** Rola até a seção da navegação explícita, suspendendo a atualização passiva. */
+/**
+ * Leva o foco ao título da seção (ou à própria seção, sem título), sem rolar de novo, para quem usa
+ * teclado ou leitor de tela acompanhar a navegação explícita.
+ */
+function focarTitulo(slug: string): void {
+  const secao = document.getElementById(slug);
+  const alvo = secao?.querySelector<HTMLElement>("h1, h2, h3") ?? secao;
+  if (!alvo) return;
+  if (!alvo.hasAttribute("tabindex")) alvo.tabIndex = -1;
+  alvo.focus({ preventScroll: true });
+}
+
+/** Navegação explícita: suspende a atualização passiva, rola até a seção e leva o foco ao título. */
 function navegarExplicitamente(slug: string, suave: boolean): boolean {
   suspenderAtualizacaoPassiva();
-  return irParaSecao(slug, { suave });
+  if (!irParaSecao(slug, { suave })) return false;
+  focarTitulo(slug);
+  return true;
 }
 
 /** Carga em /<slug> (sitelink): rola até a seção sem animação. Só no navegador, depois da hidratação. */
@@ -89,6 +109,7 @@ export function interceptarLinksDeSecao(): () => void {
   return () => {
     document.removeEventListener("click", aoClicar);
     window.removeEventListener("popstate", aoNavegarNoHistorico);
+    retomarAtualizacaoPassiva();
   };
 }
 
@@ -126,8 +147,7 @@ export function acompanharRolagem(): () => void {
     observador.disconnect();
     cancelarTrocaPendente();
     cancelarTrocaPendente = () => {};
-    encerrarSuspensao();
-    suspensa = false;
+    retomarAtualizacaoPassiva();
   };
 }
 

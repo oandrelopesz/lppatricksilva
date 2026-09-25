@@ -5,7 +5,7 @@ import { SECOES } from "./secoes";
 
 describe("navegação por seções", () => {
   beforeEach(() => {
-    document.body.innerHTML = SECOES.map((slug) => `<section id="${slug}"><a href="#${slug}">${slug}</a></section>`).join("");
+    document.body.innerHTML = SECOES.map((slug) => `<section id="${slug}"><h2>Título ${slug}</h2><a href="#${slug}">${slug}</a></section>`).join("");
     Element.prototype.scrollIntoView = vi.fn();
     vi.stubGlobal("matchMedia", () => ({ matches: false }));
   });
@@ -311,6 +311,71 @@ describe("navegação por seções", () => {
       vi.advanceTimersByTime(300);
       expect(window.location.pathname).toBe("/onde-atende");
       desligar();
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    });
+  });
+
+  describe("foco nas navegações explícitas (R20, item 3)", () => {
+    const titulo = (slug: string) => document.querySelector<HTMLElement>(`#${slug} h2`)!;
+    let desligar: () => void = () => {};
+    afterEach(() => desligar());
+
+    it("clique em link interno leva o foco ao título da seção, sem rolar de novo", () => {
+      desligar = interceptarLinksDeSecao();
+      const focar = vi.spyOn(HTMLElement.prototype, "focus");
+      fireEvent.click(document.querySelector<HTMLAnchorElement>('a[href="#sobre"]')!);
+      expect(document.activeElement).toBe(titulo("sobre"));
+      expect(titulo("sobre").tabIndex).toBe(-1);
+      expect(focar).toHaveBeenCalledWith({ preventScroll: true });
+      focar.mockRestore();
+    });
+
+    it("carga em /<slug> e Voltar levam o foco ao título", () => {
+      window.history.replaceState(null, "", "/duvidas");
+      rolarParaSecaoDaUrl();
+      expect(document.activeElement).toBe(titulo("duvidas"));
+      desligar = interceptarLinksDeSecao();
+      window.history.replaceState(null, "", "/como-funciona");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      expect(document.activeElement).toBe(titulo("como-funciona"));
+    });
+
+    it("mantém um tabindex que o título já tenha", () => {
+      desligar = interceptarLinksDeSecao();
+      titulo("sobre").tabIndex = 0;
+      fireEvent.click(document.querySelector<HTMLAnchorElement>('a[href="#sobre"]')!);
+      expect(titulo("sobre").tabIndex).toBe(0);
+      expect(document.activeElement).toBe(titulo("sobre"));
+    });
+
+    it("a atualização passiva pela rolagem não mexe no foco", () => {
+      let retorno: IntersectionObserverCallback | undefined;
+      vi.stubGlobal(
+        "IntersectionObserver",
+        class {
+          constructor(r: IntersectionObserverCallback) {
+            retorno = r;
+          }
+          observe = vi.fn();
+          unobserve = vi.fn();
+          disconnect = vi.fn();
+        },
+      );
+      vi.spyOn(document.documentElement, "scrollHeight", "get").mockImplementation(() => 10000);
+      vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+        const topo = this.id === "sobre" ? 0 : 5000;
+        return { top: topo, bottom: topo + 800, left: 0, right: 390, width: 390, height: 800, x: 0, y: topo, toJSON: () => ({}) } as DOMRect;
+      });
+      vi.useFakeTimers();
+      const botao = document.createElement("button");
+      document.body.append(botao);
+      botao.focus();
+      desligar = acompanharRolagem();
+      retorno!([{ target: document.getElementById("sobre")!, isIntersecting: true } as unknown as IntersectionObserverEntry], {} as IntersectionObserver);
+      vi.advanceTimersByTime(300);
+      expect(window.location.pathname).toBe("/sobre");
+      expect(document.activeElement).toBe(botao);
       vi.useRealTimers();
       vi.restoreAllMocks();
     });
