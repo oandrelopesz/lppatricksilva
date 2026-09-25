@@ -6,7 +6,7 @@ export type ParametrosEvento = Record<string, string | number | undefined>;
 export interface OpcoesEvento {
   /**
    * Chamado uma vez: 150 ms depois de a requisição de conversão do Ads sair ou no teto (1.500 ms com o
-   * GTM pronto no clique, 3.000 ms sem ele), o que vier primeiro.
+   * GTM pronto no clique, 4.000 ms sem ele), o que vier primeiro.
    */
   aoConcluir?: () => void;
   /** performance.now() do clique original (clique segurado antes da hidratação); o teto conta dele. */
@@ -29,7 +29,7 @@ declare global {
  * vista ou no teto, contado do clique (spec §8).
  */
 const TETO_COM_GTM_MS = 1500;
-const TETO_SEM_GTM_MS = 3000;
+const TETO_SEM_GTM_MS = 4000;
 const DEPOIS_DA_CONVERSAO_MS = 150;
 
 /**
@@ -158,7 +158,7 @@ export function track(evento: string, params: ParametrosEvento = {}, opcoes: Opc
   const inicio = opcoes.inicioMs ?? performance.now();
   const limpo = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ""));
   window.dataLayer = window.dataLayer || [];
-  // Com o GTM já na página, a conversão sai mais cedo (teto de 1.500 ms); carregando agora, 3.000 ms.
+  // Com o GTM já na página, a conversão sai mais cedo (teto de 1.500 ms); carregando agora, 4.000 ms.
   // O teto depende do GTM no clique: no clique segurado, o estado guardado pelo segurador (parecer R29).
   const gtmPronto = opcoes.gtmProntoNoClique ?? Boolean(window.google_tag_manager);
   if (evento === "clique_whatsapp") {

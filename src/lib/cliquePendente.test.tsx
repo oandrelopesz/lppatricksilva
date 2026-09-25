@@ -92,8 +92,8 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
     expect(w.__lpCliquePendente).toBeUndefined();
     expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", local_cta: "hero" }));
     expect(link).toHaveAttribute("aria-busy", "true");
-    // Teto de 3.000 ms contado do clique original (1.000 ms já passaram).
-    act(() => vi.advanceTimersByTime(1999));
+    // Teto de 4.000 ms contado do clique original (1.000 ms já passaram).
+    act(() => vi.advanceTimersByTime(2999));
     expect(navegacao.ir).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(1));
     expect(navegacao.ir).toHaveBeenCalledTimes(1);
@@ -121,7 +121,7 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
     expect(navegacao.ir).toHaveBeenCalledTimes(1);
   });
 
-  it("se a app não hidratar, a navegação de segurança vai para o href em 3.500 ms", () => {
+  it("se a app não hidratar, a navegação de segurança vai para o href em 4.500 ms", () => {
     let aoClicar: ((e: unknown) => void) | undefined;
     const assign = vi.fn();
     const janela = {
@@ -140,7 +140,7 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
     expect(evento.preventDefault).toHaveBeenCalled();
     expect(evento.stopPropagation).toHaveBeenCalled();
     expect(janela.__lpCliquePendente).toMatchObject({ href: LINK_WHATSAPP_BASE, localCta: "faq" });
-    vi.advanceTimersByTime(3499);
+    vi.advanceTimersByTime(4499);
     expect(assign).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
     expect(assign).toHaveBeenCalledWith(LINK_WHATSAPP_BASE);
@@ -222,17 +222,17 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
       expect(w.__lpCliquePendente).toMatchObject({ gtmPronto: false });
     });
 
-    it("GTM ausente no clique e pronto aos 1.100 ms, hidratação aos 1.600 ms: teto de 3.000 ms do clique", async () => {
+    it("GTM ausente no clique e pronto aos 1.100 ms, hidratação aos 1.600 ms: teto de 4.000 ms do clique", async () => {
       await cenario(false, 1100, 1600);
-      act(() => vi.advanceTimersByTime(1399));
+      act(() => vi.advanceTimersByTime(2399));
       expect(navegacao.ir).not.toHaveBeenCalled();
       act(() => vi.advanceTimersByTime(1));
       expect(navegacao.ir).toHaveBeenCalledTimes(1);
     });
 
-    it("GTM ausente no clique e pronto antes, hidratação aos 1.200 ms (antes de 1.500): continua o teto de 3.000 ms", async () => {
+    it("GTM ausente no clique e pronto antes, hidratação aos 1.200 ms (antes de 1.500): continua o teto de 4.000 ms", async () => {
       await cenario(false, 500, 1200);
-      act(() => vi.advanceTimersByTime(1799));
+      act(() => vi.advanceTimersByTime(2799));
       expect(navegacao.ir).not.toHaveBeenCalled();
       act(() => vi.advanceTimersByTime(1));
       expect(navegacao.ir).toHaveBeenCalledTimes(1);
@@ -268,8 +268,8 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
       return { assign, clicar };
     }
 
-    for (const hidratacaoMs of [2999, 3400, 3499]) {
-      it(`hidratação aos ${hidratacaoMs} ms: uma navegação só, nunca depois dos 3.000 ms (ou na hora)`, async () => {
+    for (const hidratacaoMs of [3999, 4400, 4499]) {
+      it(`hidratação aos ${hidratacaoMs} ms: uma navegação só, nunca depois dos 4.000 ms (ou na hora)`, async () => {
         const { assign, clicar } = instalarSeguradorContando();
         const raiz = document.createElement("div");
         raiz.innerHTML = renderToString(<Cta />);
@@ -281,7 +281,7 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
         });
         act(() => processarCliquePendente());
         expect(window.dataLayer!.filter((e) => e.event === "clique_whatsapp")).toHaveLength(1);
-        const ate = Math.max(3000 - hidratacaoMs, 0);
+        const ate = Math.max(4000 - hidratacaoMs, 0);
         if (ate > 0) {
           expect(navegacao.ir).not.toHaveBeenCalled();
           act(() => vi.advanceTimersByTime(ate));
@@ -299,7 +299,7 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
       raiz.innerHTML = renderToString(<Cta />);
       document.body.append(raiz);
       clicar(raiz.querySelector("a")!);
-      act(() => vi.advanceTimersByTime(3600));
+      act(() => vi.advanceTimersByTime(4600));
       expect(assign).toHaveBeenCalledTimes(1);
       await act(async () => {
         hydrateRoot(raiz, <Cta />);

@@ -54,7 +54,7 @@ describe("CtaWhatsApp", () => {
     expect(navegacao.ir).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(1));
     expect(navegacao.ir).toHaveBeenCalledTimes(1);
-    act(() => vi.advanceTimersByTime(3000));
+    act(() => vi.advanceTimersByTime(4000));
     expect(navegacao.ir).toHaveBeenCalledTimes(1);
     const url = vi.mocked(navegacao.ir).mock.calls[0][0];
     expect(textoDe(url)).toBe(MENSAGENS_WHATSAPP.base);
@@ -109,7 +109,7 @@ describe("CtaWhatsApp", () => {
     expect(noSegundoClique[1].cidade).toBeUndefined();
   });
 
-  it("sem o GTM carregado, navega no teto de 3.000 ms, com o link ocupado durante a espera", () => {
+  it("sem o GTM carregado, navega no teto de 4.000 ms, com o link ocupado durante a espera", () => {
     render(
       <CidadeProvider>
         <CtaWhatsApp localCta="faq" className="cta">Agendar</CtaWhatsApp>
@@ -120,7 +120,7 @@ describe("CtaWhatsApp", () => {
     expect(link).toHaveAttribute("aria-busy", "true");
     expect(link).toHaveClass("cta", "cta-aguardando");
     expect(link.textContent).toBe("Agendar");
-    vi.advanceTimersByTime(2999);
+    vi.advanceTimersByTime(3999);
     expect(navegacao.ir).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(1));
     expect(navegacao.ir).toHaveBeenCalledTimes(1);
@@ -157,7 +157,7 @@ describe("CtaWhatsApp", () => {
     );
     const link = screen.getByRole("link", { name: "Agendar" });
     fireEvent.click(link, { ctrlKey: true });
-    vi.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(4000);
     expect(navegacao.ir).not.toHaveBeenCalled();
     expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", local_cta: "rodape" }));
     expect(textoDe(link.getAttribute("href")!)).toBe(MENSAGENS_WHATSAPP.comCidade("Tuntum"));
@@ -172,7 +172,7 @@ describe("CtaWhatsApp", () => {
     const link = screen.getByRole("link", { name: "Agendar" });
     // O @testing-library/dom instalado não tem fireEvent.auxClick: dispara o evento nativo.
     fireEvent(link, new MouseEvent("auxclick", { bubbles: true, cancelable: true, button: 1 }));
-    vi.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(4000);
     expect(navegacao.ir).not.toHaveBeenCalled();
     expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", local_cta: "sobre" }));
     expect(textoDe(link.getAttribute("href")!)).toBe(MENSAGENS_WHATSAPP.comCidade("Tuntum"));
@@ -187,7 +187,7 @@ describe("CtaWhatsApp", () => {
     );
     fireEvent.click(screen.getByText("escolher"));
     fireEvent.click(screen.getByRole("link", { name: "Agendar" }));
-    vi.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(4000);
     expect(textoDe(vi.mocked(navegacao.ir).mock.calls[0][0])).toContain("Tuntum");
     expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", cidade: "Tuntum" }));
   });
@@ -201,7 +201,7 @@ describe("CtaWhatsApp", () => {
       </CidadeProvider>,
     );
     fireEvent.click(screen.getByRole("link", { name: "Agendar em Balsas" }));
-    vi.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(4000);
     const texto = textoDe(vi.mocked(navegacao.ir).mock.calls[0][0]);
     expect(texto).toContain("Balsas");
     expect(texto).toContain("Hospital São José");
@@ -221,7 +221,7 @@ describe("CtaWhatsApp", () => {
     const link = screen.getByRole("link", { name: "Agendar" });
     fireEvent.click(link, { ctrlKey: true });
     expect(link.getAttribute("href")).toBe(LINK_WHATSAPP_BASE);
-    vi.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(4000);
     expect(navegacao.ir).toHaveBeenCalledTimes(1);
     expect(textoDe(vi.mocked(navegacao.ir).mock.calls[0][0])).toContain("Meu resumo: joelho.");
     expect(document.body.innerHTML).not.toContain("joelho");
@@ -254,7 +254,7 @@ describe("CtaWhatsApp", () => {
       const link = screen.getByRole("link", { name: "Perguntar" });
       expect(link.getAttribute("href")).toBe(LINK_WHATSAPP_DUVIDA);
       fireEvent.click(link);
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(4000);
       expect(textoDe(vi.mocked(navegacao.ir).mock.calls[0][0])).toBe(MENSAGENS_WHATSAPP.duvida);
       expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", intencao: "duvida" }));
     });
@@ -270,7 +270,7 @@ describe("CtaWhatsApp", () => {
       );
       fireEvent.click(screen.getByText("escolher"));
       fireEvent.click(screen.getByRole("link", { name: "Perguntar" }));
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(4000);
       expect(textoDe(vi.mocked(navegacao.ir).mock.calls[0][0])).toContain("tirar uma dúvida antes de agendar uma consulta em Tuntum.");
     });
 
@@ -283,7 +283,7 @@ describe("CtaWhatsApp", () => {
       const link = screen.getByRole("link", { name: "Agendar" });
       expect(link.getAttribute("href")).toBe(LINK_WHATSAPP_BASE);
       fireEvent.click(link);
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(4000);
       expect(textoDe(vi.mocked(navegacao.ir).mock.calls[0][0])).toContain("gostaria de agendar uma consulta");
       expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", intencao: "agendar" }));
     });
@@ -326,7 +326,7 @@ describe("CtaWhatsApp", () => {
       const seguiu = fireEvent.click(link);
       expect(seguiu).toBe(false);
       expect(window.dataLayer!.filter((e) => e.event === "clique_whatsapp")).toHaveLength(1);
-      act(() => vi.advanceTimersByTime(3000));
+      act(() => vi.advanceTimersByTime(4000));
       expect(navegacao.ir).toHaveBeenCalledTimes(1);
       // Depois da navegação, a trava sai: um novo clique volta a valer.
       fireEvent.click(link);
@@ -344,7 +344,7 @@ describe("CtaWhatsApp", () => {
       expect(fireEvent.click(link, { ctrlKey: true })).toBe(true);
       fireEvent(link, new MouseEvent("auxclick", { bubbles: true, cancelable: true, button: 1 }));
       expect(window.dataLayer!.filter((e) => e.event === "clique_whatsapp")).toHaveLength(3);
-      act(() => vi.advanceTimersByTime(3000));
+      act(() => vi.advanceTimersByTime(4000));
       expect(navegacao.ir).toHaveBeenCalledTimes(1);
     });
   });
