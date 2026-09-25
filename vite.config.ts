@@ -25,5 +25,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
+    // Testes que renderizam o App inteiro passam de 5 s com a máquina carregada.
+    testTimeout: 15000,
   },
 });

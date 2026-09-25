@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { navegacao } from "@/components/CtaWhatsApp";
 import { TEXTOS_AUTOAVALIACAO as T } from "@/content/autoavaliacao";
@@ -25,6 +25,18 @@ describe("Autoavaliacao", () => {
     expect(screen.getByRole("group", { name: regiao.pergunta })).toBeInTheDocument();
     expect(screen.getByText(T.progresso(1, 3))).toHaveAttribute("aria-live", "polite");
     expect(screen.getByText(regiao.pergunta)).not.toHaveFocus();
+  });
+
+  it("mostra barra de progresso que acompanha a etapa e opções em cartões", () => {
+    renderizar();
+    const progresso = screen.getByRole("progressbar");
+    expect(progresso).toHaveAttribute("aria-valuenow", "1");
+    expect(progresso).toHaveAttribute("aria-valuemax", "3");
+    expect(screen.getByRole("button", { name: regiao.opcoes[0] })).toHaveClass("autoavaliacao-opcao");
+    fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "2");
+    fireEvent.click(screen.getByRole("button", { name: T.voltar }));
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "1");
   });
 
   it("três respostas levam ao resultado com aviso e sem procedimento", () => {
@@ -63,22 +75,23 @@ describe("Autoavaliacao", () => {
   });
 
   it("o resumo só segue ao WhatsApp após opt-in, fora do href e dos eventos", () => {
+    // A navegação sai pelo teto do clique (o detector da conversão é testado no analytics).
+    vi.useFakeTimers();
     renderizar();
     fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
     fireEvent.click(screen.getByRole("button", { name: limitacao.opcoes[0] }));
     fireEvent.click(screen.getByRole("button", { name: tentativa.opcoes[0] }));
     const cta = screen.getByRole("link", { name: T.cta });
     fireEvent.click(cta);
-    const semResumo = window.dataLayer?.at(-1) as { eventCallback: () => void };
-    semResumo.eventCallback();
+    act(() => vi.advanceTimersByTime(3000));
     expect(vi.mocked(navegacao.ir).mock.lastCall?.[0]).not.toContain(regiao.opcoes[0]);
     fireEvent.click(screen.getByRole("checkbox", { name: T.incluirResumo }));
     expect(cta.getAttribute("href")).not.toContain(regiao.opcoes[0]);
     fireEvent.click(cta);
-    const comResumo = window.dataLayer?.at(-1) as { eventCallback: () => void };
-    comResumo.eventCallback();
+    act(() => vi.advanceTimersByTime(3000));
     expect(new URL(vi.mocked(navegacao.ir).mock.lastCall![0]).searchParams.get("text")).toContain(T.resumo.regiao(regiao.opcoes[0]));
     expect(JSON.stringify(window.dataLayer)).not.toContain(regiao.opcoes[0]);
+    vi.useRealTimers();
   });
 
   it("depois de um clique sem opt-in, marcar a caixa volta o href ao link base (parecer R10)", () => {

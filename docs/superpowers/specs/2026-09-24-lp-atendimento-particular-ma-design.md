@@ -204,13 +204,13 @@ Nenhum evento carrega dado de saúde (região do corpo, limitação, tratamento)
 ## 10. Identidade visual
 
 - Linha do dossiê: monograma em traço fino, paleta escura com dourado e bege, tipografia serifada. Logo oficial não entregue: wordmark tipográfico "Dr. Patrick Santos" e favicon com as iniciais "PS" (pendência do arquivo).
-- Tokens iniciais (o Designer ajusta mantendo AA): grafite `#15171B`, creme de fundo `#F8F4EC`, bege `#EDE3D2`, dourado `#B98F4E` (texto dourado só sobre grafite), dourado claro da topbar `#D4B06A` com texto `#15171B`, CTA verde WhatsApp escuro `#1E7F4F` com texto branco.
-- Tipografia: Lora 600/700 nos títulos e Figtree 400/600 no corpo, self-hosted em woff2 (subset latin), `font-display: swap`, fallback métrico. Corpo mínimo 18 px no mobile, entrelinha 1,6.
+- Direção vigente, conforme §21 frontend-design v2: grafite `#171B20`, gesso `#EDEFEA`, linho `#DDD2BE`, ouro fosco `#A98545`, eco `#56717F` e CTA verde `#1E7F4F`.
+- Tipografia: Source Serif 4 600 nos títulos e Atkinson Hyperlegible Next 400/600 no corpo, self-hosted em woff2 (subset latin), `font-display: swap`, fallback métrico. Corpo 19 px no mobile, entrelinha 1,6.
 - Alvos de toque de 48 px, contraste WCAG AA, foco visível, `prefers-reduced-motion` respeitado. Transição entre seções só por cor de fundo.
 
 ## 11. Imagens
 
-- Seleção: hero `_DSC2060`; sobre `_DSC2069`; como funciona `_DSC2001`; CTA final `_DSC1992`.
+- Seleção vigente: hero `_DSC2069`; sobre `_DSC1992`; como funciona `_DSC2001`; CTA final `_DSC2011`.
 - `scripts/imagens.mjs` (ffmpeg: libaom-av1 e libwebp) gera AVIF e WebP nas larguras 480, 720, 960 e 1280 em `public/img/`, recorte 4:5 por foto. Originais continuam em `fotos-originais/`, fora do git.
 - `<picture>` com AVIF, WebP e `srcset`/`sizes`; dimensões explícitas. Hero sem lazy e com `fetchpriority="high"`; demais com `loading="lazy"` e `decoding="async"`.
 
@@ -222,7 +222,13 @@ Opcional. O Designer pode propor um elemento que ajude a conversão (não decora
 
 | Asset gerado | Onde entrou | O que representa |
 |---|---|---|
-| `public/favicon.svg` (Tarefa 7a, commit 8503e3e) | Favicon da página | Monograma "PS" provisório em traço fino, dourado `#B98F4E` sobre grafite `#15171B`, até chegar o logo oficial |
+| `public/favicon.svg` (Tarefa 7a, atualizado em FD) | Favicon e rodapé | Monograma "PS" provisório em traço fino, ouro fosco `#A98545` sobre grafite `#171B20`, até chegar o logo oficial |
+| `src/components/icones/Icone.tsx`: joelho, quadril, ombro, coluna, pé e calcanhar, cotovelo, tendão e treino | Identificação e autoavaliação | Sinais anatômicos neutros em SVG de linha, sem diagnóstico nem representação de paciente |
+| `src/components/icones/Icone.tsx`: calendário, alfinete de mapa, conversa e ultrassom | Como funciona | Etapas e recursos da consulta em SVG de linha; ícones decorativos ocultos da árvore de acessibilidade |
+| `src/components/MapaMaranhao.tsx` (contorno de `src/data/mapaMaranhao.ts`) | Seção Onde atende | Mapa ilustrado do Maranhão derivado da malha e centroides do IBGE, com 11 marcadores numerados e clicáveis; pontos próximos têm área de toque separada por linha guia |
+| `public/prancha-joelho.webp` | Cartão de articulação em Para quem é | Gravura anatômica neutra de joelho, gerada pelo modelo de imagem GPT e otimizada em WebP, 11.114 B |
+| `public/prancha-coluna.webp` | Cartão de coluna em Para quem é | Gravura anatômica neutra de coluna, gerada pelo modelo de imagem GPT e otimizada em WebP, 6.690 B |
+| `public/prancha-ombro.webp` | Cartão de esporte em Para quem é | Gravura anatômica neutra de ombro, gerada pelo modelo de imagem GPT e otimizada em WebP, 14.584 B |
 
 ## 13. Compliance
 
@@ -304,6 +310,8 @@ O André avaliou a página como sem acabamento visual: sem mapa aparente, intera
 - **Contêiner do GTM (decisão do André, 24/09/2026):** usar o contêiner existente GTM-M6GH8FC9 (conta "PATRICK SILVA", vazio) em vez de criar conta nova; a importação entra num workspace próprio. Publicação da versão "v1 LP Dr. Patrick Santos" confirmada pelo André em 25/09/2026, com a lista da validação 3 (13 tags, 9 acionadores, 15 variáveis, 4 variáveis internas desativadas), depois de 5/5 com consentimento recusado e 5/5 com aceito no clique imediato.
 - **Deploy inicial (decisão do André, 24/09/2026):** o primeiro deploy ficou público em `lp-dr-santos.vercel.app` antes do marco; o André decidiu manter no ar (conteúdo aprovado, sem GTM nem cookies). Os próximos deploys seguem a cada entrega aprovada.
 - **Preview ao vivo do design:** terminal "Servidor Design" no Floor Front (porta 8082) e portais "LP design ao vivo" e "LP design 3 telas", para o André acompanhar antes do merge.
+- **Direção frontend-design v2 (pedido do André, 24/09/2026; substitui as decisões visuais V1 a V4):** refatoração só visual, sem mudar texto nem comportamento interativo. Conceito "atlas de consultório": o médico que explica com o modelo anatômico, guia procedimentos por ultrassom e viaja por 11 cidades. Tokens: grafite `#171B20`, gesso `#EDEFEA`, linho `#DDD2BE`, ouro fosco `#A98545` apenas em filetes, monograma e foco, eco `#56717F` para rotas e mapa, verde WhatsApp `#1E7F4F` apenas em CTA. Atkinson Hyperlegible Next no corpo e Source Serif 4 nos títulos; 19 px e entrelinha 1,6 no mobile. Hero com foto real em moldura editorial ampla e filete discreto, após André rejeitar o recorte em gota; todo o movimento ocorre apenas na resposta a ações. Pranchas anatômicas de gravura sem sombra, ficha de autoavaliação com régua em três marcas, seis passos em rota numerada, Sobre editorial, seção de locais escura com mapa e rota, FAQ em lista de filetes e rodapé com monograma. Sem revelação ao rolar, rótulos em caixa alta, eyebrow, seta de botão, gradiente decorativo ou cartões idênticos.
+- **Ajuste direto do André:** na aba aberta, clínicas e embeds do Google Maps ficam em uma única coluna em todas as larguras. Cada clínica apresenta nome, endereço e seu próprio mapa no mesmo bloco; um embed por linha.
 
 ## 19. Registro do parecer R2 (Revisor, plano)
 

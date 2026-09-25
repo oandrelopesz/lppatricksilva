@@ -2,38 +2,232 @@
 @import "./tokens.css";
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-    scroll-padding-top: 4rem;
-  }
+  html { scroll-behavior: smooth; scroll-padding-top: 71px; scrollbar-width: thin; scrollbar-color: #718b96 var(--color-creme); }
+  body { margin: 0; background: var(--color-creme); color: var(--color-grafite); font-family: var(--font-corpo); font-size: 1.1875rem; line-height: 1.6; }
+  p, li { max-width: 66ch; }
+  h1, h2, h3, h4 { font-family: var(--font-titulo); font-optical-sizing: auto; font-weight: 600; line-height: 1.15; }
+  h1, h2 { letter-spacing: -.035em; }
+  h3, h4 { letter-spacing: -.015em; }
+  section h2, #onde-atende > h2 { font-size: clamp(2.25rem, 6vw, 3.9rem); max-width: 20ch; }
+  section h3 { line-height: 1.2; }
+  :focus-visible { outline: 3px solid var(--color-foco-claro); outline-offset: 4px; }
+  a, button { -webkit-tap-highlight-color: transparent; }
+  @media (min-width: 640px) { html { scroll-padding-top: 51px; } }
+  @media (min-width: 768px) { body { font-size: 1.125rem; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+}
 
-  body {
-    background: var(--color-creme);
-    color: var(--color-grafite);
-    font-family: var(--font-corpo);
-    font-size: 1.125rem;
-    line-height: 1.6;
-  }
+@layer components {
+  .premium-texture { background: var(--color-grafite); }
+  .premium-card { border: 1px solid rgb(23 27 32 / 18%); border-radius: 4px; box-shadow: none; }
+  .premium-photo { display: block; border: 1px solid var(--color-dourado); border-radius: 12px; box-shadow: none; }
+  a.premium-cta { min-height: 48px; border-radius: 4px; box-shadow: none; transition: background-color 160ms ease, transform 160ms ease; }
+  a.premium-cta:active { background: var(--color-cta-escuro); transform: scale(.99); transition: none; }
+  a.premium-cta:focus-visible { outline: 3px solid var(--color-foco-claro); outline-offset: 4px; }
+  #onde-atende :focus-visible, #rodape :focus-visible { outline-color: var(--color-dourado-claro); }
+  #para-quem .autoavaliacao-opcao:focus-visible { outline-color: var(--color-foco-claro); }
 
-  h1, h2, h3 {
-    font-family: var(--font-titulo);
-    line-height: 1.2;
-  }
+  .premium-topbar { padding-block: 11px; border-bottom: 1px solid var(--color-dourado); box-shadow: none; }
+  .premium-topbar p { line-height: 24px; }
+  .atlas-hero { position: relative; overflow: clip; padding-top: 2rem; padding-bottom: 4rem; border-bottom: 1px solid rgb(23 27 32 / 18%); }
+  .atlas-hero > div { position: relative; }
+  .atlas-hero h1 { font-size: clamp(2.42rem, 7.5vw, 4.9rem); line-height: 1.04; max-width: 17ch; }
+  .atlas-hero p:not(:first-child) { max-width: 60ch; }
+  .hero-media { position: relative; isolation: isolate; width: 100%; max-width: 31rem; margin-inline: auto; }
+  .hero-media::before { content: ""; position: absolute; inset: 16px -16px -16px 16px; z-index: -1; border: 1px solid var(--color-eco); border-radius: 12px; }
+  .hero-media .premium-photo { width: 100%; height: auto; border-radius: 12px; }
+  @media (max-width: 374px) { .atlas-hero { padding-top: .5rem; } }
+  @media (min-width: 768px) { .atlas-hero { padding-block: 5rem; } .hero-media { width: min(115%, 36rem); max-width: none; margin-right: -4rem; } }
+  @media (min-width: 1024px) { .atlas-hero { padding-block: 2.5rem; } .atlas-hero h1 { font-size: 3.375rem; line-height: 1.04; } .hero-media { width: min(100%, 26rem); margin-right: -2rem; } }
 
-  :focus-visible {
-    outline: 3px solid var(--color-grafite);
-    outline-offset: 3px;
-  }
+  .aviso-cookies :focus-visible { outline-color: var(--color-dourado-claro); }
 
-  .bg-grafite :focus-visible {
-    outline-color: var(--color-creme);
-  }
+  #para-quem { background: var(--color-creme); }
+  #para-quem > div > p:first-of-type { max-width: 58ch; }
+  #para-quem .identificacao-cartao { border: 1px solid var(--color-dourado); border-radius: 4px; background: var(--color-bege); box-shadow: none; padding: 0 0 1.5rem; overflow: hidden; }
+  .identificacao-cartao__artes { position: relative; display: block; height: clamp(13rem, 25vw, 16rem); border-bottom: 1px solid rgb(23 27 32 / 18%); background: #edefea; }
+  .identificacao-cartao__icone { position: absolute; bottom: .75rem; left: .75rem; z-index: 1; border: 1px solid var(--color-dourado); border-radius: 4px; background: var(--color-creme); box-shadow: none; }
+  .identificacao-cartao__arte { display: block; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+  #para-quem .identificacao-cartao h3, #para-quem .identificacao-cartao ul { margin-inline: 1.5rem; }
+  #para-quem .identificacao-cartao h3 { margin-top: 1.5rem; font-size: 1.6rem; }
+  #para-quem .identificacao-cartao li { padding-left: .15rem; }
+  #para-quem .identificacao-cartao li::marker { color: var(--color-eco); }
 
+  .autoavaliacao-painel { border: 1px solid var(--color-grafite); border-top: 4px solid var(--color-eco); border-radius: 4px; box-shadow: none; background: #fff; }
+  .autoavaliacao-progresso { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; height: 7px; overflow: visible; background: none; }
+  .autoavaliacao-progresso > span { display: block; height: 7px; background: #bdc4c5; transition: background-color 180ms ease; }
+  .autoavaliacao-progresso > span[data-completo="true"] { background: var(--color-eco); }
+  .autoavaliacao-etapa, .autoavaliacao-resultado { animation: etapa-entrar 180ms ease-out both; }
+  @keyframes etapa-entrar { from { opacity: .7; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .autoavaliacao-opcao { display: flex; align-items: center; gap: .8rem; border: 1px solid rgb(23 27 32 / 34%); border-radius: 4px; box-shadow: none; transition: border-color 150ms ease, background-color 150ms ease; }
+  .autoavaliacao-opcao:active { border-color: var(--color-eco); background: var(--color-creme); transition: none; }
+  .autoavaliacao-opcao__icone { display: inline-flex; width: 2.5rem; height: 2.5rem; flex: none; align-items: center; justify-content: center; border-radius: 4px; background: var(--color-bege); }
+  .autoavaliacao-nav { border: 1px solid var(--color-grafite); border-radius: 4px; color: var(--color-grafite); background: transparent; }
+  .autoavaliacao-nav:active { background: var(--color-bege); }
+  .autoavaliacao-resumo, .autoavaliacao-inclusao { border-radius: 4px; }
+
+  .premium-timeline { position: relative; }
+  .premium-timeline::before { content: ""; position: absolute; top: 1.5rem; bottom: 1.5rem; left: 1.375rem; width: 2px; background: var(--color-eco); }
+  .timeline-marker { position: absolute; top: 1rem; left: -3.45rem; z-index: 1; display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1.5px solid var(--color-eco); border-radius: 50%; background: var(--color-creme); color: var(--color-grafite); font-family: var(--font-corpo); font-size: 1rem; font-weight: 600; }
+  #como-funciona .premium-timeline > li { border: 0; border-bottom: 1px solid rgb(23 27 32 / 28%); border-radius: 0; background: transparent; box-shadow: none; }
+  #como-funciona .premium-timeline svg { color: var(--color-eco); }
+  .seletor-cidade { border: 1px solid var(--color-eco); border-left: 4px solid var(--color-eco); border-radius: 4px; box-shadow: none; }
+  .seletor-cidade select, .seletor-cidade button { border-radius: 4px; }
+  .seletor-cidade button:active { background: #303a42; }
+
+  #sobre { background: var(--color-bege); color: var(--color-grafite); }
+  #sobre .text-dourado-claro { color: #5a481f; }
+  .sobre-fatos { display: grid; gap: 0; list-style: none; padding: 0; }
+  .sobre-fatos li { padding: 1.2rem 0; border-top: 1px solid var(--color-dourado); border-radius: 0; background: transparent; }
+  .sobre-fatos li:last-child { border-bottom: 1px solid var(--color-dourado); }
+  .sobre-fatos p { margin: 0; }
+
+  #onde-atende { background: var(--color-grafite); color: var(--color-creme); padding: 5rem 1rem; }
+  #onde-atende > * { max-width: 72rem; margin-inline: auto; }
+  #onde-atende > p { margin-top: 1.25rem; }
+  #onde-atende > .premium-cta { margin-inline: max(0px, calc((100vw - 72rem) / 2)); }
+  .abas-cidades__regiao { margin-top: 2.5rem; }
+  .abas-cidades__regiao h3 { font-size: 1.55rem; margin-bottom: .5rem; color: var(--color-creme); }
+  .abas-cidades__lista-wrap { position: relative; }
+  .abas-cidades__lista-wrap::before, .abas-cidades__lista-wrap::after { content: ""; position: absolute; top: 0; bottom: 0; z-index: 1; width: 1.5rem; pointer-events: none; opacity: 0; transition: opacity .15s ease; }
+  .abas-cidades__lista-wrap::before { left: 0; background: linear-gradient(270deg, transparent, var(--color-grafite)); }
+  .abas-cidades__lista-wrap::after { right: 0; background: linear-gradient(90deg, transparent, var(--color-grafite)); }
+  .abas-cidades__lista-wrap[data-sombra-esquerda]::before, .abas-cidades__lista-wrap[data-sombra-direita]::after { opacity: 1; }
+  .abas-cidades__lista { display: flex; gap: .75rem; overflow-x: auto; padding: .3rem .2rem .8rem; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: #8cabb8 transparent; }
+  .abas-cidades__lista::-webkit-scrollbar { height: 8px; }
+  .abas-cidades__lista::-webkit-scrollbar-track { background: transparent; }
+  .abas-cidades__lista::-webkit-scrollbar-thumb { border: 2px solid var(--color-grafite); border-radius: 999px; background: #8cabb8; }
+  .abas-cidades__lista button { display: inline-flex; flex: 0 0 min(62vw, 14rem); align-items: center; justify-content: center; gap: .6rem; min-height: 48px; padding: .55rem .85rem; border: 1.5px solid var(--color-dourado); border-radius: 8px; background: #252c31; color: var(--color-creme); cursor: pointer; scroll-snap-align: start; text-align: left; font-weight: 600; line-height: 1.2; transition: transform .15s ease, background-color .15s ease, border-color .15s ease; }
+  .abas-cidades__lista button:active { transform: translateY(1px); border-color: var(--color-dourado-claro); background: #35424b; transition: none; }
+  .abas-cidades__lista button[aria-selected="true"] { border-color: var(--color-dourado-claro); background: var(--color-dourado-claro); color: var(--color-grafite); }
+  .abas-cidades__lista button[aria-selected="true"]:active { background: #dfc58d; }
+  .abas-cidades__lista button:focus-visible { outline-color: var(--color-dourado-claro); outline-offset: 2px; }
+  @media (min-width: 640px) { .abas-cidades__lista button { flex-basis: auto; } }
+  .abas-cidades__geral { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: 1rem; margin-top: 2rem; }
+  .abas-cidades__geral > div, .cartao-local { padding: 1.5rem; border: 1px solid var(--color-dourado); border-radius: 4px; background: #252c31; color: var(--color-creme); box-shadow: none; }
+  .abas-cidades__geral h4, .cartao-local h4 { font-size: 1.4rem; }
+  .abas-cidades__geral ul { margin-top: .75rem; }
+  .abas-cidades__geral li + li { margin-top: 1rem; }
+  .abas-cidades__geral a, .cartao-local > a { display: inline-flex; min-height: 48px; align-items: center; color: #dce7e9; font-weight: 600; text-decoration: underline; text-underline-offset: .2em; }
+  .cartao-local { display: flex; flex-direction: column; min-width: 0; margin-top: 0; }
+  .cartao-local > p { margin-top: .75rem; }
+  .cartao-local > a { margin-right: 1rem; }
+  .cartao-local > a[href^="https://wa.me/"] { justify-content: center; margin: .75rem 0 0; padding: .75rem 1.25rem; border-radius: 4px; background: var(--color-cta); color: #fff; text-align: center; text-decoration: none; }
+  .cartao-local > a[href^="https://wa.me/"]:active { background: var(--color-cta-escuro); }
+  .cartao-local__mapa { min-height: 240px; margin-top: 1rem; overflow: hidden; border: 1px solid var(--color-dourado); border-radius: 12px; background: #303a40; }
+  .cartao-local__mapa iframe { display: block; width: 100%; height: 240px; border: 0; touch-action: pan-y; }
+  .abas-cidades__cartoes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; max-width: 58rem; margin-top: 1.5rem; }
+  .abas-cidades__ver-todas, [role="tabpanel"] > button { min-height: 48px; margin-top: 1.5rem; padding: .65rem 1rem; border: 1px solid var(--color-dourado); border-radius: 4px; background: transparent; color: var(--color-creme); }
+  .abas-cidades__geral[hidden], [role="tabpanel"][hidden] { display: none; }
+
+  .mapa-ma { margin: 2.5rem 0 0; padding: .75rem; border: 1px solid var(--color-dourado); border-radius: 4px; background: #20272c; }
+  .mapa-ma__rolagem { width: 100%; margin-inline: auto; overflow: visible; }
+  .mapa-ma__quadro { position: relative; width: 100%; max-width: 600px; aspect-ratio: 600 / 700; margin-inline: auto; background: transparent; cursor: pointer; }
+  .mapa-ma__quadro svg { display: block; width: 100%; height: 100%; }
+  .mapa-ma__contorno { fill: #283137; stroke: var(--color-dourado-claro); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+  .mapa-ma__rota { display: none; fill: none; stroke: #8cabb8; stroke-width: 1.5; stroke-dasharray: 5 6; vector-effect: non-scaling-stroke; }
+  .mapa-ma__rotas, .mapa-ma__guia--ampla { display: none; }
+  .mapa-ma__guia { fill: none; stroke: #d4dcd9; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+  .mapa-ma__guia[data-ativa] { stroke: var(--color-dourado-claro); stroke-width: 2; }
+  .mapa-ma__centroide { fill: #8cabb8; stroke: #171b20; stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .mapa-ma__centroide[data-ativa] { fill: var(--color-dourado-claro); }
+  .mapa-ma__ponto { position: absolute; z-index: 1; display: grid; place-items: center; width: 48px; height: 48px; left: var(--x-compacto); top: var(--y-compacto); transform: translate(-50%, -50%); border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+  .mapa-ma__numero { display: grid; place-items: center; width: 34px; height: 34px; border: 1.5px solid var(--color-dourado-claro); border-radius: 50%; background: var(--color-grafite); color: #fff; font-size: .875rem; font-weight: 600; transition: transform .15s ease, background-color .15s ease, border-color .15s ease; }
+  .mapa-ma__ponto:active .mapa-ma__numero { transform: translateY(1px); background: #35424b; border-color: #dfc58d; transition: none; }
+  .mapa-ma__ponto[aria-current="location"] .mapa-ma__numero { background: var(--color-dourado-claro); color: var(--color-grafite); }
+  .mapa-ma__ponto[aria-current="location"] { z-index: 3; }
+  .mapa-ma__ponto[aria-current="location"]:active .mapa-ma__numero { background: #dfc58d; }
+  .mapa-ma__selecionada { display: flex; min-height: 48px; align-items: center; gap: .5rem; margin-top: .5rem; padding: .5rem .25rem; border-top: 1px solid rgb(201 169 108 / 45%); color: var(--color-dourado-claro); font-size: 1rem; font-weight: 600; line-height: 1.3; }
+  .mapa-ma__ponto:focus-visible { outline: 3px solid var(--color-dourado-claro); outline-offset: 2px; }
+  .mapa-ma__legenda { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .1rem .5rem; margin: .5rem 0; padding: 0; list-style: none; font-size: 1rem; line-height: 1.15; }
+  .mapa-ma__legenda li { min-width: 0; padding: 0 .2rem; overflow-wrap: anywhere; }
+  .mapa-ma__legenda li span { margin-right: .4rem; font-weight: 600; color: #d4dcd9; }
+  .mapa-ma__legenda-ativa { border-left: 2px solid var(--color-dourado-claro); font-weight: 600; }
+  .mapa-ma figcaption { padding-top: .5rem; border-top: 1px solid rgb(221 210 190 / 28%); color: #d4dcd9; font-size: 1rem; line-height: 1.35; }
+  .mapa-ma figcaption a { display: inline-flex; min-height: 48px; align-items: center; text-decoration: underline; text-underline-offset: .2em; }
+
+  .faq-acordeao { overflow: hidden; max-width: 58rem; border: 0; border-top: 1px solid var(--color-grafite); border-radius: 0; background: transparent; box-shadow: none; }
+  .faq-item { margin-bottom: 8px; border-bottom: 1px solid var(--color-grafite); transition: background-color 160ms ease; }
+  .faq-item:has(.faq-pergunta[aria-expanded="true"]) { background: #e5e9e3; }
+  .faq-pergunta { min-height: 68px; font-family: var(--font-titulo); font-size: 1.35rem; transition: background-color 160ms ease; }
+  .faq-pergunta:active { background: #e5e9e3; transition: none; }
+  .faq-pergunta:focus-visible { position: relative; z-index: 1; outline-offset: -3px; }
+  .faq-icone { flex: none; color: var(--color-eco); }
+  .faq-icone__vertical { transition: opacity 160ms ease; }
+  .faq-pergunta[aria-expanded="true"] .faq-icone__vertical { opacity: 0; }
+  .faq-fecho { max-width: 58rem; border: 1px solid var(--color-eco); border-left: 4px solid var(--color-eco); border-radius: 4px; background: var(--color-bege); box-shadow: none; }
+
+  #rodape { background: var(--color-grafite); color: var(--color-creme); }
+  .rodape-fecho > div:first-child { align-self: center; }
+  .rodape-fecho h2 { font-size: clamp(2.25rem, 6vw, 3.9rem); }
+  .rodape-fecho figure { position: relative; }
+  .rodape-cidades { padding-top: 2.5rem; border-top: 1px solid var(--color-dourado); }
+  .rodape-monograma { display: block; width: 56px; height: 56px; margin-bottom: 1.5rem; }
+  .rodape-cidades h3, .rodape-cidades h4 { color: var(--color-creme); }
+  .rodape-cidades a:active { color: #dce7e9; }
+  .rodape-cidades a:focus-visible { outline-color: var(--color-dourado-claro); }
+
+  @media (min-width: 640px) {
+    .mapa-ma { padding: 1rem; }
+    .mapa-ma__rolagem { width: 100%; }
+    .mapa-ma__rotas, .mapa-ma__rota, .mapa-ma__guia--ampla { display: initial; }
+    .mapa-ma__guia--compacta { display: none; }
+    .mapa-ma__ponto { left: var(--x-amplo); top: var(--y-amplo); }
+    .mapa-ma__numero { width: 38px; height: 38px; }
+    .mapa-ma__legenda { grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: .4rem 1rem; margin: 1rem 0; line-height: 1.5; }
+    .mapa-ma__legenda li { padding: .2rem .45rem; }
+    .mapa-ma figcaption { padding-top: .85rem; line-height: 1.5; }
+  }
+  @media (min-width: 768px) { #onde-atende { padding-block: 7rem; } .cartao-local__mapa { min-height: 320px; } .cartao-local__mapa iframe { height: 320px; } }
+  @media (hover: hover) and (pointer: fine) {
+    a.premium-cta:hover { background: var(--color-cta-escuro); transform: translateY(-1px); }
+    .autoavaliacao-opcao:hover { border-color: var(--color-eco); background: var(--color-creme); }
+    .autoavaliacao-nav:hover { background: var(--color-bege); }
+    .seletor-cidade button:hover { background: #303a42; }
+    .abas-cidades__lista button:hover { transform: translateY(-2px); border-color: var(--color-dourado-claro); background: #35424b; }
+    .abas-cidades__lista button[aria-selected="true"]:hover { background: #dfc58d; }
+    .cartao-local > a[href^="https://wa.me/"]:hover { background: var(--color-cta-escuro); }
+    .mapa-ma__ponto:hover .mapa-ma__numero { transform: translateY(-2px); background: #35424b; border-color: #dfc58d; }
+    .mapa-ma__ponto[aria-current="location"]:hover .mapa-ma__numero { background: #dfc58d; }
+    .faq-pergunta:hover { background: #e5e9e3; }
+    .rodape-cidades a:hover { color: #dce7e9; }
+  }
   @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
-    }
+    a.premium-cta, .autoavaliacao-opcao, .autoavaliacao-etapa, .autoavaliacao-resultado,
+    .abas-cidades__lista button, .mapa-ma__numero, .faq-item, .faq-pergunta { transition: none; animation: none; }
   }
+}
+
+/* CTA do WhatsApp esperando a conversão sair antes de navegar (sem texto novo). */
+.cta-aguardando { cursor: progress; }
+/* Sem opacidade no texto (parecer R28): nos CTAs verdes, o fundo escurece e o branco fica em cerca de 7,2:1. */
+.bg-cta.cta-aguardando,
+.cartao-local > a.cta-aguardando { background: var(--color-cta-escuro); }
+/* Indicador decorativo, sem texto: um anel girando na cor do texto (parado com prefers-reduced-motion). */
+.cta-aguardando::after {
+  content: "";
+  display: inline-block;
+  flex: none;
+  width: .9em;
+  height: .9em;
+  margin-left: .5em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -.1em;
+  animation: cta-girar .8s linear infinite;
+}
+@keyframes cta-girar { to { transform: rotate(360deg); } }
+/* Movimento reduzido: o indicador fica parado (a regra global só encurta a duração, parecer R29). */
+@media (prefers-reduced-motion: reduce) {
+  .cta-aguardando::after { animation: none; }
+}
+
+/* Aviso de cookies: mostra e oculta com transição curta, sem piscar na carga (a lógica fica em useExibicaoAviso). */
+.aviso-cookies { transition: transform .2s ease-out, visibility 0s linear 0s; }
+/* Ao ocultar, sai na hora e sem receber toque: não fica por cima do CTA do hero durante uma saída animada (R33). */
+.aviso-cookies[data-oculto] { transform: translateY(100%); visibility: hidden; pointer-events: none; transition: none; }
+.aviso-cookies[data-medindo] { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .aviso-cookies, .aviso-cookies[data-oculto] { transition: none; }
 }

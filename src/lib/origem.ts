@@ -107,6 +107,47 @@ export function urlLimpa(href: string): string {
   return limpa.toString();
 }
 
+/**
+ * utm_* que sai da barra de endereço, decidido pela chave em minúsculas (UTM_TERM, Utm_Term...):
+ * só fica um nome minúsculo da convenção com o valor inteiro aprovado; utm_term, variantes de caixa,
+ * utm_* sem convenção e valores fora da convenção saem (parecer R24).
+ */
+function utmProibida(chave: string, valor: string): boolean {
+  if (!chave.toLowerCase().startsWith("utm_")) return false;
+  const daConvencao = (UTMS as readonly string[]).includes(chave);
+  return !daConvencao || sanitizar(chave, valor) === undefined;
+}
+
+/**
+ * Na carga, antes do pagina_limpa e do GTM: tira da barra de endereço o utm_term (a palavra buscada)
+ * e as UTMs fora da convenção fechada, porque a tag do Ads e o ccm/collect mandam a URL completa
+ * (spec §8, "Endereço sem termo de busca"). Mantém caminho, âncora, gclid, gbraid, wbraid,
+ * gad_source, UTMs válidas e demais parâmetros, com a codificação original. Sem nada a tirar, não
+ * toca no histórico.
+ */
+export function limparEndereco(): void {
+  const busca = window.location.search.replace(/^\?/, "");
+  if (!busca) return;
+  const pares = busca.split("&");
+  const mantidos = pares.filter((par) => {
+    // Chave e valor só no primeiro "=": o resto (inclusive outros "=") é parte do valor validado.
+    const corte = par.indexOf("=");
+    const chaveBruta = corte < 0 ? par : par.slice(0, corte);
+    const valorBruto = corte < 0 ? "" : par.slice(corte + 1);
+    const decodificar = (texto: string) => {
+      try {
+        return decodeURIComponent(texto.replace(/\+/g, " "));
+      } catch {
+        return texto;
+      }
+    };
+    return !utmProibida(decodificar(chaveBruta), decodificar(valorBruto));
+  });
+  if (mantidos.length === pares.length) return;
+  const query = mantidos.length ? `?${mantidos.join("&")}` : "";
+  window.history.replaceState(window.history.state, "", window.location.pathname + query + window.location.hash);
+}
+
 export function reiniciarOrigemParaTestes(): void {
   emMemoria = null;
 }

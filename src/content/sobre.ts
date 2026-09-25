@@ -7,6 +7,5 @@ export const TEXTOS_SOBRE = {
   ],
   formacaoUltrassom: "Formação em ultrassom, em Salvador",
   cta: "Chamar no WhatsApp para agendar",
-  legendaFoto: "Dr. Patrick com o modelo anatômico de joelho.",
-  altFoto: "Dr. Patrick Santos explicando em um modelo anatômico de joelho",
+  altFoto: "Dr. Patrick Santos de pé ao lado do aparelho de ultrassom na sala de consulta",
 } as const;

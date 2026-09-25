@@ -1,52 +1,49 @@
 @theme {
-  --color-grafite: #15171b;
-  --color-creme: #f8f4ec;
-  --color-bege: #ede3d2;
-  --color-dourado: #b98f4e;
-  --color-dourado-claro: #d4b06a;
+  --color-grafite: #171b20;
+  --color-creme: #edefea;
+  --color-bege: #ddd2be;
+  --color-dourado: #a98545;
+  --color-dourado-claro: #c9a96c;
+  --color-foco-claro: #806223;
+  --color-eco: #56717f;
   --color-cta: #1e7f4f;
-  --color-cta-escuro: #17663f;
-  --font-titulo: "Lora", "Lora Fallback", Georgia, serif;
-  --font-corpo: "Figtree", "Figtree Fallback", system-ui, sans-serif;
+  --color-cta-escuro: #17643e;
+  --font-titulo: "Source Serif 4", "Source Serif 4 Fallback", Georgia, serif;
+  --font-corpo: "Atkinson Hyperlegible Next", "Atkinson Fallback", Arial, sans-serif;
 }
 
 @font-face {
-  font-family: "Figtree";
+  font-family: "Atkinson Hyperlegible Next";
+  font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/fonts/figtree-latin-400-normal.woff2") format("woff2");
+  src: url("/fonts/atkinson-hyperlegible-next-latin-400-normal.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "Figtree";
+  font-family: "Atkinson Hyperlegible Next";
+  font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/fonts/figtree-latin-600-normal.woff2") format("woff2");
+  src: url("/fonts/atkinson-hyperlegible-next-latin-600-normal.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "Lora";
+  font-family: "Source Serif 4";
+  font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/fonts/lora-latin-600-normal.woff2") format("woff2");
+  src: url("/fonts/source-serif-4-latin-600-normal.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "Lora";
-  font-weight: 700;
-  font-display: swap;
-  src: url("/fonts/lora-latin-700-normal.woff2") format("woff2");
-}
-
-/* Médias de avanço medidas contra Arial e Georgia em texto representativo pt-BR. */
-@font-face {
-  font-family: "Figtree Fallback";
+  font-family: "Atkinson Fallback";
   src: local("Arial");
-  size-adjust: 99.90%;
+  size-adjust: 101%;
 }
 
 @font-face {
-  font-family: "Lora Fallback";
+  font-family: "Source Serif 4 Fallback";
   src: local("Georgia");
-  size-adjust: 107.79%;
+  size-adjust: 99%;
 }
