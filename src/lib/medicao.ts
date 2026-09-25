@@ -1,4 +1,5 @@
 import { agendarGtm, registrarPagina } from "@/lib/analytics";
+import { limparEndereco } from "@/lib/origem";
 import { observarProfundidade } from "@/lib/profundidade";
 
 let iniciada = false;
@@ -10,6 +11,10 @@ let iniciada = false;
 export function iniciarMedicao(): void {
   if (iniciada) return;
   iniciada = true;
+  // 1. Barra de endereço sem utm_term nem UTM fora da convenção: a tag do Ads e o ccm/collect mandam
+  //    a URL completa (spec §8). Antes do pagina_limpa e do GTM.
+  limparEndereco();
+  // 2. pagina_limpa; 3. agendamento do GTM.
   registrarPagina();
   agendarGtm();
   observarProfundidade();

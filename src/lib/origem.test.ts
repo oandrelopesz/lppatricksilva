@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { capturarOrigem, reiniciarOrigemParaTestes, sanitizar, urlLimpa } from "./origem";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { capturarOrigem, limparEndereco, reiniciarOrigemParaTestes, sanitizar, urlLimpa } from "./origem";
 
 function storageFalso(): Storage {
   const mapa = new Map<string, string>();
@@ -107,5 +107,37 @@ describe("origem", () => {
     expect(urlLimpa("https://lp-dr-santos.vercel.app/?utm_campaign=dor_joelho&utm_source=google")).toBe(
       "https://lp-dr-santos.vercel.app/?utm_source=google",
     );
+  });
+
+  describe("limparEndereco (spec §8, endereço sem termo de busca)", () => {
+    afterEach(() => window.history.replaceState(null, "", "/"));
+
+    it("tira utm_term e UTMs fora da convenção, mantendo caminho, gclid e UTMs válidas", () => {
+      window.history.replaceState(null, "", "/?utm_source=google&utm_term=dor+no+joelho&gclid=abc.1&utm_campaign=joelho");
+      limparEndereco();
+      expect(window.location.pathname + window.location.search).toBe("/?utm_source=google&gclid=abc.1");
+    });
+
+    it("mantém gbraid, wbraid, gad_source, outros parâmetros, o caminho e a âncora", () => {
+      window.history.replaceState(null, "", "/onde-atende?gad_source=1&utm_term=artrose&gbraid=0AAA&wbraid=Cj0B&cidade=tuntum&utm_medium=cpc#mapa");
+      limparEndereco();
+      expect(window.location.pathname + window.location.search + window.location.hash).toBe(
+        "/onde-atende?gad_source=1&gbraid=0AAA&wbraid=Cj0B&cidade=tuntum&utm_medium=cpc#mapa",
+      );
+    });
+
+    it("tira utm_* sem convenção (ex.: utm_id), que não dá para validar", () => {
+      window.history.replaceState(null, "", "/?utm_id=joelho+dor&utm_content=a01");
+      limparEndereco();
+      expect(window.location.search).toBe("?utm_content=a01");
+    });
+
+    it("sem nada a tirar, não chama o replaceState", () => {
+      window.history.replaceState(null, "", "/?utm_source=google&utm_campaign=c01&gclid=abc.1");
+      const trocar = vi.spyOn(window.history, "replaceState");
+      limparEndereco();
+      expect(trocar).not.toHaveBeenCalled();
+      trocar.mockRestore();
+    });
   });
 });

@@ -63,4 +63,22 @@ describe("iniciarMedicao", () => {
     expect(modeloNoEvento("clique_whatsapp").pagina_limpa).toBe(`${location.origin}/sobre?utm_source=google`);
     window.history.replaceState(null, "", "/");
   });
+
+  it("limpa o endereço antes do pagina_limpa e antes de o GTM carregar (spec §8)", async () => {
+    window.history.replaceState(null, "", "/?utm_source=google&utm_term=dor+no+joelho&gclid=abc.1&utm_campaign=joelho");
+    const noMomento: Array<{ filas: number; gtm: boolean }> = [];
+    const trocar = vi.spyOn(window.history, "replaceState").mockImplementation(function (this: History, ...args) {
+      noMomento.push({ filas: window.dataLayer!.length, gtm: !!document.head.querySelector("script[data-gtm]") });
+      return History.prototype.replaceState.apply(this, args as Parameters<History["replaceState"]>);
+    });
+    const { iniciarMedicao } = await import("./medicao");
+    iniciarMedicao();
+    vi.advanceTimersByTime(1500);
+    trocar.mockRestore();
+    expect(noMomento).toEqual([{ filas: 0, gtm: false }]);
+    expect(window.dataLayer![0]).toEqual({ pagina_limpa: `${location.origin}/?utm_source=google` });
+    expect(window.location.search).toBe("?utm_source=google&gclid=abc.1");
+    expect(document.head.querySelector("script[data-gtm]")).not.toBeNull();
+    window.history.replaceState(null, "", "/");
+  });
 });
