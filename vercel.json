@@ -1,17 +1,3 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "www.drpatricksantos.com.br" }],
-      "destination": "https://drpatricksantos.com.br/:path*",
-      "statusCode": 301
-    },
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "lp-dr-santos.vercel.app" }],
-      "destination": "https://drpatricksantos.com.br/:path*",
-      "statusCode": 301
-    }
-  ]
+  "$schema": "https://openapi.vercel.sh/vercel.json"
 }
