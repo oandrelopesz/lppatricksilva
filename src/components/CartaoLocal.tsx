@@ -23,6 +23,7 @@ export function CartaoLocal({ cidade, local, mostrarMapa }: Props) {
         </p>
       ) : null}
       <p>{T.clinica.disponibilidade}</p>
+      {/* Moldura sempre reservada: o iframe entra sem salto de layout. */}
       <div className="cartao-local__mapa">
         {mostrarMapa ? (
           <iframe

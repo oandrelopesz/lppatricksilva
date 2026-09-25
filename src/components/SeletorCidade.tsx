@@ -40,14 +40,14 @@ export function SeletorCidade() {
   }
 
   return (
-    <div className="premium-card seletor-cidade bg-bege p-5">
+    <div className="premium-card seletor-cidade bg-bege">
       <label className="block font-semibold" htmlFor="seletor-cidade">{T.rotuloSeletor}</label>
       <p className="mt-2" id="apoio-seletor-cidade">{T.apoioSeletor}</p>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row">
         <select
           id="seletor-cidade"
           aria-describedby="apoio-seletor-cidade"
-          className="min-h-12 min-w-0 flex-1 rounded border border-grafite/30 bg-white px-4 py-3"
+          className="min-h-12 min-w-0 flex-1 rounded border border-grafite/30 bg-white"
           value={valor}
           onChange={(evento) => {
             pendente.current = true;
@@ -65,7 +65,7 @@ export function SeletorCidade() {
         </select>
         <button
           type="button"
-          className="min-h-12 rounded bg-grafite px-5 py-3 font-semibold text-creme"
+          className="min-h-12 rounded bg-grafite font-semibold text-creme"
           onClick={verLocais}
         >
           {T.botaoVerLocais}

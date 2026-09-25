@@ -76,7 +76,7 @@ export const TEXTOS_AUTOAVALIACAO: {
   },
   oQueAConsultaAvalia: "Na consulta, o médico ouve como a dor começou e o que já foi tentado, examina a região que dói e lê os exames que você levar. A partir daí, explica o que cabe no seu caso e o que não cabe.",
   aviso: "Este resumo serve para organizar a conversa. Não é diagnóstico e não substitui a avaliação na consulta.",
-  incluirResumo: "Incluir meu resumo na mensagem do WhatsApp",
-  avisoPrivacidade: "Suas respostas ficam nesta página até você marcar esta opção e clicar no botão. Aí o texto vai para o WhatsApp só para preencher a mensagem. O consultório só recebe se você enviar.",
+  incluirResumo: "Autorizo incluir meu resumo da dor na mensagem do WhatsApp",
+  avisoPrivacidade: "Ao abrir o link, o WhatsApp pode receber esse texto. O Dr. Patrick Santos só recebe a mensagem se você enviar. Você pode agendar sem incluir o resumo.",
   cta: "Chamar no WhatsApp para agendar",
 };

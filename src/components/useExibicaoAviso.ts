@@ -12,7 +12,8 @@ import { lerConsentimento } from "@/lib/consentimento";
  * - a decisão é refeita quando a viewport ou o layout mudam (resize, orientationchange, resize do
  *   visualViewport, agrupados por requestAnimationFrame) e a cada abertura;
  * - carga direta numa seção (CTA já acima da viewport) mostra na hora;
- * - o botão do rodapé abre na hora e mantém até a escolha, mesmo em cima do hero.
+ * - o botão do rodapé abre na hora e mantém até a escolha, mesmo em cima do hero;
+ * - o rodapé e o botão Escolher abrem a segunda camada (por categoria), que também fica até a escolha.
  * A altura real da barra é medida com ela invisível; nada aparece antes da primeira medição.
  */
 export interface ExibicaoAviso {
@@ -23,7 +24,11 @@ export interface ExibicaoAviso {
   visivel: boolean;
   /** true até a primeira medição: a barra fica invisível e sem transição. */
   medindo: boolean;
-  /** Depois de aceitar ou recusar. */
+  /** Segunda camada (escolha por categoria): aberta pelo rodapé ou pelo botão Escolher. */
+  escolhendo: boolean;
+  /** Botão Escolher da primeira camada: passa à segunda e mantém a barra até a escolha. */
+  abrirEscolha: () => void;
+  /** Depois de aceitar, recusar ou salvar a escolha. */
   concluir: () => void;
 }
 
@@ -130,6 +135,8 @@ export function useExibicaoAviso(): ExibicaoAviso {
     return () => window.removeEventListener("scroll", conferir);
   }, [ocultarNaVolta]);
 
+  const abrirEscolha = useCallback(() => setPedidoPeloRodape(true), []);
+
   const concluir = useCallback(() => {
     setPendente(false);
     setPedidoPeloRodape(false);
@@ -139,5 +146,5 @@ export function useExibicaoAviso(): ExibicaoAviso {
 
   const medindo = montar && podeCobrir === null;
   const visivel = montar && (pedidoPeloRodape || (podeCobrir !== null && (!podeCobrir || ctaAcima)));
-  return { refBarra, montar, visivel, medindo, concluir };
+  return { refBarra, montar, visivel, medindo, escolhendo: pedidoPeloRodape, abrirEscolha, concluir };
 }

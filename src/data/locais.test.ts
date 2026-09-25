@@ -75,4 +75,107 @@ describe("locais", () => {
     const local = buscarCidade("tuntum")!.locais[0];
     expect(new URL(urlEmbedMapa(local)).searchParams.get("q")).toContain("CMT Centro Médico de Tuntum e Laboratório");
   });
+  describe("embed do mapa por local (conferido no navegador)", () => {
+    const local = (id: string) => todosOsLocais().find(({ local }) => local.id === id)!.local;
+    const CORRIGIDOS: Record<string, string> = {
+      "clinica-mais-saude": "https://www.google.com/maps?cid=6068533600021052492&output=embed",
+      clinimed: `https://www.google.com/maps?${new URLSearchParams({ q: "Rua 28 de Julho, Loreto - MA", output: "embed" })}`,
+      "sd-med": `https://www.google.com/maps?${new URLSearchParams({ q: "R. Quinze de Novembro, 49B, São Domingos do Maranhão - MA", output: "embed" })}`,
+      "cm-lab-graca-aranha": `https://www.google.com/maps?${new URLSearchParams({ q: "R. São Francisco, Graça Aranha - MA, 65785-000", output: "embed" })}`,
+      "clinica-mais-familia": "https://www.google.com/maps?cid=492768669301912196&output=embed",
+    };
+
+    for (const [id, esperado] of Object.entries(CORRIGIDOS)) {
+      it(`${id}: embed próprio`, () => {
+        expect(urlEmbedMapa(local(id))).toBe(esperado);
+      });
+    }
+
+    it("os outros 9 seguem o padrão (nome da ficha ou nome, mais o endereço)", () => {
+      const outros = todosOsLocais().filter(({ local }) => !(local.id in CORRIGIDOS));
+      expect(outros.map(({ local }) => local.id)).toEqual([
+        "mais-centro-medico",
+        "hospital-sao-jose",
+        "clinica-santa-maria",
+        "mendesclin",
+        "clinica-levive",
+        "clinica-risalva-carvalho",
+        "begmed",
+        "cm-lab-tuntum",
+        "hospital-florencio-brandes",
+      ]);
+      for (const { local } of outros) {
+        const url = new URL(urlEmbedMapa(local));
+        expect(url.origin + url.pathname).toBe("https://www.google.com/maps");
+        expect(url.searchParams.get("output")).toBe("embed");
+        expect(url.searchParams.get("q")).toBe(`${local.nomeNoMaps ?? local.nome} ${local.endereco}`);
+      }
+    });
+
+    it("nenhuma busca de embed leva (filial) ou (matriz)", () => {
+      for (const { local } of todosOsLocais()) {
+        const q = new URL(urlEmbedMapa(local)).searchParams.get("q") ?? "";
+        expect(q).not.toMatch(/\((filial|matriz)\)/);
+      }
+    });
+  });
+
+  describe("Como chegar leva ao mesmo destino do mapa (parecer R37, achado A1)", () => {
+    const local = (id: string) => todosOsLocais().find(({ local }) => local.id === id)!.local;
+    const busca = (q: string) => `https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", query: q })}`;
+    /** "Rua" e "R." são a mesma coisa no endereço escrito. */
+    const normalizar = (texto: string) => texto.replace(/^Rua\b/, "R.").trim();
+
+    it("Clinimed, CM LAB de Graça Aranha e SD MED: busca da mesma rua do embed", () => {
+      expect(local("clinimed").linkComoChegar).toBe(busca("Rua 28 de Julho, Loreto - MA"));
+      expect(local("cm-lab-graca-aranha").linkComoChegar).toBe(busca("R. São Francisco, Graça Aranha - MA, 65785-000"));
+      expect(local("sd-med").linkComoChegar).toBe(busca("R. Quinze de Novembro, 49B, São Domingos do Maranhão - MA"));
+    });
+
+    it("todo embed por busca tem o Como chegar com a mesma busca, e a rua é a do endereço escrito", () => {
+      for (const { cidade, local: l } of todosOsLocais()) {
+        if (!l.embed || !("q" in l.embed)) continue;
+        expect(l.linkComoChegar).toBe(busca(l.embed.q));
+        const [rua] = l.embed.q.split(",");
+        expect(normalizar(l.endereco).startsWith(normalizar(rua))).toBe(true);
+        expect(l.embed.q).toContain(cidade.nome);
+      }
+    });
+
+    it("todo embed pela ficha (cid) tem o Como chegar pela mesma ficha", () => {
+      for (const { local: l } of todosOsLocais()) {
+        if (!l.embed || !("cid" in l.embed)) continue;
+        expect(l.linkComoChegar).toBe(`https://maps.google.com/?cid=${l.embed.cid}`);
+      }
+    });
+
+    it("Mendesclin mantém a ficha, com a distância até a praça anotada (achado A2)", () => {
+      expect(local("mendesclin").linkComoChegar).toBe("https://maps.google.com/?cid=9740273424993758535");
+      expect(local("mendesclin").observacao).toMatch(/43 m da Praça Mercado/);
+    });
+  });
+
+  describe("endereços confirmados no destaque Clínicas do Instagram", () => {
+    const local = (id: string) => todosOsLocais().find(({ local }) => local.id === id)!.local;
+
+    it("Levive confirmada: sem a observação sobre a Pró Saúde", () => {
+      expect(local("clinica-levive").observacao).toBeUndefined();
+    });
+
+    it("Mendesclin: endereço do Instagram, com a divergência da ficha do Maps anotada", () => {
+      expect(local("mendesclin").observacao).toContain(
+        "Endereço confirmado no Instagram do médico (Praça do Mercado Central, nº 14); a ficha do Google Maps mostra R. Gonçalves Dias.",
+      );
+    });
+
+    it("CM LAB de Graça Aranha com o CEP", () => {
+      expect(local("cm-lab-graca-aranha").endereco).toBe("Rua São Francisco, s/n, Centro, Graça Aranha-MA, 65785-000");
+      expect(local("cm-lab-graca-aranha").cep).toBe("65785-000");
+      expect(local("cm-lab-graca-aranha").observacao).toBe("Sem número (confirmado no Instagram) e sem ficha no Google Maps.");
+    });
+
+    it("Clinimed sem número, confirmado no Instagram", () => {
+      expect(local("clinimed").observacao).toBe("Sem número (confirmado no Instagram) e sem ficha no Google Maps.");
+    });
+  });
 });

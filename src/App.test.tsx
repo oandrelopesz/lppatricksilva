@@ -12,7 +12,7 @@ describe("App", () => {
     localStorage.clear();
     window.dataLayer = [];
     render(<App />);
-    fireEvent.click(screen.getByRole("button", { name: TEXTOS_COOKIES.recusar }));
+    fireEvent.click(screen.getByRole("button", { name: TEXTOS_COOKIES.recusarTudo }));
     expect(screen.queryByRole("region", { name: TEXTOS_COOKIES.rotulo })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: TEXTOS_COOKIES.preferencias }));
     expect(screen.getByRole("region", { name: TEXTOS_COOKIES.rotulo })).toBeInTheDocument();

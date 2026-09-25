@@ -115,6 +115,17 @@ describe("Autoavaliacao", () => {
     const tudo = `${cta.getAttribute("href")} ${JSON.stringify(window.dataLayer)}`;
     for (const etapa of T.etapas) for (const opcao of etapa.opcoes) expect(tudo).not.toContain(opcao);
   });
+  it("a caixa pede autorização específica e explica o que o WhatsApp recebe (textos-lgpd, item E)", () => {
+    renderizar();
+    fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: limitacao.opcoes[0] }));
+    fireEvent.click(screen.getByRole("button", { name: tentativa.opcoes[0] }));
+    expect(screen.getByRole("checkbox", { name: "Autorizo incluir meu resumo da dor na mensagem do WhatsApp" })).not.toBeChecked();
+    expect(
+      screen.getByText("Ao abrir o link, o WhatsApp pode receber esse texto. O Dr. Patrick Santos só recebe a mensagem se você enviar. Você pode agendar sem incluir o resumo."),
+    ).toBeInTheDocument();
+  });
+
   it("nenhum evento recebe resposta e registra etapas sem dados de saúde", () => {
     renderizar();
     fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));

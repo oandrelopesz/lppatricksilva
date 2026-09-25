@@ -9,43 +9,151 @@ describe("AvisoCookies", () => {
     window.dataLayer = [];
   });
 
-  it("aparece quando não há escolha e some ao aceitar", () => {
+  const guardado = () => JSON.parse(localStorage.getItem("lp_consentimento_v2")!);
+  const ultimoUpdate = () => Array.from(window.dataLayer!.at(-1) as unknown as ArrayLike<unknown>)[2];
+  const chave = (nome: string) => screen.getByRole("switch", { name: nome }) as HTMLInputElement;
+
+  it("primeira camada: texto, política e as três opções", () => {
     render(<AvisoCookies />);
     expect(screen.getByRole("region", { name: T.rotulo })).toHaveTextContent(T.texto);
     expect(screen.getByRole("link", { name: T.linkPolitica })).toHaveAttribute("href", "/politica-de-privacidade.html");
-    fireEvent.click(screen.getByRole("button", { name: T.aceitar }));
-    expect(screen.queryByRole("button", { name: T.aceitar })).toBeNull();
-    expect(localStorage.getItem("lp_consentimento_v1")).toBe("aceito");
+    for (const nome of [T.recusarTudo, T.escolher, T.aceitarTudo]) expect(screen.getByRole("button", { name: nome })).toBeInTheDocument();
+    expect(screen.queryByRole("switch")).toBeNull();
+  });
+
+  it("Aceitar tudo liga as duas categorias, sem personalização, e fecha", () => {
+    render(<AvisoCookies />);
+    fireEvent.click(screen.getByRole("button", { name: T.aceitarTudo }));
+    expect(screen.queryByRole("region", { name: T.rotulo })).toBeNull();
+    expect(guardado()).toMatchObject({ visitas: true, anuncios: true, versao: "2026-09-25" });
+    expect(ultimoUpdate()).toEqual({ analytics_storage: "granted", ad_storage: "granted", ad_user_data: "granted", ad_personalization: "denied" });
+  });
+
+  it("Recusar tudo desliga as duas e mantém negado", () => {
+    render(<AvisoCookies />);
+    fireEvent.click(screen.getByRole("button", { name: T.recusarTudo }));
+    expect(guardado()).toMatchObject({ visitas: false, anuncios: false });
+    expect(ultimoUpdate()).toEqual({ analytics_storage: "denied", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
+  });
+
+  it("a primeira camada tem o texto do item B, sem o trecho dos mapas (mapas sempre visíveis)", () => {
+    render(<AvisoCookies />);
+    expect(screen.getByRole("region", { name: T.rotulo })).toHaveTextContent(
+      "Esta página usa ferramentas do Google para medir as visitas e os resultados dos anúncios. Antes de você escolher, e também se recusar, o Google recebe sinais técnicos da visita e do clique no WhatsApp, como endereço IP, navegador, horário e página, sem cookies de medição. Se aceitar, as ferramentas usam cookies nas opções que você escolher. Você pode mudar depois, no rodapé.",
+    );
+  });
+
+  it("a segunda camada não fala mais de mapas nem de Ver mapa", () => {
+    render(<AvisoCookies />);
+    fireEvent.click(screen.getByRole("button", { name: T.escolher }));
+    const regiao = screen.getByRole("region", { name: T.rotulo });
+    expect(regiao.textContent).not.toMatch(/mapas|Ver mapa/);
+    expect(Object.keys(T)).not.toContain("notaMapas");
+  });
+
+  it("Escolher abre a segunda camada com as duas chaves desligadas; Salvar grava só o que foi ligado", () => {
+    render(<AvisoCookies />);
+    fireEvent.click(screen.getByRole("button", { name: T.escolher }));
+    expect(screen.getByText(T.titulo)).toBeInTheDocument();
+    expect(screen.getByText(T.notaPersonalizacao)).toBeInTheDocument();
+    expect(chave(T.opcaoVisitas).checked).toBe(false);
+    expect(chave(T.opcaoAnuncios).checked).toBe(false);
+    expect(chave(T.opcaoVisitas)).toHaveAccessibleDescription(T.opcaoVisitasDescricao);
+    expect(chave(T.opcaoAnuncios)).toHaveAccessibleDescription(T.opcaoAnunciosDescricao);
+    for (const nome of [T.recusarTudo, T.salvar, T.aceitarTudo]) expect(screen.getByRole("button", { name: nome })).toBeInTheDocument();
+    fireEvent.click(chave(T.opcaoVisitas));
+    fireEvent.click(screen.getByRole("button", { name: T.salvar }));
+    expect(screen.queryByRole("region", { name: T.rotulo })).toBeNull();
+    expect(guardado()).toMatchObject({ visitas: true, anuncios: false });
+    expect(ultimoUpdate()).toEqual({ analytics_storage: "granted", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
+  });
+
+  it("o rodapé abre direto a segunda camada, com a escolha atual", () => {
+    localStorage.setItem("lp_consentimento_v2", JSON.stringify({ visitas: false, anuncios: true, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" }));
+    render(<AvisoCookies />);
+    expect(screen.queryByRole("region", { name: T.rotulo })).toBeNull();
+    act(() => {
+      window.dispatchEvent(new Event("abrir-preferencias-cookies"));
+    });
+    expect(screen.getByText(T.titulo)).toBeInTheDocument();
+    expect(chave(T.opcaoVisitas).checked).toBe(false);
+    expect(chave(T.opcaoAnuncios).checked).toBe(true);
+  });
+
+  it("a escolha antiga (aceito) aparece migrada ao reabrir pelo rodapé", () => {
+    localStorage.setItem("lp_consentimento_v1", "aceito");
+    render(<AvisoCookies />);
+    expect(screen.queryByRole("region", { name: T.rotulo })).toBeNull();
+    act(() => {
+      window.dispatchEvent(new Event("abrir-preferencias-cookies"));
+    });
+    expect(chave(T.opcaoVisitas).checked).toBe(true);
+    expect(chave(T.opcaoAnuncios).checked).toBe(true);
+  });
+
+  describe("segunda camada com altura limitada (parecer R38)", () => {
+    it("título, texto e chaves ficam numa área rolável, focável e nomeada; os botões ficam fora dela", () => {
+      render(<AvisoCookies />);
+      fireEvent.click(screen.getByRole("button", { name: T.escolher }));
+      const area = screen.getByRole("group", { name: T.titulo });
+      expect(area).toHaveClass("aviso-cookies__conteudo");
+      expect(area).toHaveAttribute("tabindex", "0");
+      for (const s of screen.getAllByRole("switch")) expect(area.contains(s)).toBe(true);
+      for (const nome of [T.recusarTudo, T.salvar, T.aceitarTudo]) expect(area.contains(screen.getByRole("button", { name: nome }))).toBe(false);
+    });
+
+    it("ao sair de Escolher, o foco vai para a área da segunda camada (o botão Escolher some)", () => {
+      render(<AvisoCookies />);
+      const escolher = screen.getByRole("button", { name: T.escolher });
+      escolher.focus();
+      fireEvent.click(escolher);
+      expect(screen.getByRole("group", { name: T.titulo })).toHaveFocus();
+    });
+
+    it("a primeira camada também põe texto e política numa área rolável, focável e nomeada, com os botões fora (parecer R40)", () => {
+      render(<AvisoCookies />);
+      const area = screen.getByRole("group", { name: T.rotulo });
+      expect(area).toHaveClass("aviso-cookies__conteudo");
+      expect(area).toHaveAttribute("tabindex", "0");
+      expect(area).toContainElement(screen.getByText(T.texto));
+      expect(area).toContainElement(screen.getByRole("link", { name: T.linkPolitica }));
+      for (const nome of [T.recusarTudo, T.escolher, T.aceitarTudo]) expect(area.contains(screen.getByRole("button", { name: nome }))).toBe(false);
+    });
+
+    it("o CSS limita as duas camadas à viewport (dvh com fallback em vh) e rola só o conteúdo", async () => {
+      const { readFileSync } = await import("node:fs");
+      const css = readFileSync(`${process.cwd()}/src/styles/global.css`, "utf8").replace(/\s+/g, " ");
+      const regra = css.match(/\.aviso-cookies \{ display: flex;([^}]*)\}/)![1];
+      expect(regra).toMatch(/max-height: 100vh;.*max-height: 100dvh;/);
+      expect(css).toMatch(/ \.aviso-cookies__conteudo \{[^}]*overflow-y: auto;/);
+      expect(css).toMatch(/ \.aviso-cookies__acoes \{[^}]*flex: none;/);
+      expect(css).not.toMatch(/\.aviso-cookies\[data-escolhendo\] \.aviso-cookies__conteudo/);
+    });
+  });
+
+  it("revogar pelo rodapé apaga os cookies da categoria e manda o update na hora", () => {
+    localStorage.setItem("lp_consentimento_v2", JSON.stringify({ visitas: true, anuncios: true, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" }));
+    document.cookie = "_ga=GA1.1.1; path=/";
+    document.cookie = "_gcl_au=1.1; path=/";
+    render(<AvisoCookies />);
+    act(() => {
+      window.dispatchEvent(new Event("abrir-preferencias-cookies"));
+    });
+    fireEvent.click(chave(T.opcaoVisitas));
+    fireEvent.click(screen.getByRole("button", { name: T.salvar }));
+    expect(ultimoUpdate()).toEqual({ analytics_storage: "denied", ad_storage: "granted", ad_user_data: "granted", ad_personalization: "denied" });
+    expect(document.cookie).not.toContain("_ga=");
+    expect(document.cookie).toContain("_gcl_au=");
+    document.cookie = "_gcl_au=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
   });
 
   it("mostra o texto inteiro, sem limite de altura nem rolagem interna (parecer R32), e a política fora dele", () => {
     render(<AvisoCookies />);
     const texto = screen.getByText(T.texto);
     const politica = screen.getByRole("link", { name: T.linkPolitica });
-    expect(texto).toHaveTextContent(T.texto);
     expect(texto.className).not.toMatch(/(^|\s)(sm:)?max-h-|overflow-y-(auto|scroll)/);
     expect(texto).not.toHaveAttribute("tabindex");
-    // No jsdom não há layout (0 <= 0); a medida real a 320 px é feita no Chrome.
-    expect(texto.scrollHeight).toBeLessThanOrEqual(texto.clientHeight);
     expect(texto.contains(politica)).toBe(false);
-  });
-
-  it("recusar guarda a escolha e mantém negado", () => {
-    render(<AvisoCookies />);
-    fireEvent.click(screen.getByRole("button", { name: T.recusar }));
-    expect(localStorage.getItem("lp_consentimento_v1")).toBe("recusado");
-    const ultimo = Array.from(window.dataLayer!.at(-1) as unknown as ArrayLike<unknown>);
-    expect(ultimo[2]).toMatchObject({ analytics_storage: "denied", ad_storage: "denied" });
-  });
-
-  it("não aparece quando já existe escolha e reabre pelo evento", () => {
-    localStorage.setItem("lp_consentimento_v1", "recusado");
-    render(<AvisoCookies />);
-    expect(screen.queryByRole("button", { name: T.aceitar })).toBeNull();
-    act(() => {
-      window.dispatchEvent(new Event("abrir-preferencias-cookies"));
-    });
-    expect(screen.getByRole("button", { name: T.aceitar })).toBeInTheDocument();
   });
 
   it("textos sem travessão", () => {
@@ -162,7 +270,7 @@ describe("AvisoCookies não cobre o CTA do hero, de forma reativa (spec §5.10, 
     expect(aviso()).toBeInTheDocument();
     rolarCtaPara(300);
     expect(aviso()).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: T.recusar }));
+    fireEvent.click(screen.getByRole("button", { name: T.recusarTudo }));
     expect(aviso()).toBeNull();
   });
 
@@ -308,7 +416,7 @@ describe("AvisoCookies com mudança de viewport, saída e teardown (parecer R33)
     renderizarComHero();
     act(() => entregar!({ isIntersecting: false, boundingClientRect: { top: -108, bottom: -40 } as DOMRectReadOnly }));
     desconectar.mockClear();
-    fireEvent.click(screen.getByRole("button", { name: T.recusar }));
+    fireEvent.click(screen.getByRole("button", { name: T.recusarTudo }));
     expect(desconectar).toHaveBeenCalled();
     expect(aviso()).toBeNull();
     act(() => {
@@ -327,7 +435,7 @@ describe("AvisoCookies com mudança de viewport, saída e teardown (parecer R33)
       window.dispatchEvent(new Event("scroll"));
     });
     expect(aviso()).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: T.aceitar }));
+    fireEvent.click(screen.getByRole("button", { name: T.aceitarTudo }));
     expect(remover.mock.calls.some(([tipo]) => tipo === "scroll")).toBe(true);
   });
 });

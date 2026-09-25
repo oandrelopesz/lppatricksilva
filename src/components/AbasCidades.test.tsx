@@ -5,6 +5,7 @@ import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
 import { TEXTOS_ONDE_ATENDE as T } from "@/content/ondeAtende";
 import { AbasCidades } from "./AbasCidades";
 
+
 function renderizar() {
   return render(
     <CidadeProvider>
@@ -228,6 +229,69 @@ describe("AbasCidades sem IntersectionObserver (parecer R15)", () => {
     fireEvent.scroll(window);
     act(() => vi.advanceTimersByTime(250));
     expect(container.querySelector("iframe")).toBeNull();
+  });
+});
+
+describe("mapas sempre visíveis, com ou sem aceite (decisão do André, 25/09/2026)", () => {
+  beforeEach(() => {
+    reiniciarOrigemParaTestes();
+    capturarOrigem("", null);
+    window.dataLayer = [];
+    mostrarSecao = undefined;
+    localStorage.clear();
+    vi.stubGlobal("IntersectionObserver", ObservadorFalso);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    localStorage.clear();
+  });
+
+  const ACEITE = JSON.stringify({ visitas: true, anuncios: true, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" });
+
+  for (const [caso, preparar] of [
+    ["sem consentimento", () => {}],
+    ["recusado", () => localStorage.setItem("lp_consentimento_v2", JSON.stringify({ visitas: false, anuncios: false, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" }))],
+    ["com consentimento", () => localStorage.setItem("lp_consentimento_v2", ACEITE)],
+  ] as const) {
+    it(`${caso}: molduras reservadas antes, e os 3 iframes de Balsas montam ao chegar perto da seção`, () => {
+      preparar();
+      const { container } = renderizar();
+      const balsas = container.querySelector("#painel-balsas")!;
+      expect(balsas.querySelectorAll(".cartao-local__mapa")).toHaveLength(3);
+      expect(balsas.querySelector("iframe")).toBeNull();
+      act(() => mostrarSecao?.());
+      const iframes = balsas.querySelectorAll(".cartao-local__mapa iframe");
+      expect(iframes).toHaveLength(3);
+      for (const iframe of iframes) {
+        expect(iframe).toHaveAttribute("referrerpolicy", "no-referrer");
+        expect(iframe).toHaveAttribute("loading", "lazy");
+      }
+    });
+  }
+
+  it("trocar de aba carrega os mapas da cidade, sem aceite", () => {
+    const { container } = renderizar();
+    fireEvent.click(screen.getByRole("tab", { name: "Barra do Corda" }));
+    expect(container.querySelectorAll("#painel-barra-do-corda iframe")).toHaveLength(2);
+  });
+
+  it("não existe botão nem placeholder de Ver mapa", () => {
+    const { container } = renderizar();
+    act(() => mostrarSecao?.());
+    expect(screen.queryByRole("button", { name: "Ver mapa" })).toBeNull();
+    expect(container.textContent).not.toContain("Ver mapa");
+    expect(container.querySelector(".abas-cidades__mapa-consentimento")).toBeNull();
+    // Nem texto de "Ver mapa" sobrando no conteúdo (parecer R40).
+    expect(Object.keys(T)).not.toContain("verMapa");
+  });
+
+  it("no HTML do servidor não há iframe nem Ver mapa", async () => {
+    const { renderToString } = await import("react-dom/server");
+    const { CidadeProvider: Provedor } = await import("@/context/CidadeContext");
+    const html = renderToString(<Provedor><AbasCidades /></Provedor>);
+    expect(html).not.toContain("Ver mapa");
+    expect(html).not.toContain("<iframe");
   });
 });
 

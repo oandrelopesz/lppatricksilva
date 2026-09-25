@@ -6,12 +6,28 @@ import { ASSINATURA } from "@/config";
 import { todosOsLocais } from "@/data/locais";
 import { render } from "@/entry-server";
 import { TEXTOS_FAQ } from "@/content/faq";
+import { TEXTOS_HERO } from "@/content/hero";
 import { TEXTOS_COOKIES } from "@/content/cookies";
 import { TEXTOS_ONDE_ATENDE } from "@/content/ondeAtende";
 import { LINK_WHATSAPP_BASE } from "@/lib/whatsapp";
 
 describe("HTML inicial (sem JavaScript)", () => {
   const html = render();
+
+  it("sem JavaScript, o Como chegar da lista leva à mesma rua do mapa (parecer R37, achado A1)", () => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const busca = (q: string) => `https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", query: q })}`;
+    const esperados: Record<string, string> = {
+      Clinimed: busca("Rua 28 de Julho, Loreto - MA"),
+      "CM LAB (filial)": busca("R. São Francisco, Graça Aranha - MA, 65785-000"),
+      "SD MED": busca("R. Quinze de Novembro, 49B, São Domingos do Maranhão - MA"),
+    };
+    const itens = [...doc.querySelectorAll(".abas-cidades__geral li")];
+    for (const [nome, link] of Object.entries(esperados)) {
+      const item = itens.find((li) => li.querySelector("strong")?.textContent === nome)!;
+      expect([...item.querySelectorAll("a")].find((a) => a.textContent === "Como chegar")!.getAttribute("href")).toBe(link);
+    }
+  });
 
   it("tem os 14 locais com nome, endereço e link 'Como chegar'", () => {
     for (const { local } of todosOsLocais()) {
@@ -47,6 +63,13 @@ describe("HTML inicial (sem JavaScript)", () => {
     }
     expect((html.match(/role="region"/g) || [])).toHaveLength(11);
     expect(html).toContain('href="/politica-de-privacidade.html"');
+  });
+
+  it("tem o aviso curto de medição logo antes do CTA do hero, com o link Privacidade", () => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const aviso = doc.getElementById("cta-hero")!.previousElementSibling!;
+    expect(aviso.textContent).toBe(`${TEXTOS_HERO.avisoMedicao} ${TEXTOS_HERO.linkPrivacidade}`);
+    expect(aviso.querySelector("a")!.getAttribute("href")).toBe("/politica-de-privacidade.html");
   });
 
   it("sem JavaScript: nem aviso nem botão de cookies (controle sem ação), só o link da política (parecer R18)", () => {

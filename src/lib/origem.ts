@@ -107,23 +107,29 @@ export function urlLimpa(href: string): string {
   return limpa.toString();
 }
 
+/** Identificadores de clique do Google Ads, mantidos como vieram (nomes em minúsculas, como o Google lê). */
+const IDS_DO_ADS = ["gclid", "gbraid", "wbraid", "gad_source"];
+
 /**
- * utm_* que sai da barra de endereço, decidido pela chave em minúsculas (UTM_TERM, Utm_Term...):
- * só fica um nome minúsculo da convenção com o valor inteiro aprovado; utm_term, variantes de caixa,
- * utm_* sem convenção e valores fora da convenção saem (parecer R24).
+ * O que pode ficar na barra de endereço (parecer R36, item 3): os identificadores do Ads, o
+ * gad_campaignid numérico, a cidade da lista e as UTMs da convenção com o valor inteiro
+ * aprovado. Chave exata, em minúsculas: variantes de caixa (UTM_SOURCE, GCLID, Cidade) saem, como
+ * utm_term e qualquer outro parâmetro livre (parecer R24).
  */
-function utmProibida(chave: string, valor: string): boolean {
-  if (!chave.toLowerCase().startsWith("utm_")) return false;
-  const daConvencao = (UTMS as readonly string[]).includes(chave);
-  return !daConvencao || sanitizar(chave, valor) === undefined;
+function permitido(chave: string, valor: string): boolean {
+  if (IDS_DO_ADS.includes(chave)) return true;
+  // ID numérico da campanha, acrescentado pelo Google Ads à URL final (parecer R38): só dígitos.
+  if (chave === "gad_campaignid") return /^\d{1,20}$/.test(valor);
+  if (chave === "cidade") return buscarCidade(valor) !== undefined;
+  return (UTMS as readonly string[]).includes(chave) && sanitizar(chave, valor) !== undefined;
 }
 
 /**
- * Na carga, antes do pagina_limpa e do GTM: tira da barra de endereço o utm_term (a palavra buscada)
- * e as UTMs fora da convenção fechada, porque a tag do Ads e o ccm/collect mandam a URL completa
- * (spec §8, "Endereço sem termo de busca"). Mantém caminho, âncora, gclid, gbraid, wbraid,
- * gad_source, UTMs válidas e demais parâmetros, com a codificação original. Sem nada a tirar, não
- * toca no histórico.
+ * Na carga, antes do pagina_limpa e do GTM: deixa na barra de endereço só o permitido, porque a tag do
+ * Ads e o ccm/collect mandam a URL completa (spec §8; parecer R36, item 3). Saem utm_term (a palavra
+ * buscada), UTMs fora da convenção e qualquer outro parâmetro, inclusive texto posto por terceiros.
+ * Mantém caminho, âncora e os parâmetros permitidos com a codificação original (gclid intacto). Cada
+ * ocorrência de um parâmetro repetido é validada. Sem nada a tirar, não toca no histórico.
  */
 export function limparEndereco(): void {
   const busca = window.location.search.replace(/^\?/, "");
@@ -141,7 +147,7 @@ export function limparEndereco(): void {
         return texto;
       }
     };
-    return !utmProibida(decodificar(chaveBruta), decodificar(valorBruto));
+    return permitido(decodificar(chaveBruta), decodificar(valorBruto));
   });
   if (mantidos.length === pares.length) return;
   const query = mantidos.length ? `?${mantidos.join("&")}` : "";

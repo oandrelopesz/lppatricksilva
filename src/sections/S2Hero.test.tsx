@@ -28,6 +28,15 @@ describe("S2Hero", () => {
     expect(cta.getAttribute("href")).toMatch(/^https:\/\/wa\.me\/5513996822680/);
   });
 
+  it("logo acima do CTA, o aviso curto de medição com o link Privacidade (parecer R37)", () => {
+    renderizar();
+    const aviso = document.getElementById("cta-hero")!.previousElementSibling as HTMLElement;
+    expect(aviso).toHaveTextContent(`${TEXTOS_HERO.avisoMedicao} ${TEXTOS_HERO.linkPrivacidade}`);
+    const link = screen.getByRole("link", { name: TEXTOS_HERO.linkPrivacidade });
+    expect(aviso.contains(link)).toBe(true);
+    expect(link).toHaveAttribute("href", "/politica-de-privacidade.html");
+  });
+
   it("tem o link 'Veja onde ele atende' para a âncora real", () => {
     renderizar();
     expect(screen.getByRole("link", { name: /veja onde ele atende/i })).toHaveAttribute("href", "#onde-atende");
