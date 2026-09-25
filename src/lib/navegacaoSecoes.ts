@@ -1,4 +1,4 @@
-import { SECOES, atualizarUrl, ehSecao, irParaSecao, secaoDaUrl } from "@/lib/secoes";
+import { SECOES, anunciarSecao, atualizarUrl, ehSecao, irParaSecao, secaoDaUrl } from "@/lib/secoes";
 
 /** Intervalo mínimo entre trocas de URL durante a rolagem. */
 const INTERVALO_URL_MS = 300;
@@ -101,6 +101,7 @@ export function interceptarLinksDeSecao(): () => void {
 
   function aoNavegarNoHistorico() {
     const slug = secaoDaUrl(window.location.pathname) ?? "inicio";
+    anunciarSecao(slug, window.location.pathname);
     if (!navegarExplicitamente(slug, false)) window.scrollTo({ top: 0, behavior: "instant" });
   }
 

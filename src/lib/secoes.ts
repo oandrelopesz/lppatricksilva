@@ -39,10 +39,24 @@ export function irParaSecao(slug: string, { suave = false }: { suave?: boolean }
   return true;
 }
 
+/** Nome do evento que anuncia cada troca de URL por seção (decisão (b) do parecer R20). */
+export const EVENTO_SECAO = "lp:secao";
+
+export interface DetalheSecao {
+  slug: string;
+  caminho: string;
+}
+
+/** Anuncia no window a troca de URL; a medição responde atualizando o pagina_limpa. */
+export function anunciarSecao(slug: string, caminho: string): void {
+  window.dispatchEvent(new CustomEvent<DetalheSecao>(EVENTO_SECAO, { detail: { slug, caminho } }));
+}
+
 /** Troca a URL para /<slug> (a raiz para inicio), mantendo a query (UTMs, gclid) e sem âncora. */
 export function atualizarUrl(slug: string, { substituir = false }: { substituir?: boolean } = {}): void {
   const destino = caminhoDaSecao(slug) + window.location.search;
   if (destino === window.location.pathname + window.location.search && !window.location.hash) return;
   if (substituir) window.history.replaceState(window.history.state, "", destino);
   else window.history.pushState(window.history.state, "", destino);
+  anunciarSecao(slug, caminhoDaSecao(slug));
 }

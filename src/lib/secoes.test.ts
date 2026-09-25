@@ -83,4 +83,21 @@ describe("secoes", () => {
     empilhar.mockRestore();
     trocar.mockRestore();
   });
+
+  it("cada troca efetiva de URL dispara lp:secao uma vez, com slug e caminho; sem troca, nada", () => {
+    const eventos: Array<{ slug: string; caminho: string }> = [];
+    const ouvir = (e: Event) => eventos.push((e as CustomEvent<{ slug: string; caminho: string }>).detail);
+    window.addEventListener("lp:secao", ouvir);
+    atualizarUrl("sobre");
+    atualizarUrl("sobre");
+    atualizarUrl("duvidas", { substituir: true });
+    atualizarUrl("duvidas", { substituir: true });
+    atualizarUrl("inicio");
+    window.removeEventListener("lp:secao", ouvir);
+    expect(eventos).toEqual([
+      { slug: "sobre", caminho: "/sobre" },
+      { slug: "duvidas", caminho: "/duvidas" },
+      { slug: "inicio", caminho: "/" },
+    ]);
+  });
 });

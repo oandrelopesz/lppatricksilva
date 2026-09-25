@@ -387,4 +387,23 @@ describe("navegação por seções", () => {
       vi.restoreAllMocks();
     });
   });
+
+  describe("evento lp:secao no Voltar/Avançar (R20, decisão b)", () => {
+    it("popstate dispara lp:secao uma vez com a seção da URL restaurada", () => {
+      const eventos: unknown[] = [];
+      const ouvir = (e: Event) => eventos.push((e as CustomEvent).detail);
+      window.addEventListener("lp:secao", ouvir);
+      const desligar = interceptarLinksDeSecao();
+      window.history.replaceState(null, "", "/onde-atende");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      window.history.replaceState(null, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      desligar();
+      window.removeEventListener("lp:secao", ouvir);
+      expect(eventos).toEqual([
+        { slug: "onde-atende", caminho: "/onde-atende" },
+        { slug: "inicio", caminho: "/" },
+      ]);
+    });
+  });
 });
