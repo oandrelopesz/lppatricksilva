@@ -41,22 +41,30 @@ describe("AvisoCookies", () => {
   });
 });
 
-describe("AvisoCookies não cobre o CTA do hero (spec §5.10)", () => {
-  /** Geometria simulada: CTA do hero entre topoCta e topoCta + 34; barra do aviso com alturaBarra. */
-  let topoCta = 657;
-  let alturaBarra = 150;
-  let aoCruzar: ((visivel: boolean) => void) | undefined;
-  let observados: Element[] = [];
+describe("AvisoCookies não cobre o CTA do hero, de forma reativa (spec §5.10, parecer R31)", () => {
+  /** Geometria simulada: CTA do hero com 68 px de altura a partir de topoCta; barra com alturaBarra. */
+  let topoCta = 691;
+  let alturaBarra = 337;
+  let entregar: ((entrada: Partial<IntersectionObserverEntry>) => void) | undefined;
 
   class ObservadorFalso {
     constructor(private retorno: IntersectionObserverCallback) {
-      aoCruzar = (visivel) =>
-        this.retorno([{ isIntersecting: visivel, target: observados[0] } as unknown as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+      entregar = (entrada) => this.retorno([entrada as IntersectionObserverEntry], this as unknown as IntersectionObserver);
     }
-    observe = (alvo: Element) => void observados.push(alvo);
+    observe = vi.fn();
     unobserve = vi.fn();
     disconnect = vi.fn();
   }
+
+  /** Simula a rolagem: o CTA passa a ficar em topo..topo+68 e o observador avisa. */
+  function rolarCtaPara(topo: number) {
+    topoCta = topo;
+    const retangulo = { top: topo, bottom: topo + 68 } as DOMRectReadOnly;
+    // Sem observador (a barra não pode cobrir o CTA), a rolagem não muda nada.
+    if (entregar) act(() => entregar!({ isIntersecting: topo + 68 > 0 && topo < window.innerHeight, boundingClientRect: retangulo }));
+  }
+
+  const aviso = () => screen.queryByRole("region", { name: T.rotulo });
 
   function renderizarComHero() {
     return render(
@@ -70,16 +78,16 @@ describe("AvisoCookies não cobre o CTA do hero (spec §5.10)", () => {
   beforeEach(() => {
     localStorage.clear();
     window.dataLayer = [];
-    topoCta = 657;
-    alturaBarra = 150;
-    aoCruzar = undefined;
-    observados = [];
-    vi.stubGlobal("innerHeight", 740);
+    topoCta = 691;
+    alturaBarra = 337;
+    entregar = undefined;
+    vi.stubGlobal("innerHeight", 568);
+    vi.stubGlobal("scrollY", 0);
     vi.stubGlobal("IntersectionObserver", ObservadorFalso);
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
       const topo = this.id === "cta-hero" ? topoCta : 0;
-      const altura = this.id === "cta-hero" ? 34 : 0;
-      return { top: topo, bottom: topo + altura, left: 0, right: 360, width: 360, height: altura, x: 0, y: topo, toJSON: () => ({}) } as DOMRect;
+      const altura = this.id === "cta-hero" ? 68 : 0;
+      return { top: topo, bottom: topo + altura, left: 0, right: 320, width: 320, height: altura, x: 0, y: topo, toJSON: () => ({}) } as DOMRect;
     });
     vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(function (this: HTMLElement) {
       return this.getAttribute("role") === "region" ? alturaBarra : 0;
@@ -91,51 +99,64 @@ describe("AvisoCookies não cobre o CTA do hero (spec §5.10)", () => {
     vi.restoreAllMocks();
   });
 
-  it("a 360x740 no topo (CTA em 657..691), fica oculto até o CTA sair da tela e aparece depois da rolagem", () => {
+  it("320x568: CTA abaixo da viewport na carga, oculto; rolando até o CTA, continua oculto; com o CTA acima, aparece", () => {
     renderizarComHero();
-    expect(screen.queryByRole("region", { name: T.rotulo })).toBeNull();
-    expect(observados.map((e) => e.id)).toEqual(["cta-hero"]);
-    act(() => aoCruzar!(true));
-    expect(screen.queryByRole("region", { name: T.rotulo })).toBeNull();
-    act(() => aoCruzar!(false));
-    expect(screen.getByRole("region", { name: T.rotulo })).toBeInTheDocument();
+    expect(aviso()).toBeNull();
+    rolarCtaPara(451); // rolou 240 px: o CTA estaria atrás da barra (231..568)
+    expect(aviso()).toBeNull();
+    rolarCtaPara(-80); // o CTA passou para cima da viewport
+    expect(aviso()).toBeInTheDocument();
   });
 
-  it("sem sobreposição (CTA bem acima da barra), aparece na carga", () => {
-    vi.stubGlobal("innerHeight", 900);
-    topoCta = 520;
-    alturaBarra = 90;
+  it("voltar ao hero sem ter escolhido oculta a barra de novo", () => {
     renderizarComHero();
-    expect(screen.getByRole("region", { name: T.rotulo })).toBeInTheDocument();
+    rolarCtaPara(-80);
+    expect(aviso()).toBeInTheDocument();
+    rolarCtaPara(300);
+    expect(aviso()).toBeNull();
   });
 
-  it("CTA só apontando na borda de baixo (1440x900: 894..928, centro fora da tela), aparece na carga", () => {
+  it("360x740 (CTA em 623..691, barra de 293 px): oculto na carga", () => {
+    vi.stubGlobal("innerHeight", 740);
+    topoCta = 623;
+    alturaBarra = 293;
+    renderizarComHero();
+    expect(aviso()).toBeNull();
+  });
+
+  it("desktop em que a barra não alcança o CTA (CTA em 600..668, barra de 121 px a 900): aparece na carga e fica", () => {
     vi.stubGlobal("innerHeight", 900);
-    topoCta = 894;
+    topoCta = 600;
     alturaBarra = 121;
     renderizarComHero();
-    expect(screen.getByRole("region", { name: T.rotulo })).toBeInTheDocument();
+    expect(aviso()).toBeInTheDocument();
+    rolarCtaPara(300);
+    expect(aviso()).toBeInTheDocument();
   });
 
-  it("carga direto numa seção (/onde-atende, CTA fora da tela), aparece na hora", () => {
-    topoCta = -9000;
+  it("carga direta em /onde-atende (CTA acima da viewport): aparece na hora", () => {
+    vi.stubGlobal("scrollY", 10000);
+    topoCta = -9300;
     renderizarComHero();
-    expect(screen.getByRole("region", { name: T.rotulo })).toBeInTheDocument();
+    expect(aviso()).toBeInTheDocument();
   });
 
-  it("o botão do rodapé abre na hora, mesmo com o CTA na tela", () => {
+  it("o botão do rodapé abre na hora, em cima do hero, e mantém até a escolha", () => {
     renderizarComHero();
-    expect(screen.queryByRole("region", { name: T.rotulo })).toBeNull();
+    expect(aviso()).toBeNull();
     act(() => {
       window.dispatchEvent(new Event("abrir-preferencias-cookies"));
     });
-    expect(screen.getByRole("region", { name: T.rotulo })).toBeInTheDocument();
+    expect(aviso()).toBeInTheDocument();
+    rolarCtaPara(300);
+    expect(aviso()).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: T.recusar }));
+    expect(aviso()).toBeNull();
   });
 
-  it("enquanto mede, a barra fica invisível e fora da árvore de acessibilidade", () => {
+  it("enquanto mede e enquanto oculta, a barra fica fora da árvore de acessibilidade", () => {
     renderizarComHero();
-    const medindo = document.querySelector('[role="region"]');
-    // Depois da medição com sobreposição, a barra sai do DOM; se ainda estiver, tem de estar invisível.
-    if (medindo) expect((medindo as HTMLElement).style.visibility).toBe("hidden");
+    const barra = document.querySelector('[role="region"]');
+    if (barra) expect(barra).toHaveAttribute("aria-hidden", "true");
   });
 });
