@@ -5,7 +5,7 @@ import { aplicarConsentimento, lerConsentimento, salvarConsentimento, type Escol
 import { apagarCookiesRevogados } from "@/lib/cookiesMedicao";
 
 const BOTAO =
-  "inline-flex h-12 min-h-12 flex-1 items-center justify-center rounded-full border border-creme px-3 py-2 text-base font-semibold sm:flex-none sm:px-5 sm:py-3";
+  "inline-flex h-12 min-h-12 flex-1 items-center justify-center rounded border border-creme px-3 py-2 text-base font-semibold sm:flex-none sm:px-5 sm:py-3";
 
 const NENHUMA: Escolha = { visitas: false, anuncios: false };
 const TODAS: Escolha = { visitas: true, anuncios: true };
@@ -37,6 +37,7 @@ export function AvisoCookies() {
       aria-hidden={!visivel || undefined}
       data-oculto={!visivel || undefined}
       data-medindo={medindo || undefined}
+      data-escolhendo={escolhendo || undefined}
       // Oculta, a barra fica inerte no mesmo render: sem toque nem foco durante a saída (parecer R33).
       {...(visivel ? {} : { inert: "" })}
       className="aviso-cookies fixed inset-x-0 bottom-0 z-50 border-t border-dourado bg-grafite px-3 py-[7px] text-creme shadow-lg sm:px-4 sm:py-4"
@@ -52,7 +53,7 @@ export function AvisoCookies() {
                   ["anuncios", T.opcaoAnuncios, T.opcaoAnunciosDescricao],
                 ] as const
               ).map(([chave, rotulo, descricao]) => (
-                <label key={chave} className="aviso-cookies__opcao mt-2 flex min-h-12 items-start gap-3">
+                <label key={chave} className="aviso-cookies__opcao mt-1 flex min-h-12 items-center gap-3">
                   <input
                     type="checkbox"
                     role="switch"
@@ -60,15 +61,15 @@ export function AvisoCookies() {
                     onChange={(e) => setRascunho((atual) => ({ ...atual, [chave]: e.target.checked }))}
                     aria-labelledby={`${id}-${chave}-rotulo`}
                     aria-describedby={`${id}-${chave}`}
-                    className="mt-1 size-6 shrink-0 accent-dourado"
+                    className="aviso-cookies__chave shrink-0"
                   />
                   <span>
                     <span id={`${id}-${chave}-rotulo`} className="block font-semibold">{rotulo}</span>
-                    <span id={`${id}-${chave}`} className="block text-sm">{descricao}</span>
+                    <span id={`${id}-${chave}`} className="block text-base">{descricao}</span>
                   </span>
                 </label>
               ))}
-              <p className="mt-1 text-sm">{T.notaPersonalizacao}</p>
+              <p className="mt-1 text-base">{T.notaPersonalizacao}</p>
             </>
           ) : (
             /* Texto inteiro, sem rolagem interna (parecer R32): a barra fica mais alta no celular, e o
@@ -80,8 +81,8 @@ export function AvisoCookies() {
           </a>
         </div>
         {/* Recusar tudo com o mesmo peso visual de Aceitar tudo. */}
-        <div className="flex flex-wrap gap-2 sm:gap-3">
-          <button type="button" onClick={() => escolher(NENHUMA)} className={BOTAO}>
+        <div className="aviso-cookies__acoes flex flex-wrap gap-2 sm:gap-3">
+          <button type="button" onClick={() => escolher(NENHUMA)} className={`${BOTAO} bg-creme text-grafite`}>
             {T.recusarTudo}
           </button>
           {escolhendo ? (

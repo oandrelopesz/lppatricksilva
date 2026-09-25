@@ -36,11 +36,29 @@
   .hero-media { position: relative; isolation: isolate; width: 100%; max-width: 31rem; margin-inline: auto; }
   .hero-media::before { content: ""; position: absolute; inset: 16px -16px -16px 16px; z-index: -1; border: 1px solid var(--color-eco); border-radius: 12px; }
   .hero-media .premium-photo { width: 100%; height: auto; border-radius: 12px; }
-  @media (max-width: 374px) { .atlas-hero { padding-top: .5rem; } }
+  .aviso-medicao-hero { color: var(--color-grafite); }
+  .aviso-medicao-hero a { display: inline-flex; min-height: 48px; align-items: center; margin-block: -12px; padding-inline: 4px; color: #604914; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+  @media (max-width: 374px) {
+    .atlas-hero { padding-top: .25rem; }
+    .atlas-hero h1 { font-size: 2.1875rem; line-height: 1.02; }
+  }
   @media (min-width: 768px) { .atlas-hero { padding-block: 5rem; } .hero-media { width: min(115%, 36rem); max-width: none; margin-right: -4rem; } }
   @media (min-width: 1024px) { .atlas-hero { padding-block: 2.5rem; } .atlas-hero h1 { font-size: 3.375rem; line-height: 1.04; } .hero-media { width: min(100%, 26rem); margin-right: -2rem; } }
 
   .aviso-cookies :focus-visible { outline-color: var(--color-dourado-claro); }
+  .aviso-cookies__titulo { line-height: 1.2; }
+  .aviso-cookies__opcao { padding: .15rem .5rem; border: 1px solid #718b96; border-radius: 4px; background: #252c31; cursor: pointer; line-height: 1.2; }
+  .aviso-cookies__opcao:has(.aviso-cookies__chave:checked) { border-color: var(--color-dourado-claro); background: #343a35; }
+  .aviso-cookies__opcao:focus-within { outline: 3px solid var(--color-dourado-claro); outline-offset: 2px; }
+  .aviso-cookies__chave { appearance: none; position: relative; width: 52px; height: 32px; min-width: 52px; border: 2px solid #c7d4d7; border-radius: 999px; background: #53616a; cursor: pointer; transition: background-color .15s ease, border-color .15s ease; }
+  .aviso-cookies__chave::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .15s ease; }
+  .aviso-cookies__chave:checked { border-color: var(--color-dourado-claro); background: var(--color-dourado-claro); }
+  .aviso-cookies__chave:checked::after { transform: translateX(20px); background: var(--color-grafite); }
+  .aviso-cookies__chave:focus-visible { outline: 3px solid var(--color-dourado-claro); outline-offset: 3px; }
+  .aviso-cookies[data-escolhendo] .aviso-cookies__opcao ~ p { margin-top: .25rem; padding: .125rem .6rem; border-left: 2px solid var(--color-dourado-claro); color: var(--color-creme); font-size: 1rem; line-height: 1.25; }
+  .aviso-cookies__acoes button { transition: background-color .15s ease, border-color .15s ease; }
+  .aviso-cookies__acoes button:active { background: var(--color-dourado-claro); border-color: var(--color-dourado-claro); color: var(--color-grafite); transition: none; }
+  @media (min-width: 640px) { .aviso-cookies[data-escolhendo] > div { align-items: end; } }
 
   #para-quem { background: var(--color-creme); }
   #para-quem > div > p:first-of-type { max-width: 58ch; }
@@ -69,6 +87,7 @@
   .premium-timeline { position: relative; }
   .premium-timeline::before { content: ""; position: absolute; top: 1.5rem; bottom: 1.5rem; left: 1.375rem; width: 2px; background: var(--color-eco); }
   .timeline-marker { position: absolute; top: 1rem; left: -3.45rem; z-index: 1; display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1.5px solid var(--color-eco); border-radius: 50%; background: var(--color-creme); color: var(--color-grafite); font-family: var(--font-corpo); font-size: 1rem; font-weight: 600; }
+  #como-funciona .premium-timeline h3 { min-width: 0; overflow-wrap: anywhere; }
   #como-funciona .premium-timeline > li { border: 0; border-bottom: 1px solid rgb(23 27 32 / 28%); border-radius: 0; background: transparent; box-shadow: none; }
   #como-funciona .premium-timeline svg { color: var(--color-eco); }
   .seletor-cidade { border: 1px solid var(--color-eco); border-left: 4px solid var(--color-eco); border-radius: 4px; box-shadow: none; }
@@ -116,6 +135,12 @@
   .cartao-local > a[href^="https://wa.me/"]:active { background: var(--color-cta-escuro); }
   .cartao-local__mapa { min-height: 240px; margin-top: 1rem; overflow: hidden; border: 1px solid var(--color-dourado); border-radius: 12px; background: #303a40; }
   .cartao-local__mapa iframe { display: block; width: 100%; height: 240px; border: 0; touch-action: pan-y; }
+  .abas-cidades__mapa-consentimento { display: flex; min-height: 240px; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; margin-top: 1.5rem; padding: 1.25rem; border: 1px solid var(--color-dourado); border-radius: 12px; background: #303a40; text-align: center; }
+  .abas-cidades__mapa-consentimento-icone { flex: none; color: var(--color-dourado-claro); }
+  .abas-cidades__mapa-consentimento p { max-width: 50ch; margin: 0; font-size: 1rem; line-height: 1.4; }
+  .abas-cidades__mapa-consentimento button { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; padding: .65rem 1.5rem; border: 1px solid var(--color-dourado-claro); border-radius: 4px; background: var(--color-dourado-claro); color: var(--color-grafite); font-size: 1rem; font-weight: 600; cursor: pointer; }
+  .abas-cidades__mapa-consentimento button:focus-visible { outline-color: var(--color-dourado-claro); }
+  .abas-cidades__mapa-consentimento button:active { background: #dfc58d; }
   .abas-cidades__cartoes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; max-width: 58rem; margin-top: 1.5rem; }
   .abas-cidades__ver-todas, [role="tabpanel"] > button { min-height: 48px; margin-top: 1.5rem; padding: .65rem 1rem; border: 1px solid var(--color-dourado); border-radius: 4px; background: transparent; color: var(--color-creme); }
   .abas-cidades__geral[hidden], [role="tabpanel"][hidden] { display: none; }
@@ -178,7 +203,7 @@
     .mapa-ma__legenda li { padding: .2rem .45rem; }
     .mapa-ma figcaption { padding-top: .85rem; line-height: 1.5; }
   }
-  @media (min-width: 768px) { #onde-atende { padding-block: 7rem; } .cartao-local__mapa { min-height: 320px; } .cartao-local__mapa iframe { height: 320px; } }
+  @media (min-width: 768px) { #onde-atende { padding-block: 7rem; } .cartao-local__mapa, .abas-cidades__mapa-consentimento { min-height: 320px; } .cartao-local__mapa iframe { height: 320px; } }
   @media (hover: hover) and (pointer: fine) {
     a.premium-cta:hover { background: var(--color-cta-escuro); transform: translateY(-1px); }
     .autoavaliacao-opcao:hover { border-color: var(--color-eco); background: var(--color-creme); }
