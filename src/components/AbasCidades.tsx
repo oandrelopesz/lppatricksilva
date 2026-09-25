@@ -206,6 +206,7 @@ export function AbasCidades() {
             {cidade.locais.length > 1 ? <p>{T.multiplas(cidade.locais.length)}</p> : null}
             {/* Sem JavaScript não há botão: ficam endereço e Como chegar, como antes. */}
             {montado && !aceite && !pedido ? <div className="abas-cidades__mapa-consentimento">
+              <Icone nome="mapa" className="abas-cidades__mapa-consentimento-icone h-9 w-9" />
               <p>{T.mapaSemConsentimento.texto}</p>
               <button type="button" onClick={() => setMapasPedidos((atual) => new Set(atual).add(cidade.id))}>{T.mapaSemConsentimento.botao}</button>
             </div> : null}

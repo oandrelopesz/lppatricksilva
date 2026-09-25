@@ -65,9 +65,9 @@ describe("HTML inicial (sem JavaScript)", () => {
     expect(html).toContain('href="/politica-de-privacidade.html"');
   });
 
-  it("tem o aviso curto de medição logo depois do CTA do hero, com o link Privacidade", () => {
+  it("tem o aviso curto de medição logo antes do CTA do hero, com o link Privacidade", () => {
     const doc = new DOMParser().parseFromString(html, "text/html");
-    const aviso = doc.getElementById("cta-hero")!.nextElementSibling!;
+    const aviso = doc.getElementById("cta-hero")!.previousElementSibling!;
     expect(aviso.textContent).toBe(`${TEXTOS_HERO.avisoMedicao} ${TEXTOS_HERO.linkPrivacidade}`);
     expect(aviso.querySelector("a")!.getAttribute("href")).toBe("/politica-de-privacidade.html");
   });
