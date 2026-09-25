@@ -80,7 +80,7 @@ describe("locais", () => {
     const CORRIGIDOS: Record<string, string> = {
       "clinica-mais-saude": "https://www.google.com/maps?cid=6068533600021052492&output=embed",
       clinimed: `https://www.google.com/maps?${new URLSearchParams({ q: "Rua 28 de Julho, Loreto - MA", output: "embed" })}`,
-      "sd-med": "https://www.google.com/maps?cid=8715891456907011906&output=embed",
+      "sd-med": `https://www.google.com/maps?${new URLSearchParams({ q: "R. Quinze de Novembro, 49B, São Domingos do Maranhão - MA", output: "embed" })}`,
       "cm-lab-graca-aranha": `https://www.google.com/maps?${new URLSearchParams({ q: "R. São Francisco, Graça Aranha - MA, 65785-000", output: "embed" })}`,
       "clinica-mais-familia": "https://www.google.com/maps?cid=492768669301912196&output=embed",
     };

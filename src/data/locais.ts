@@ -190,7 +190,8 @@ export const CIDADES: Cidade[] = [
         logradouro: "R. Quinze de Novembro, 49B, Centro",
         cep: "65790-000",
         linkComoChegar: "https://maps.google.com/?cid=8715891456907011906",
-        embed: { cid: "8715891456907011906" },
+        // A ficha (cid) não tem endereço: o mapa ficava na cidade, sem pino.
+        embed: { q: "R. Quinze de Novembro, 49B, São Domingos do Maranhão - MA" },
       },
     ],
   },
