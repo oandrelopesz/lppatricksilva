@@ -8,6 +8,4 @@ export const TEXTOS_HERO = {
   nome: "Dr. Patrick Santos",
   assinatura: "MÉDICO · CRM-MA 16520 · Ortopedia e Traumatologia · RQE 7389",
   altFoto: "Dr. Patrick Santos apontando para um modelo anatômico de joelho no consultório",
-  flutuante: "WhatsApp",
-  flutuanteAria: "Chamar no WhatsApp para agendar",
 } as const;
