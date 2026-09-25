@@ -24,7 +24,6 @@
   a.premium-cta { min-height: 48px; border-radius: 4px; box-shadow: none; transition: background-color 160ms ease, transform 160ms ease; }
   a.premium-cta:active { background: var(--color-cta-escuro); transform: scale(.99); transition: none; }
   a.premium-cta:focus-visible { outline: 3px solid var(--color-foco-claro); outline-offset: 4px; }
-  a.premium-cta.botao-flutuante:focus-visible { outline: none; box-shadow: 0 0 0 3px #171b20, 0 0 0 6px #c9a96c; }
   #onde-atende :focus-visible, #rodape :focus-visible { outline-color: var(--color-dourado-claro); }
   #para-quem .autoavaliacao-opcao:focus-visible { outline-color: var(--color-foco-claro); }
 

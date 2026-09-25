@@ -13,8 +13,7 @@ export type LocalCta =
   | "sobre"
   | "onde_atende"
   | "faq"
-  | "rodape"
-  | "flutuante";
+  | "rodape";
 
 interface Props extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href" | "onClick" | "target" | "rel"> {
   localCta: LocalCta;
