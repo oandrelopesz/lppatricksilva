@@ -44,8 +44,9 @@ describe("HTML inicial (sem JavaScript)", () => {
     expect(html).toContain('href="/politica-de-privacidade.html"');
   });
 
-  it("não traz o aviso de cookies (só aparece depois da hidratação) e traz o botão de preferências", () => {
+  it("sem JavaScript: nem aviso nem botão de cookies (controle sem ação), só o link da política (parecer R18)", () => {
     expect(html).not.toContain(TEXTOS_COOKIES.rotulo);
-    expect(html).toContain(TEXTOS_COOKIES.preferencias);
+    expect(html).not.toContain(TEXTOS_COOKIES.preferencias);
+    expect(html).toContain('href="/politica-de-privacidade.html"');
   });
 });

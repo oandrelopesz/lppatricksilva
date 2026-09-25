@@ -1,4 +1,4 @@
-import type { MouseEvent } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { CtaWhatsApp } from "@/components/CtaWhatsApp";
 import { Foto } from "@/components/Foto";
 import { ASSINATURA } from "@/config";
@@ -23,6 +23,8 @@ function abrirAba(evento: MouseEvent<HTMLAnchorElement>, cidadeId: string) {
 }
 
 export function S8Rodape() {
+  const [montado, setMontado] = useState(false);
+  useEffect(() => setMontado(true), []);
   return (
     <footer id="rodape" className="bg-grafite px-4 py-16 text-creme">
       <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-2">
@@ -64,13 +66,16 @@ export function S8Rodape() {
           <p className="mt-3">{T.lgpd}</p>
           <a className="mt-3 inline-block min-h-12 py-2 font-semibold underline underline-offset-4" href="/politica-de-privacidade.html">{T.politicaLink}</a>
           <div id="rodape-extra">
-            <button
-              type="button"
-              className="min-h-12 py-2 text-left font-semibold underline underline-offset-4"
-              onClick={() => window.dispatchEvent(new Event("abrir-preferencias-cookies"))}
-            >
-              {TEXTOS_COOKIES.preferencias}
-            </button>
+            {/* Sem JavaScript o botão não teria ação: entra só depois da hidratação (parecer R18). */}
+            {montado ? (
+              <button
+                type="button"
+                className="min-h-12 py-2 text-left font-semibold underline underline-offset-4"
+                onClick={() => window.dispatchEvent(new Event("abrir-preferencias-cookies"))}
+              >
+                {TEXTOS_COOKIES.preferencias}
+              </button>
+            ) : null}
           </div>
           <p className="mt-4">{T.copyright(new Date().getFullYear())}</p>
         </div>

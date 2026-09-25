@@ -20,12 +20,15 @@ describe("hidratação do HTML pré-renderizado", () => {
     raiz.innerHTML = render();
     document.body.appendChild(raiz);
     expect(raiz.textContent).not.toContain(TEXTOS_COOKIES.texto);
+    expect(raiz.textContent).not.toContain(TEXTOS_COOKIES.preferencias);
     let app: ReturnType<typeof hydrateRoot> | undefined;
     await act(async () => {
       app = hydrateRoot(raiz, <App />, { onRecoverableError: (e) => console.error(e) });
     });
     expect(erros).not.toHaveBeenCalled();
     expect(raiz.textContent).toContain(TEXTOS_COOKIES.texto);
+    // O botão de preferências entra num efeito, depois da hidratação, sem diferença no primeiro render.
+    expect(raiz.querySelector("#rodape-extra button")?.textContent).toBe(TEXTOS_COOKIES.preferencias);
     act(() => app!.unmount());
   });
 });
