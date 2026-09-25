@@ -1,6 +1,7 @@
 import type { CSSProperties, MouseEvent } from "react";
 import { CIDADES } from "@/data/locais";
 import { MAPA_MA, PONTOS_CIDADES } from "@/data/mapaMaranhao";
+import { Icone } from "@/components/icones/Icone";
 
 interface Props {
   cidadeAberta?: string;
@@ -114,7 +115,10 @@ export function MapaMaranhao({ cidadeAberta, aoEscolher }: Props) {
       const proximo = marcadores.map(({ cidade, ponto }) => ({ id: cidade.id,
         distancia: Math.hypot((x - ponto.x) * quadro.width / 600, (y - ponto.y) * quadro.height / 700) }))
         .sort((a, b) => a.distancia - b.distancia)[0];
-      if (proximo.distancia <= 18) { aoEscolher(proximo.id); return; }
+      const contorno = evento.currentTarget.querySelector<SVGPathElement>(".mapa-ma__contorno");
+      const dentroDoEstado = contorno?.isPointInFill?.({ x, y } as DOMPoint) ??
+        (evento.target as Element).closest(".mapa-ma__contorno") !== null;
+      if (dentroDoEstado || proximo.distancia <= 18) { aoEscolher(proximo.id); return; }
     }
     const botoes = evento.currentTarget.querySelectorAll<HTMLButtonElement>(".mapa-ma__ponto");
     let maisPerto: { id: string; distancia: number } | undefined;
@@ -156,14 +160,13 @@ export function MapaMaranhao({ cidadeAberta, aoEscolher }: Props) {
         </svg>
         {marcadores.map(({ cidade, numero, compacto, amplo }) => <button key={cidade.id} className="mapa-ma__ponto" type="button"
           style={{ "--x-compacto": `${compacto.x / LARGURA_COMPACTA * 100}%`, "--y-compacto": `${compacto.y / ALTURA_COMPACTA * 100}%`,
-            "--x-amplo": `${amplo.x / 600 * 100}%`, "--y-amplo": `${amplo.y / 700 * 100}%`,
-            "--limite-etiqueta": `${compacto.x > LARGURA_COMPACTA / 2 ? compacto.x - 30 : LARGURA_COMPACTA - compacto.x - 30}px` } as CSSProperties}
-          data-lado={compacto.x > LARGURA_COMPACTA / 2 ? "esquerda" : "direita"}
+            "--x-amplo": `${amplo.x / 600 * 100}%`, "--y-amplo": `${amplo.y / 700 * 100}%` } as CSSProperties}
           aria-label={`${numero}, Cidade de ${cidade.nome} no mapa`} aria-current={cidade.id === cidadeAberta ? "location" : undefined}
-          onClick={() => aoEscolher(cidade.id)}><span className="mapa-ma__numero" aria-hidden="true">{numero}</span>
-            {cidade.id === cidadeAberta ? <span className="mapa-ma__etiqueta" aria-hidden="true">{cidade.nome}</span> : null}
-          </button>)}
+          onClick={() => aoEscolher(cidade.id)}><span className="mapa-ma__numero" aria-hidden="true">{numero}</span></button>)}
       </div>
+    </div>
+    <div className="mapa-ma__selecionada" aria-live="polite">
+      {cidadeAberta ? <><Icone nome="mapa" className="h-5 w-5 shrink-0" />{CIDADES.find((cidade) => cidade.id === cidadeAberta)?.nome}</> : null}
     </div>
     <ol className="mapa-ma__legenda">{marcadores.map(({ cidade, numero }) => <li key={cidade.id} className={cidade.id === cidadeAberta ? "mapa-ma__legenda-ativa" : undefined}>
       <span aria-hidden="true">{numero.toString().padStart(2, "0")}</span> {cidade.nome}

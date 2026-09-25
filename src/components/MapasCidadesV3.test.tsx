@@ -148,6 +148,39 @@ describe("mapas e mapa ilustrado V3", () => {
     expect(screen.getByRole("tab", { name: "Graça Aranha" })).toHaveAttribute("aria-selected", "true");
   });
 
+  it("toque no interior do estado, longe dos pontos, escolhe o centroide mais próximo", () => {
+    renderizar();
+    const quadro = screen.getByRole("group", { name: /cidades no mapa ilustrado/i });
+    const contorno = quadro.querySelector<SVGPathElement>(".mapa-ma__contorno")!;
+    const dentro = vi.fn().mockReturnValue(true);
+    Object.defineProperty(contorno, "isPointInFill", { value: dentro });
+    vi.spyOn(quadro, "getBoundingClientRect").mockReturnValue({
+      left: 0, top: 0, right: 322, bottom: 376, width: 322, height: 376,
+      x: 0, y: 0, toJSON: () => ({}),
+    });
+    for (const botao of screen.getAllByRole("button", { name: /no mapa/ })) {
+      vi.spyOn(botao, "getBoundingClientRect").mockReturnValue({
+        left: 1000, top: 1000, right: 1048, bottom: 1048, width: 48, height: 48,
+        x: 1000, y: 1000, toJSON: () => ({}),
+      });
+    }
+    fireEvent.click(quadro, { clientX: 165, clientY: 205 });
+    expect(dentro).toHaveBeenCalled();
+    expect(screen.getByRole("tab", { name: "Barra do Corda" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("mostra o nome das 11 cidades fora da malha de pontos", () => {
+    const { container } = renderizar();
+    const quadro = screen.getByRole("group", { name: /cidades no mapa ilustrado/i });
+    for (const cidade of CIDADES) {
+      fireEvent.click(screen.getByRole("button", { name: new RegExp(`Cidade de ${cidade.nome} no mapa$`) }));
+      const nome = container.querySelector(".mapa-ma__selecionada");
+      expect(nome).toHaveTextContent(cidade.nome);
+      expect(quadro.contains(nome)).toBe(false);
+      expect(quadro.querySelector(".mapa-ma__etiqueta")).toBeNull();
+    }
+  });
+
   it("toque perto de um ponto escolhe a cidade; longe de todos não escolhe", () => {
     const { container } = renderizar();
     const quadro = screen.getByRole("group", { name: /cidades no mapa ilustrado/i });
@@ -175,7 +208,7 @@ describe("mapas e mapa ilustrado V3", () => {
     ponto.focus();
     await usuario.keyboard("{Enter}");
     expect(aba).toHaveFocus();
-    expect(aba.scrollIntoView).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ behavior: "smooth", block: "start" }));
+    expect(aba.scrollIntoView).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ behavior: "smooth", block: "start", inline: "start" }));
   });
 
   it("rola instantaneamente para a aba com movimento reduzido", () => {
@@ -184,7 +217,7 @@ describe("mapas e mapa ilustrado V3", () => {
     const aba = screen.getByRole("tab", { name: "Tuntum" });
     aba.scrollIntoView = vi.fn();
     fireEvent.click(screen.getByRole("button", { name: /^\d+, Cidade de Tuntum no mapa$/ }));
-    expect(aba.scrollIntoView).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ behavior: "auto", block: "start" }));
+    expect(aba.scrollIntoView).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ behavior: "auto", block: "start", inline: "start" }));
     expect(aba).toHaveFocus();
     vi.unstubAllGlobals();
   });
