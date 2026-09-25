@@ -18,6 +18,15 @@ describe("AvisoCookies", () => {
     expect(localStorage.getItem("lp_consentimento_v1")).toBe("aceito");
   });
 
+  it("mantém o texto integral rolável por teclado e a política acessível fora dele", () => {
+    render(<AvisoCookies />);
+    const texto = screen.getByText(T.texto);
+    const politica = screen.getByRole("link", { name: T.linkPolitica });
+    expect(texto).toHaveAttribute("tabindex", "0");
+    expect(texto).toHaveTextContent(T.texto);
+    expect(texto.contains(politica)).toBe(false);
+  });
+
   it("recusar guarda a escolha e mantém negado", () => {
     render(<AvisoCookies />);
     fireEvent.click(screen.getByRole("button", { name: T.recusar }));
