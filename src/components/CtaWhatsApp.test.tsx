@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MENSAGENS_WHATSAPP } from "@/content/whatsapp";
 import { CidadeProvider, useCidade } from "@/context/CidadeContext";
 import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
 import { LINK_WHATSAPP_BASE, LINK_WHATSAPP_DUVIDA } from "@/lib/whatsapp";
@@ -51,7 +52,8 @@ describe("CtaWhatsApp", () => {
     vi.advanceTimersByTime(1000);
     expect(navegacao.ir).toHaveBeenCalledTimes(1);
     const url = vi.mocked(navegacao.ir).mock.calls[0][0];
-    expect(textoDe(url)).toMatch(/\(ref [A-HJ-NP-Z2-9]{6}\)$/);
+    expect(textoDe(url)).toBe(MENSAGENS_WHATSAPP.base);
+    expect(evento).not.toHaveProperty("ref");
     expect(textoDe(url)).not.toContain("Balsas");
   });
 
@@ -70,7 +72,7 @@ describe("CtaWhatsApp", () => {
     expect(JSON.stringify(evento)).not.toContain("Cj0abc_1");
   });
 
-  it("dois cliques seguidos: o segundo (com resumo e sem local) não herda ref nem local do primeiro", () => {
+  it("dois cliques seguidos: o segundo (com resumo e sem local) não herda local nem cidade do primeiro", () => {
     render(
       <CidadeProvider>
         <CtaWhatsApp localCta="onde_atende" cidadeFixa="Balsas" local="Hospital São José">
@@ -93,7 +95,7 @@ describe("CtaWhatsApp", () => {
     }
     expect(noSegundoClique).toHaveLength(2);
     expect(noSegundoClique[0]).toMatchObject({ local: "Hospital São José", cidade: "Balsas" });
-    expect(noSegundoClique[0].ref).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
+    expect(noSegundoClique[0].ref).toBeUndefined();
     expect(noSegundoClique[1].local_cta).toBe("autoavaliacao");
     expect(noSegundoClique[1].ref).toBeUndefined();
     expect(noSegundoClique[1].local).toBeUndefined();
@@ -116,7 +118,7 @@ describe("CtaWhatsApp", () => {
   it("clique com Ctrl deixa o navegador abrir nova aba e só registra o evento", () => {
     render(
       <CidadeProvider>
-        <CtaWhatsApp localCta="rodape">Agendar</CtaWhatsApp>
+        <CtaWhatsApp localCta="rodape" cidadeFixa="Tuntum">Agendar</CtaWhatsApp>
       </CidadeProvider>,
     );
     const link = screen.getByRole("link", { name: "Agendar" });
@@ -124,13 +126,13 @@ describe("CtaWhatsApp", () => {
     vi.advanceTimersByTime(1000);
     expect(navegacao.ir).not.toHaveBeenCalled();
     expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", local_cta: "rodape" }));
-    expect(textoDe(link.getAttribute("href")!)).toMatch(/\(ref /);
+    expect(textoDe(link.getAttribute("href")!)).toBe(MENSAGENS_WHATSAPP.comCidade("Tuntum"));
   });
 
   it("clique com o botão do meio monta o link completo e só registra o evento", () => {
     render(
       <CidadeProvider>
-        <CtaWhatsApp localCta="sobre">Agendar</CtaWhatsApp>
+        <CtaWhatsApp localCta="sobre" cidadeFixa="Tuntum">Agendar</CtaWhatsApp>
       </CidadeProvider>,
     );
     const link = screen.getByRole("link", { name: "Agendar" });
@@ -139,7 +141,7 @@ describe("CtaWhatsApp", () => {
     vi.advanceTimersByTime(1000);
     expect(navegacao.ir).not.toHaveBeenCalled();
     expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", local_cta: "sobre" }));
-    expect(textoDe(link.getAttribute("href")!)).toMatch(/\(ref [A-HJ-NP-Z2-9]{6}\)$/);
+    expect(textoDe(link.getAttribute("href")!)).toBe(MENSAGENS_WHATSAPP.comCidade("Tuntum"));
   });
 
   it("depois que o usuário escolhe a cidade, o clique inclui a cidade", () => {
@@ -219,7 +221,7 @@ describe("CtaWhatsApp", () => {
       expect(link.getAttribute("href")).toBe(LINK_WHATSAPP_DUVIDA);
       fireEvent.click(link);
       vi.advanceTimersByTime(800);
-      expect(textoDe(vi.mocked(navegacao.ir).mock.calls[0][0])).toMatch(/^Olá! Vim do site e gostaria de tirar uma dúvida antes de agendar uma consulta\. \(ref [A-HJ-NP-Z2-9]{6}\)$/);
+      expect(textoDe(vi.mocked(navegacao.ir).mock.calls[0][0])).toBe(MENSAGENS_WHATSAPP.duvida);
       expect(window.dataLayer).toContainEqual(expect.objectContaining({ event: "clique_whatsapp", intencao: "duvida" }));
     });
 
@@ -256,15 +258,15 @@ describe("CtaWhatsApp", () => {
   it("resumo incluído depois de um clique sem resumo volta o href ao link base (parecer R10)", () => {
     const { rerender } = render(
       <CidadeProvider>
-        <CtaWhatsApp localCta="autoavaliacao">Agendar</CtaWhatsApp>
+        <CtaWhatsApp localCta="autoavaliacao" cidadeFixa="Tuntum">Agendar</CtaWhatsApp>
       </CidadeProvider>,
     );
     const link = screen.getByRole("link", { name: "Agendar" });
     fireEvent.click(link, { ctrlKey: true });
-    expect(textoDe(link.getAttribute("href")!)).toMatch(/\(ref /);
+    expect(textoDe(link.getAttribute("href")!)).toBe(MENSAGENS_WHATSAPP.comCidade("Tuntum"));
     rerender(
       <CidadeProvider>
-        <CtaWhatsApp localCta="autoavaliacao" resumo="Meu resumo: joelho.">
+        <CtaWhatsApp localCta="autoavaliacao" cidadeFixa="Tuntum" resumo="Meu resumo: joelho.">
           Agendar
         </CtaWhatsApp>
       </CidadeProvider>,

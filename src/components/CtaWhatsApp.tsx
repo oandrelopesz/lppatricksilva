@@ -65,15 +65,13 @@ export function CtaWhatsApp({
   function preparar(elemento: HTMLAnchorElement) {
     const origem = obterOrigem();
     const nomeCidade = ignorarCidade ? undefined : (cidadeFixa ?? cidade?.nome);
-    const url = montarLinkWhatsApp({ intencao, cidade: nomeCidade, local, resumo, ref: origem.ref });
+    const url = montarLinkWhatsApp({ intencao, cidade: nomeCidade, local, resumo });
     elemento.href = resumo ? linkBase : url;
     const params = {
       local_cta: localCta,
       intencao,
       cidade: nomeCidade,
       local,
-      // Sem ref quando há resumo: a mensagem também não leva a ref (spec §7).
-      ref: resumo ? undefined : origem.ref,
       utm_source: origem.utm_source,
       utm_medium: origem.utm_medium,
       utm_campaign: origem.utm_campaign,

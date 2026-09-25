@@ -12,14 +12,17 @@ export interface PedidoWhatsApp {
   local?: string;
   /** Resumo da autoavaliação, só quando o usuário marcou a caixa de inclusão. */
   resumo?: string;
-  ref: string;
 }
 
 function textoDuvida(p: PedidoWhatsApp): string {
   return p.cidade ? MENSAGENS_WHATSAPP.duvidaComCidade(p.cidade) : MENSAGENS_WHATSAPP.duvida;
 }
 
-export function montarMensagem(p: PedidoWhatsApp): string {
+/**
+ * Só o texto aprovado da copy, sem código de referência nem outro sufixo (pedido do André,
+ * spec §21 "Sem código de referência"). Com resumo da autoavaliação, o resumo vem depois do texto.
+ */
+export function montarMensagem(p: PedidoWhatsApp = {}): string {
   const texto =
     p.intencao === "duvida"
       ? textoDuvida(p)
@@ -28,16 +31,14 @@ export function montarMensagem(p: PedidoWhatsApp): string {
         : p.cidade
           ? MENSAGENS_WHATSAPP.comCidade(p.cidade)
           : MENSAGENS_WHATSAPP.base;
-  // Com resumo clínico, a mensagem não leva a ref: a origem do clique não fica ligada às respostas.
-  if (p.resumo) return `${texto} ${p.resumo.trim()}`;
-  return p.ref ? `${texto} (ref ${p.ref})` : texto;
+  return p.resumo ? `${texto} ${p.resumo.trim()}` : texto;
 }
 
 function link(texto: string): string {
   return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(texto)}`;
 }
 
-export function montarLinkWhatsApp(p: PedidoWhatsApp): string {
+export function montarLinkWhatsApp(p: PedidoWhatsApp = {}): string {
   return link(montarMensagem(p));
 }
 
