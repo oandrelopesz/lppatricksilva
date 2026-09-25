@@ -83,12 +83,31 @@ async function medirAvisos() {
 }
 medirAvisos();
 </script>`;
+/* Termos de uso a 320 px com texto ampliado: sem rolagem lateral e sem link ou título cortado. */
+const testeTermos = `<script>
+async function medirTermos() {
+  await document.fonts.ready;
+  const leituras = [];
+  for (const escala of [125, 150, 200]) {
+    document.documentElement.style.fontSize = escala + '%';
+    const cortados = [...document.querySelectorAll('a, h1, h2')].filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.width && (r.left < -1 || r.right > innerWidth + 1);
+    }).map((el) => el.tagName + ' ' + el.textContent.slice(0, 20));
+    leituras.push({ escala, largura: innerWidth, scroll: document.documentElement.scrollWidth, cortados });
+  }
+  parent.document.getElementById('termos').textContent = btoa(unescape(encodeURIComponent(JSON.stringify(leituras))));
+}
+medirTermos();
+</script>`;
+const termosTeste = readFileSync(join(raiz, "termos-de-uso.html"), "utf8").replace("</body>", `${testeTermos}</body>`);
 const frameTeste = readFileSync(join(raiz, "index.html"), "utf8").replace("</body>", `${teste}</body>`);
-const paginaTeste = '<!doctype html><html><meta charset="utf-8"><pre id="resultado"></pre><pre id="avisos"></pre><iframe src="/__frame" style="width:320px;height:568px;border:0"></iframe></html>';
+const paginaTeste = '<!doctype html><html><meta charset="utf-8"><pre id="resultado"></pre><pre id="avisos"></pre><pre id="termos"></pre><iframe src="/__frame" style="width:320px;height:568px;border:0"></iframe><iframe src="/__termos" style="width:320px;height:568px;border:0"></iframe></html>';
 const tipos = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".avif": "image/avif", ".webp": "image/webp", ".woff2": "font/woff2", ".json": "application/json" };
 const servidor = createServer((pedido, resposta) => {
   const caminho = decodeURIComponent(new URL(pedido.url ?? "/", "http://localhost").pathname);
   if (caminho === "/__reflow") { resposta.setHeader("Content-Type", "text/html; charset=utf-8"); resposta.end(paginaTeste); return; }
+  if (caminho === "/__termos") { resposta.setHeader("Content-Type", "text/html; charset=utf-8"); resposta.end(termosTeste); return; }
   if (caminho === "/__frame") { resposta.setHeader("Content-Type", "text/html; charset=utf-8"); resposta.end(frameTeste); return; }
   const arquivo = resolve(raiz, `.${caminho === "/" ? "/index.html" : caminho}`);
   if (!arquivo.startsWith(raiz + sep) || !existsSync(arquivo)) { resposta.writeHead(404); resposta.end(); return; }
@@ -123,6 +142,18 @@ try {
     for (const l of JSON.parse(Buffer.from(avisos, "base64").toString("utf8"))) {
       const ok = l.visivel && l.topo >= -1 && l.topoConteudo >= -1 && l.rolavel && l.botoesVisiveis;
       console.log(`aviso ${l.camada} camada ${l.escala}%: ${l.visivel ? `altura ${l.altura}, topo ${l.topo}, topo do conteúdo ${l.topoConteudo}, ${l.sobra ? (l.rolavel ? "rola" : "NÃO rola") : "cabe sem rolar"}, botões ${l.botoesVisiveis ? "visíveis" : "FORA"}` : "NÃO apareceu"} ${ok ? "ok" : "FALHA"}`);
+      if (!ok) process.exitCode = 1;
+    }
+  }
+  const termos = saida.match(/<pre id="termos">([^<]+)<\/pre>/)?.[1];
+  if (!termos) {
+    console.error("Termos de uso: sem medidas.");
+    process.exitCode = 1;
+  } else {
+    for (const l of JSON.parse(Buffer.from(termos, "base64").toString("utf8"))) {
+      const ok = l.largura === 320 && l.scroll <= l.largura && !l.cortados.length;
+      console.log(`termos ${l.escala}%: scrollWidth ${l.scroll} / viewport ${l.largura}; cortados ${l.cortados.length} ${ok ? "ok" : "FALHA"}`);
+      if (l.cortados.length) console.error(`Cortados nos termos: ${l.cortados.join(", ")}`);
       if (!ok) process.exitCode = 1;
     }
   }
