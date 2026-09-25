@@ -12,7 +12,7 @@ const consentimento = { consentStatus: "NOT_NEEDED" }; // só as verificações 
 
 /** Eventos e parâmetros da spec §8 (dataLayer). */
 const EVENTOS = {
-  clique_whatsapp: ["local_cta", "cidade", "local", "ref", "utm_source", "utm_medium", "utm_campaign", "utm_content"],
+  clique_whatsapp: ["local_cta", "cidade", "local", "utm_source", "utm_medium", "utm_campaign", "utm_content"],
   autoavaliacao_etapa: ["etapa"],
   autoavaliacao_concluida: [],
   autoavaliacao_pulada: ["etapa"],
