@@ -1,4 +1,4 @@
-import { atualizarUrl, ehSecao, irParaSecao, secaoDaUrl } from "@/lib/secoes";
+import { SECOES, atualizarUrl, ehSecao, irParaSecao, secaoDaUrl } from "@/lib/secoes";
 
 /** Carga em /<slug> (sitelink): rola até a seção sem animação. Só no navegador, depois da hidratação. */
 export function rolarParaSecaoDaUrl(): void {
@@ -38,11 +38,49 @@ export function interceptarLinksDeSecao(): () => void {
   };
 }
 
+/** Intervalo mínimo entre trocas de URL durante a rolagem. */
+const INTERVALO_URL_MS = 300;
+
+/**
+ * Marca a seção dominante (a que cruza uma faixa fina no meio da viewport) e troca a URL para
+ * /<slug> com replaceState, sem empilhar histórico, no máximo uma vez a cada 300 ms.
+ */
+export function acompanharRolagem(): () => void {
+  if (typeof IntersectionObserver === "undefined") return () => {};
+  let pendente: string | undefined;
+  let espera: ReturnType<typeof setTimeout> | undefined;
+
+  const aplicar = () => {
+    espera = undefined;
+    if (pendente) atualizarUrl(pendente, { substituir: true });
+  };
+
+  const observador = new IntersectionObserver(
+    (entradas) => {
+      const dominante = entradas.filter((entrada) => entrada.isIntersecting).pop();
+      if (!dominante) return;
+      pendente = dominante.target.id;
+      if (espera === undefined) espera = setTimeout(aplicar, INTERVALO_URL_MS);
+    },
+    { rootMargin: "-45% 0px -54% 0px", threshold: 0 },
+  );
+  for (const slug of SECOES) {
+    const secao = document.getElementById(slug);
+    if (secao) observador.observe(secao);
+  }
+  return () => {
+    observador.disconnect();
+    if (espera !== undefined) clearTimeout(espera);
+  };
+}
+
 /** Liga a navegação por seções. Devolve a função que desliga (efeito do React). */
 export function iniciarNavegacaoPorSecoes(): () => void {
   rolarParaSecaoDaUrl();
   const desligarLinks = interceptarLinksDeSecao();
+  const desligarRolagem = acompanharRolagem();
   return () => {
     desligarLinks();
+    desligarRolagem();
   };
 }

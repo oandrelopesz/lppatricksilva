@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent } from "@testing-library/react";
-import { interceptarLinksDeSecao, rolarParaSecaoDaUrl } from "./navegacaoSecoes";
+import { acompanharRolagem, interceptarLinksDeSecao, rolarParaSecaoDaUrl } from "./navegacaoSecoes";
 import { SECOES } from "./secoes";
 
 describe("navegação por seções", () => {
@@ -95,6 +95,82 @@ describe("navegação por seções", () => {
       const seguiu = fireEvent.click(link("sobre"));
       expect(seguiu).toBe(true);
       desligar = () => {};
+    });
+  });
+
+  describe("rolagem (item 5)", () => {
+    let retorno: IntersectionObserverCallback | undefined;
+    let observados: Element[] = [];
+    const desconectar = vi.fn();
+    class ObservadorFalso {
+      constructor(r: IntersectionObserverCallback) {
+        retorno = r;
+      }
+      observe = (alvo: Element) => void observados.push(alvo);
+      unobserve = vi.fn();
+      disconnect = desconectar;
+    }
+    const cruzar = (slug: string, entrou = true) =>
+      retorno!([{ target: document.getElementById(slug)!, isIntersecting: entrou } as unknown as IntersectionObserverEntry], {} as IntersectionObserver);
+
+    let desligar: () => void;
+    beforeEach(() => {
+      observados = [];
+      retorno = undefined;
+      desconectar.mockClear();
+      vi.stubGlobal("IntersectionObserver", ObservadorFalso);
+      vi.useFakeTimers();
+      desligar = acompanharRolagem();
+    });
+    afterEach(() => {
+      desligar();
+      vi.useRealTimers();
+    });
+
+    it("observa as seções que existem na página", () => {
+      expect(observados.map((e) => e.id)).toEqual([...SECOES]);
+    });
+
+    it("a seção dominante vira /<slug> com replaceState, sem empilhar, depois do throttle", () => {
+      const empilhar = vi.spyOn(window.history, "pushState");
+      const trocar = vi.spyOn(window.history, "replaceState");
+      cruzar("como-funciona");
+      cruzar("sobre");
+      cruzar("duvidas");
+      expect(window.location.pathname).toBe("/");
+      vi.advanceTimersByTime(300);
+      expect(window.location.pathname).toBe("/duvidas");
+      expect(trocar).toHaveBeenCalledTimes(1);
+      expect(empilhar).not.toHaveBeenCalled();
+      empilhar.mockRestore();
+      trocar.mockRestore();
+    });
+
+    it("seção saindo da faixa não muda a URL; inicio volta à raiz", () => {
+      cruzar("sobre");
+      vi.advanceTimersByTime(300);
+      cruzar("sobre", false);
+      vi.advanceTimersByTime(300);
+      expect(window.location.pathname).toBe("/sobre");
+      cruzar("inicio");
+      vi.advanceTimersByTime(300);
+      expect(window.location.pathname).toBe("/");
+    });
+
+    it("desligar desconecta o observer e cancela a troca pendente", () => {
+      cruzar("sobre");
+      desligar();
+      vi.advanceTimersByTime(300);
+      expect(desconectar).toHaveBeenCalled();
+      expect(window.location.pathname).toBe("/");
+      desligar = () => {};
+    });
+
+    it("sem IntersectionObserver, não faz nada", () => {
+      desligar();
+      vi.stubGlobal("IntersectionObserver", undefined);
+      desligar = acompanharRolagem();
+      expect(window.location.pathname).toBe("/");
     });
   });
 });
