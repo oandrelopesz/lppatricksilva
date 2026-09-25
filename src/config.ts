@@ -18,6 +18,9 @@ export const SITE_URL = "https://lp-dr-santos.vercel.app";
 
 export const GTM_ID: string = import.meta.env.VITE_GTM_ID ?? "";
 
+/** ID da conversão do Google Ads (público: vai no próprio request da conversão). */
+export const ADS_ID_CONVERSAO = "18460652540";
+
 /**
  * Pendências da spec §17. null = a página não mostra o dado e orienta a perguntar no WhatsApp.
  * Nunca exibir placeholder ao público.

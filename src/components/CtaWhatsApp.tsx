@@ -1,4 +1,4 @@
-import { useEffect, useRef, type AnchorHTMLAttributes, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type AnchorHTMLAttributes, type MouseEvent } from "react";
 import { useCidade } from "@/context/CidadeContext";
 import { track } from "@/lib/analytics";
 import { obterOrigem } from "@/lib/origem";
@@ -47,6 +47,8 @@ export function CtaWhatsApp({
   ...resto
 }: Props) {
   const { cidade } = useCidade();
+  /** Esperando a conversão sair antes de navegar: link ocupado, com aparência de pressionado. */
+  const [aguardando, setAguardando] = useState(false);
   const refLink = useRef<HTMLAnchorElement>(null);
   const linkBase = intencao === "duvida" ? LINK_WHATSAPP_DUVIDA : LINK_WHATSAPP_BASE;
 
@@ -88,7 +90,13 @@ export function CtaWhatsApp({
       return;
     }
     evento.preventDefault();
-    track("clique_whatsapp", params, { aoConcluir: () => navegacao.ir(url) });
+    setAguardando(true);
+    track("clique_whatsapp", params, {
+      aoConcluir: () => {
+        setAguardando(false);
+        navegacao.ir(url);
+      },
+    });
   }
 
   /**
@@ -101,7 +109,15 @@ export function CtaWhatsApp({
   }
 
   return (
-    <a ref={refLink} href={linkBase} onClick={aoClicar} onAuxClick={aoClicarAuxiliar} {...resto}>
+    <a
+      ref={refLink}
+      href={linkBase}
+      onClick={aoClicar}
+      onAuxClick={aoClicarAuxiliar}
+      {...resto}
+      className={[resto.className, aguardando ? "cta-aguardando" : ""].filter(Boolean).join(" ") || undefined}
+      aria-busy={aguardando || undefined}
+    >
       {children}
     </a>
   );

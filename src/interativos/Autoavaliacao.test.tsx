@@ -75,6 +75,8 @@ describe("Autoavaliacao", () => {
   });
 
   it("o resumo só segue ao WhatsApp após opt-in, fora do href e dos eventos", () => {
+    // GTM pronto: a navegação sai pelo eventCallback (o tempo do clique é testado no analytics).
+    (window as { google_tag_manager?: unknown }).google_tag_manager = {};
     renderizar();
     fireEvent.click(screen.getByRole("button", { name: regiao.opcoes[0] }));
     fireEvent.click(screen.getByRole("button", { name: limitacao.opcoes[0] }));
@@ -91,6 +93,7 @@ describe("Autoavaliacao", () => {
     comResumo.eventCallback();
     expect(new URL(vi.mocked(navegacao.ir).mock.lastCall![0]).searchParams.get("text")).toContain(T.resumo.regiao(regiao.opcoes[0]));
     expect(JSON.stringify(window.dataLayer)).not.toContain(regiao.opcoes[0]);
+    delete (window as { google_tag_manager?: unknown }).google_tag_manager;
   });
 
   it("depois de um clique sem opt-in, marcar a caixa volta o href ao link base (parecer R10)", () => {

@@ -1,4 +1,4 @@
-import { GTM_ID } from "@/config";
+import { ADS_ID_CONVERSAO, GTM_ID } from "@/config";
 import { urlLimpa } from "@/lib/origem";
 
 export type ParametrosEvento = Record<string, string | number | undefined>;
@@ -7,6 +7,8 @@ export interface OpcoesEvento {
   /** Chamado uma vez: pelo GTM (eventCallback) ou pelo tempo-limite, o que vier primeiro. */
   aoConcluir?: () => void;
   tempoLimiteMs?: number;
+  /** performance.now() do clique original (clique segurado antes da hidratação); o teto conta dele. */
+  inicioMs?: number;
 }
 
 declare global {
@@ -19,7 +21,16 @@ declare global {
 
 /** Tempo-limite do clique_whatsapp: 800 ms com o GTM já carregado; 2.000 ms se ainda não (spec §7). */
 const LIMITE_CLIQUE_COM_GTM_MS = 800;
-const LIMITE_CLIQUE_SEM_GTM_MS = 2000;
+/** GTM não pronto: navega 150 ms depois da requisição de conversão, com teto de 3.000 ms do clique. */
+const TETO_SEM_GTM_MS = 3000;
+const DEPOIS_DA_CONVERSAO_MS = 150;
+/** Clique antigo (segurado antes da hidratação) cujo teto já passou: espera ao menos isto depois do envio. */
+const MINIMO_DEPOIS_DO_ENVIO_MS = 300;
+
+/** Requisição de conversão do Ads com o nosso ID (pagead/conversion, 1p-conversion, googleadservices, ccm/collect). */
+function ehRequisicaoDeConversao(nome: string): boolean {
+  return nome.includes(ADS_ID_CONVERSAO) && /pagead\/conversion|pagead\/1p-conversion|googleadservices|ccm\/collect/.test(nome);
+}
 
 /** Campos opcionais do clique_whatsapp, zerados antes de cada clique (parecer R17). */
 export const CAMPOS_CLIQUE = [
@@ -98,17 +109,45 @@ export function track(evento: string, params: ParametrosEvento = {}, opcoes: Opc
     // O modelo do GTM guarda o último valor de cada chave: sem zerar, cidade e local de um clique vazariam para o próximo.
     window.dataLayer.push(Object.fromEntries(CAMPOS_CLIQUE.map((campo) => [campo, undefined])));
   }
-  const { aoConcluir, tempoLimiteMs = gtmPronto ? LIMITE_CLIQUE_COM_GTM_MS : LIMITE_CLIQUE_SEM_GTM_MS } = opcoes;
+  const { aoConcluir, tempoLimiteMs = LIMITE_CLIQUE_COM_GTM_MS, inicioMs } = opcoes;
   if (!aoConcluir) {
     window.dataLayer.push({ event: evento, ...limpo });
     return;
   }
+  const limpezas: Array<() => void> = [];
   let concluido = false;
   const concluir = () => {
     if (concluido) return;
     concluido = true;
+    for (const limpar of limpezas) limpar();
     aoConcluir();
   };
-  window.dataLayer.push({ event: evento, ...limpo, eventCallback: concluir, eventTimeout: tempoLimiteMs });
-  window.setTimeout(concluir, tempoLimiteMs);
+
+  // GTM pronto: o eventCallback confirma as tags; tempo-limite de 800 ms.
+  if (gtmPronto) {
+    window.dataLayer.push({ event: evento, ...limpo, eventCallback: concluir, eventTimeout: tempoLimiteMs });
+    window.setTimeout(concluir, tempoLimiteMs);
+    return;
+  }
+
+  // GTM não pronto: o eventCallback volta antes de as bibliotecas do GA4 e do Ads enviarem (validação
+  // do Tracking), então é ignorado. Navega 150 ms depois da requisição de conversão ou no teto.
+  window.dataLayer.push({ event: evento, ...limpo });
+  const inicio = inicioMs ?? performance.now();
+  const restante = Math.max(TETO_SEM_GTM_MS - (performance.now() - inicio), inicioMs === undefined ? 0 : MINIMO_DEPOIS_DO_ENVIO_MS);
+  const teto = window.setTimeout(concluir, restante);
+  limpezas.push(() => window.clearTimeout(teto));
+  if (typeof PerformanceObserver === "undefined") return;
+  const observador = new PerformanceObserver((lista) => {
+    const viuConversao = lista.getEntries().some((entrada) => entrada.startTime >= inicio && ehRequisicaoDeConversao(entrada.name));
+    if (!viuConversao) return;
+    observador.disconnect();
+    window.setTimeout(concluir, DEPOIS_DA_CONVERSAO_MS);
+  });
+  try {
+    observador.observe({ type: "resource", buffered: true });
+    limpezas.push(() => observador.disconnect());
+  } catch {
+    /* navegador sem esse tipo de entrada: fica o teto */
+  }
 }

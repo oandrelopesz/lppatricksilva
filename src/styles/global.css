@@ -193,3 +193,6 @@
     .abas-cidades__lista button, .mapa-ma__numero, .faq-item, .faq-pergunta { transition: none; animation: none; }
   }
 }
+
+/* CTA do WhatsApp esperando a conversão sair antes de navegar (sem texto novo). */
+.cta-aguardando { opacity: .75; cursor: progress; }
