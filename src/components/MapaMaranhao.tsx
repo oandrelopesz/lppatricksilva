@@ -47,7 +47,7 @@ export function MapaMaranhao({ cidadeAberta, aoEscolher }: Props) {
           </g>)}
         </svg>
         {marcadores.map(({ cidade, numero, x, y }) => <button key={cidade.id} className="mapa-ma__ponto" type="button"
-          style={{ left: x, top: y }} aria-label={`Cidade de ${cidade.nome} no mapa`} aria-current={cidade.id === cidadeAberta ? "location" : undefined}
+          style={{ left: x, top: y }} aria-label={`${numero}, Cidade de ${cidade.nome} no mapa`} aria-current={cidade.id === cidadeAberta ? "location" : undefined}
           onClick={() => aoEscolher(cidade.id)}><span aria-hidden="true">{numero}</span></button>)}
       </div>
     </div>

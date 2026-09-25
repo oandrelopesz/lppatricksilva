@@ -83,12 +83,19 @@ describe("mapas e mapa ilustrado V3", () => {
 
   it("ponto do mapa abre a aba e registra a mesma fonte aba", () => {
     const { container } = renderizar();
-    fireEvent.click(screen.getByRole("button", { name: "Cidade de Tuntum no mapa" }));
+    fireEvent.click(screen.getByRole("button", { name: /^\d+, Cidade de Tuntum no mapa$/ }));
     expect(screen.getByTestId("cidade-contexto")).toHaveTextContent("Tuntum");
     expect(screen.getByRole("tab", { name: "Tuntum" })).toHaveAttribute("aria-selected", "true");
     expect(container.querySelectorAll("iframe")).toHaveLength(1);
     expect(window.dataLayer).toContainEqual({ event: "troca_aba_cidade", cidade: "Tuntum", regiao: "Centro Maranhense" });
     expect(screen.getAllByRole("button", { name: /no mapa/ })).toHaveLength(11);
+  });
+
+  it("começa o nome acessível de cada ponto pelo número visível", () => {
+    renderizar();
+    for (const ponto of screen.getAllByRole("button", { name: /no mapa/ })) {
+      expect(ponto).toHaveAccessibleName(new RegExp(`^${ponto.textContent?.trim()}, Cidade de `));
+    }
   });
 
   it("cidade válida da URL abre a aba certa sem mapa até a interseção", () => {
