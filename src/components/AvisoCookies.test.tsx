@@ -18,12 +18,15 @@ describe("AvisoCookies", () => {
     expect(localStorage.getItem("lp_consentimento_v1")).toBe("aceito");
   });
 
-  it("mantém o texto integral rolável por teclado e a política acessível fora dele", () => {
+  it("mostra o texto inteiro, sem limite de altura nem rolagem interna (parecer R32), e a política fora dele", () => {
     render(<AvisoCookies />);
     const texto = screen.getByText(T.texto);
     const politica = screen.getByRole("link", { name: T.linkPolitica });
-    expect(texto).toHaveAttribute("tabindex", "0");
     expect(texto).toHaveTextContent(T.texto);
+    expect(texto.className).not.toMatch(/(^|\s)(sm:)?max-h-|overflow-y-(auto|scroll)/);
+    expect(texto).not.toHaveAttribute("tabindex");
+    // No jsdom não há layout (0 <= 0); a medida real a 320 px é feita no Chrome.
+    expect(texto.scrollHeight).toBeLessThanOrEqual(texto.clientHeight);
     expect(texto.contains(politica)).toBe(false);
   });
 

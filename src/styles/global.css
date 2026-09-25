@@ -40,7 +40,6 @@
   @media (min-width: 768px) { .atlas-hero { padding-block: 5rem; } .hero-media { width: min(115%, 36rem); max-width: none; margin-right: -4rem; } }
   @media (min-width: 1024px) { .atlas-hero { padding-block: 2.5rem; } .atlas-hero h1 { font-size: 3.375rem; line-height: 1.04; } .hero-media { width: min(100%, 26rem); margin-right: -2rem; } }
 
-  .aviso-cookies__texto { overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--color-dourado-claro) #252c31; }
   .aviso-cookies :focus-visible { outline-color: var(--color-dourado-claro); }
 
   #para-quem { background: var(--color-creme); }

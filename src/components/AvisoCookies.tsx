@@ -28,7 +28,9 @@ export function AvisoCookies() {
     >
       <div className="mx-auto flex max-w-5xl flex-col gap-1 sm:flex-row sm:items-center sm:gap-6">
         <div className="min-w-0 flex-1">
-          <p tabIndex={0} className="aviso-cookies__texto max-h-[60px] overflow-y-auto pr-2 text-base leading-5 sm:max-h-none sm:overflow-visible sm:pr-0 sm:leading-snug">{T.texto}</p>
+          {/* Texto inteiro, sem rolagem interna (parecer R32): a barra fica mais alta no celular, e o
+              useExibicaoAviso mede essa altura real para não cobrir o CTA do hero. */}
+          <p className="aviso-cookies__texto text-base leading-5 sm:leading-snug">{T.texto}</p>
           <a href="/politica-de-privacidade.html" className="inline-flex min-h-12 items-center font-semibold text-dourado-claro underline underline-offset-2 sm:min-h-0">
             {T.linkPolitica}
           </a>
