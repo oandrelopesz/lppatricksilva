@@ -23,7 +23,7 @@ function medir() {
   const leituras = [];
   for (const escala of [125, 150, 200]) {
     document.documentElement.style.fontSize = escala + '%';
-    const controles = document.querySelectorAll('#cta-hero, .aviso-medicao-hero a, .autoavaliacao-opcao, #como-funciona select, #como-funciona button, .faq-pergunta, #rodape a');
+    const controles = document.querySelectorAll('#cta-hero, .autoavaliacao-opcao, #como-funciona select, #como-funciona button, .faq-pergunta, #rodape a');
     const cortados = [...controles].filter((controle) => {
       const retangulo = controle.getBoundingClientRect();
       return retangulo.width && (retangulo.left < -1 || retangulo.right > innerWidth + 1 || controle.scrollWidth > controle.clientWidth + 1);
@@ -83,12 +83,34 @@ async function medirAvisos() {
 }
 medirAvisos();
 </script>`;
+/* Páginas de texto (termos e política) a 320 px com texto ampliado: sem rolagem lateral e sem link ou título cortado. */
+const PAGINAS_TEXTO = [["termos", "termos-de-uso.html"], ["politica", "politica-de-privacidade.html"]];
+const testeTexto = (id) => `<script>
+async function medirTexto() {
+  await document.fonts.ready;
+  const leituras = [];
+  for (const escala of [125, 150, 200]) {
+    document.documentElement.style.fontSize = escala + '%';
+    const cortados = [...document.querySelectorAll('a, h1, h2')].filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.width && (r.left < -1 || r.right > innerWidth + 1);
+    }).map((el) => el.tagName + ' ' + el.textContent.slice(0, 20));
+    leituras.push({ escala, largura: innerWidth, scroll: document.documentElement.scrollWidth, cortados });
+  }
+  parent.document.getElementById('${id}').textContent = btoa(unescape(encodeURIComponent(JSON.stringify(leituras))));
+}
+medirTexto();
+</script>`;
+const framesTexto = Object.fromEntries(
+  PAGINAS_TEXTO.map(([id, arquivo]) => [`/__${id}`, readFileSync(join(raiz, arquivo), "utf8").replace("</body>", `${testeTexto(id)}</body>`)]),
+);
 const frameTeste = readFileSync(join(raiz, "index.html"), "utf8").replace("</body>", `${teste}</body>`);
-const paginaTeste = '<!doctype html><html><meta charset="utf-8"><pre id="resultado"></pre><pre id="avisos"></pre><iframe src="/__frame" style="width:320px;height:568px;border:0"></iframe></html>';
+const paginaTeste = `<!doctype html><html><meta charset="utf-8"><pre id="resultado"></pre><pre id="avisos"></pre>${PAGINAS_TEXTO.map(([id]) => `<pre id="${id}"></pre>`).join("")}<iframe src="/__frame" style="width:320px;height:568px;border:0"></iframe>${PAGINAS_TEXTO.map(([id]) => `<iframe src="/__${id}" style="width:320px;height:568px;border:0"></iframe>`).join("")}</html>`;
 const tipos = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".avif": "image/avif", ".webp": "image/webp", ".woff2": "font/woff2", ".json": "application/json" };
 const servidor = createServer((pedido, resposta) => {
   const caminho = decodeURIComponent(new URL(pedido.url ?? "/", "http://localhost").pathname);
   if (caminho === "/__reflow") { resposta.setHeader("Content-Type", "text/html; charset=utf-8"); resposta.end(paginaTeste); return; }
+  if (framesTexto[caminho]) { resposta.setHeader("Content-Type", "text/html; charset=utf-8"); resposta.end(framesTexto[caminho]); return; }
   if (caminho === "/__frame") { resposta.setHeader("Content-Type", "text/html; charset=utf-8"); resposta.end(frameTeste); return; }
   const arquivo = resolve(raiz, `.${caminho === "/" ? "/index.html" : caminho}`);
   if (!arquivo.startsWith(raiz + sep) || !existsSync(arquivo)) { resposta.writeHead(404); resposta.end(); return; }
@@ -123,6 +145,20 @@ try {
     for (const l of JSON.parse(Buffer.from(avisos, "base64").toString("utf8"))) {
       const ok = l.visivel && l.topo >= -1 && l.topoConteudo >= -1 && l.rolavel && l.botoesVisiveis;
       console.log(`aviso ${l.camada} camada ${l.escala}%: ${l.visivel ? `altura ${l.altura}, topo ${l.topo}, topo do conteúdo ${l.topoConteudo}, ${l.sobra ? (l.rolavel ? "rola" : "NÃO rola") : "cabe sem rolar"}, botões ${l.botoesVisiveis ? "visíveis" : "FORA"}` : "NÃO apareceu"} ${ok ? "ok" : "FALHA"}`);
+      if (!ok) process.exitCode = 1;
+    }
+  }
+  for (const [id] of PAGINAS_TEXTO) {
+    const medidas = saida.match(new RegExp(`<pre id="${id}">([^<]+)</pre>`))?.[1];
+    if (!medidas) {
+      console.error(`${id}: sem medidas.`);
+      process.exitCode = 1;
+      continue;
+    }
+    for (const l of JSON.parse(Buffer.from(medidas, "base64").toString("utf8"))) {
+      const ok = l.largura === 320 && l.scroll <= l.largura && !l.cortados.length;
+      console.log(`${id} ${l.escala}%: scrollWidth ${l.scroll} / viewport ${l.largura}; cortados ${l.cortados.length} ${ok ? "ok" : "FALHA"}`);
+      if (l.cortados.length) console.error(`Cortados em ${id}: ${l.cortados.join(", ")}`);
       if (!ok) process.exitCode = 1;
     }
   }

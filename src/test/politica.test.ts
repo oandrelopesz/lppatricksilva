@@ -13,6 +13,13 @@ describe("política de privacidade", () => {
     expect(html).not.toMatch(/\[fonte:|\[PREENCHER\]|\{data da publicação\}/);
   });
 
+  it("termina com o link para os termos de uso", () => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const ultimo = doc.querySelector("main")!.lastElementChild!;
+    expect(ultimo.textContent!.replace(/\s+/g, " ").trim()).toBe("Veja também os Termos de uso.");
+    expect(ultimo.querySelector("a")!.getAttribute("href")).toBe("/termos-de-uso.html");
+  });
+
   describe("versão de 25/09/2026 (textos-lgpd, seção F; parecer R36)", () => {
     const doc = new DOMParser().parseFromString(html, "text/html");
     const texto = doc.body.textContent!.replace(/\s+/g, " ");
@@ -32,7 +39,7 @@ describe("política de privacidade", () => {
         "Em Escolher, você liga ou desliga, uma por uma, a Medição de visitas pelo Google Analytics e a Medição de anúncios pelo Google Ads.",
         "Resumo da dor: o seu consentimento específico, dado ao marcar a opção (LGPD, art. 11, I).",
         "Parâmetros livres, como termos de busca ou dados colocados por terceiros, são apagados antes de as ferramentas do Google carregarem. Identificadores de anúncio do Google (gclid, gbraid, wbraid, gad_source e gad_campaignid), a cidade escolhida e os códigos de campanha permitidos podem permanecer no endereço.",
-        "Antes disso, esta política fica no link Privacidade, logo acima do botão.",
+        "Antes disso, esta política e os termos de uso ficam nos links do rodapé da página.",
         "Google Maps. Os mapas das clínicas são do Google Maps e carregam quando você chega à seção de locais, com ou sem aceite de cookies. Ao carregar, o Google recebe dados técnicos da conexão, como o endereço IP, e pode usar cookies conforme as regras do Google Maps.",
         "A página é hospedada pela Vercel",
         "Google, Meta e Vercel têm sede no exterior",
@@ -47,6 +54,7 @@ describe("política de privacidade", () => {
       expect(texto).not.toContain("Clínica parceira.");
       expect(texto).not.toContain("Outros parâmetros do endereço são apagados");
       expect(texto).not.toContain("logo abaixo do botão");
+      expect(texto).not.toContain("link Privacidade");
       expect(texto).not.toContain("Ver mapa");
       expect(texto).not.toContain("Ela lida com três tipos de dado.");
       expect(texto).not.toContain("—");

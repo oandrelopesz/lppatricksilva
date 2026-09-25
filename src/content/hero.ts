@@ -5,9 +5,6 @@ export const TEXTOS_HERO = {
   linhaCidades: "Atende em Balsas, Presidente Dutra, Barra do Corda e mais 8 cidades do Maranhão.",
   linkOndeAtende: "Veja onde ele atende",
   cta: "Chamar no WhatsApp para agendar",
-  /** Aviso curto na primeira dobra, logo abaixo do CTA (nota textos-lgpd, item A). */
-  avisoMedicao: "O Google mede esta visita, mesmo sem cookies.",
-  linkPrivacidade: "Privacidade",
   nome: "Dr. Patrick Santos",
   assinatura: "MÉDICO · CRM-MA 16520 · Ortopedia e Traumatologia · RQE 7389",
   altFoto: "Dr. Patrick Santos apontando para um modelo anatômico de joelho no consultório",

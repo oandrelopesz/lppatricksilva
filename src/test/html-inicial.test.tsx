@@ -6,7 +6,6 @@ import { ASSINATURA } from "@/config";
 import { todosOsLocais } from "@/data/locais";
 import { render } from "@/entry-server";
 import { TEXTOS_FAQ } from "@/content/faq";
-import { TEXTOS_HERO } from "@/content/hero";
 import { TEXTOS_COOKIES } from "@/content/cookies";
 import { TEXTOS_ONDE_ATENDE } from "@/content/ondeAtende";
 import { LINK_WHATSAPP_BASE } from "@/lib/whatsapp";
@@ -65,11 +64,9 @@ describe("HTML inicial (sem JavaScript)", () => {
     expect(html).toContain('href="/politica-de-privacidade.html"');
   });
 
-  it("tem o aviso curto de medição logo antes do CTA do hero, com o link Privacidade", () => {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const aviso = doc.getElementById("cta-hero")!.previousElementSibling!;
-    expect(aviso.textContent).toBe(`${TEXTOS_HERO.avisoMedicao} ${TEXTOS_HERO.linkPrivacidade}`);
-    expect(aviso.querySelector("a")!.getAttribute("href")).toBe("/politica-de-privacidade.html");
+  it("o hero não tem mais o aviso de medição (foi para o rodapé)", () => {
+    expect(html).not.toContain("O Google mede esta visita");
+    expect(html).not.toContain("aviso-medicao-hero");
   });
 
   it("sem JavaScript: nem aviso nem botão de cookies (controle sem ação), só o link da política (parecer R18)", () => {

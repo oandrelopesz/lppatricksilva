@@ -37,8 +37,6 @@
   .hero-media { position: relative; isolation: isolate; width: 100%; max-width: 31rem; margin-inline: auto; }
   .hero-media::before { content: ""; position: absolute; inset: 16px -16px -16px 16px; z-index: -1; border: 1px solid var(--color-eco); border-radius: 12px; }
   .hero-media .premium-photo { width: 100%; height: auto; border-radius: 12px; }
-  .aviso-medicao-hero { color: var(--color-grafite); }
-  .aviso-medicao-hero a { display: inline-flex; min-height: 48px; align-items: center; margin-block: -12px; padding-inline: 4px; color: #604914; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
   @media (max-width: 374px) {
     .atlas-hero { padding-top: .25rem; }
     .atlas-hero h1 { font-size: 2.1875rem; line-height: 1.02; }

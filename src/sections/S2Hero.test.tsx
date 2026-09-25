@@ -28,13 +28,12 @@ describe("S2Hero", () => {
     expect(cta.getAttribute("href")).toMatch(/^https:\/\/wa\.me\/5513996822680/);
   });
 
-  it("logo acima do CTA, o aviso curto de medição com o link Privacidade (parecer R37)", () => {
-    renderizar();
-    const aviso = document.getElementById("cta-hero")!.previousElementSibling as HTMLElement;
-    expect(aviso).toHaveTextContent(`${TEXTOS_HERO.avisoMedicao} ${TEXTOS_HERO.linkPrivacidade}`);
-    const link = screen.getByRole("link", { name: TEXTOS_HERO.linkPrivacidade });
-    expect(aviso.contains(link)).toBe(true);
-    expect(link).toHaveAttribute("href", "/politica-de-privacidade.html");
+  it("o hero não tem mais o aviso de medição nem o link Privacidade (foram para o rodapé)", () => {
+    const { container } = renderizar();
+    expect(container.textContent).not.toContain("O Google mede esta visita");
+    expect(screen.queryByRole("link", { name: "Privacidade" })).toBeNull();
+    expect(container.querySelector(".aviso-medicao-hero")).toBeNull();
+    expect(Object.keys(TEXTOS_HERO)).not.toContain("avisoMedicao");
   });
 
   it("tem o link 'Veja onde ele atende' para a âncora real", () => {
