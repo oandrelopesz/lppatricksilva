@@ -249,6 +249,24 @@ describe("analytics", () => {
       expect(navegar).toHaveBeenCalledTimes(1);
     });
 
+    it("page_view do ccm/collect com o ID não libera; só a conversão libera (R28, crítico)", async () => {
+      vi.stubGlobal("PerformanceObserver", ObservadorDeRecursos);
+      const { track } = await import("./analytics");
+      const navegar = vi.fn();
+      track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: navegar });
+      entregar!([
+        { name: "https://www.google.com/ccm/collect?en=page_view&tid=AW-18460652540&dl=x", startTime: performance.now() + 1 },
+        { name: "https://www.google.com/pagead/landing?gclid=x&id=18460652540", startTime: performance.now() + 1 },
+        { name: "https://www.google.com/ccm/collect?en=conversion&tid=AW-99999999999", startTime: performance.now() + 1 },
+        { name: "https://www.googleadservices.com/pagead/conversion/99999999999/?label=18460652540", startTime: performance.now() + 1 },
+      ]);
+      vi.advanceTimersByTime(500);
+      expect(navegar).not.toHaveBeenCalled();
+      entregar!([{ name: "https://www.google.com/ccm/collect?en=conversion&tid=AW-18460652540&dl=x", startTime: performance.now() + 1 }]);
+      vi.advanceTimersByTime(150);
+      expect(navegar).toHaveBeenCalledTimes(1);
+    });
+
     it("reconhece as outras formas da conversão (1p-conversion e ccm/collect com o ID)", async () => {
       vi.stubGlobal("PerformanceObserver", ObservadorDeRecursos);
       const { track } = await import("./analytics");

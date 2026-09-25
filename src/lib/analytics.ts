@@ -32,9 +32,24 @@ const DEPOIS_DA_CONVERSAO_MS = 150;
 /** Clique antigo (segurado antes da hidratação) cujo teto já passou: espera ao menos isto depois do envio. */
 const MINIMO_DEPOIS_DO_ENVIO_MS = 300;
 
-/** Requisição de conversão do Ads com o nosso ID (pagead/conversion, 1p-conversion, googleadservices, ccm/collect). */
+/**
+ * Só a conversão do Ads com o nosso ID (parecer R28): pagead/conversion/<ID> ou pagead/1p-conversion/<ID>
+ * (ID no segmento do caminho) ou ccm/collect com en=conversion e tid=AW-<ID>. Um ccm/collect de
+ * page_view, com o mesmo ID, não conta.
+ */
 function ehRequisicaoDeConversao(nome: string): boolean {
-  return nome.includes(ADS_ID_CONVERSAO) && /pagead\/conversion|pagead\/1p-conversion|googleadservices|ccm\/collect/.test(nome);
+  let url: URL;
+  try {
+    url = new URL(nome);
+  } catch {
+    return false;
+  }
+  const pagead = url.pathname.match(/\/pagead\/(?:1p-)?conversion\/(\d+)(?:\/|$)/);
+  if (pagead) return pagead[1] === ADS_ID_CONVERSAO;
+  if (url.pathname.endsWith("/ccm/collect")) {
+    return url.searchParams.get("en") === "conversion" && url.searchParams.get("tid") === `AW-${ADS_ID_CONVERSAO}`;
+  }
+  return false;
 }
 
 /** Campos opcionais do clique_whatsapp, zerados antes de cada clique (parecer R17). */
