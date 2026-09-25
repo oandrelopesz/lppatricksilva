@@ -183,6 +183,19 @@ describe("origem", () => {
         expect(window.location.search).toBe("?gclid=AbC.XyZ-1");
       });
 
+      it("gad_campaignid fica com o valor como veio, junto de gad_source, se seguir [A-Za-z0-9_-]{1,100}", () => {
+        window.history.replaceState(null, "", `/?gad_source=1&gad_campaignid=21234567890&gclid=${GCLID}&sintoma=dor`);
+        limparEndereco();
+        expect(window.location.search).toBe(`?gad_source=1&gad_campaignid=21234567890&gclid=${GCLID}`);
+      });
+
+      it("gad_campaignid fora do padrão sai (texto livre, codificado, vazio ou longo demais)", () => {
+        const longo = "a".repeat(101);
+        window.history.replaceState(null, "", `/?gad_source=1&gad_campaignid=dor+no+joelho&gad_campaignid=abc%20def&gad_campaignid=&gad_campaignid=${longo}&gad_campaignid=Ab_c-9&GAD_CAMPAIGNID=1`);
+        limparEndereco();
+        expect(window.location.search).toBe("?gad_source=1&gad_campaignid=Ab_c-9");
+      });
+
       it("só parâmetros livres: a barra fica sem query", () => {
         window.history.replaceState(null, "", "/onde-atende?sintoma=dor+no+joelho&nome=maria");
         limparEndereco();

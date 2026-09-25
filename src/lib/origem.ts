@@ -111,12 +111,15 @@ export function urlLimpa(href: string): string {
 const IDS_DO_ADS = ["gclid", "gbraid", "wbraid", "gad_source"];
 
 /**
- * O que pode ficar na barra de endereço (parecer R36, item 3): os identificadores do Ads, a cidade da
- * lista e as UTMs da convenção com o valor inteiro aprovado. Chave exata, em minúsculas: variantes de
- * caixa (UTM_SOURCE, GCLID, Cidade) saem, como utm_term e qualquer outro parâmetro livre (parecer R24).
+ * O que pode ficar na barra de endereço (parecer R36, item 3): os identificadores do Ads, o
+ * gad_campaignid no padrão do Google, a cidade da lista e as UTMs da convenção com o valor inteiro
+ * aprovado. Chave exata, em minúsculas: variantes de caixa (UTM_SOURCE, GCLID, Cidade) saem, como
+ * utm_term e qualquer outro parâmetro livre (parecer R24).
  */
 function permitido(chave: string, valor: string): boolean {
   if (IDS_DO_ADS.includes(chave)) return true;
+  // Acrescentado pelo Google Ads à URL final; ajuda a medir a campanha e não tem dado pessoal.
+  if (chave === "gad_campaignid") return /^[A-Za-z0-9_-]{1,100}$/.test(valor);
   if (chave === "cidade") return buscarCidade(valor) !== undefined;
   return (UTMS as readonly string[]).includes(chave) && sanitizar(chave, valor) !== undefined;
 }
