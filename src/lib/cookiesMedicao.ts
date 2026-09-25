@@ -1,8 +1,12 @@
 import type { Escolha } from "@/lib/consentimento";
 
-/** Cookies de medição que a própria página cria pelo GTM, por categoria (parecer R36, item 10). */
+/**
+ * Cookies de medição que a própria página cria pelo GTM, por categoria (parecer R36, item 10): _ga e
+ * _ga_*, e qualquer _gcl_* (parecer R37, B4). Só os legíveis por esta origem; HttpOnly e cookies de
+ * terceiros ficam de fora, e o que o Google já recebeu não é desfeito.
+ */
 const DE_VISITAS = (nome: string) => nome === "_ga" || nome.startsWith("_ga_");
-const DE_ANUNCIOS = (nome: string) => ["_gcl_au", "_gcl_aw", "_gcl_dc", "_gcl_gb", "_gcl_gs"].includes(nome);
+const DE_ANUNCIOS = (nome: string) => nome.startsWith("_gcl_");
 
 const EXPIRADO = "expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
 

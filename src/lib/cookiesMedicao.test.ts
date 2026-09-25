@@ -38,6 +38,14 @@ describe("apagarCookiesRevogados", () => {
     expect(gravacoes.some((g) => g.endsWith("domain=.vercel.app"))).toBe(true);
   });
 
+  it("anúncios revogada: reconhece qualquer _gcl_ legível, inclusive um nome novo (parecer R37, B4)", () => {
+    const { doc, gravacoes } = documentoFalso("_gcl_xyz=1; _gcl_au=2; _gclx=3; gcl_au=4; _ga=5");
+    apagarCookiesRevogados({ visitas: true, anuncios: false }, doc, "lp-dr-santos.vercel.app");
+    expect(apagados(gravacoes)).toEqual(["_gcl_au", "_gcl_xyz"]);
+    expect(gravacoes.filter((g) => g.startsWith("_gcl_xyz=")).every((g) => g.includes("path=/"))).toBe(true);
+    expect(gravacoes.some((g) => g.startsWith("_gcl_xyz=") && g.endsWith("domain=.vercel.app"))).toBe(true);
+  });
+
   it("as duas aceitas: não apaga nada", () => {
     const { doc, gravacoes } = documentoFalso(EXISTENTES);
     apagarCookiesRevogados({ visitas: true, anuncios: true }, doc, "lp-dr-santos.vercel.app");
