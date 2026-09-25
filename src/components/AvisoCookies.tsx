@@ -68,6 +68,8 @@ export function AvisoCookies() {
                   </span>
                 </label>
               ))}
+              {/* Aceitar qualquer opção também carrega os mapas: dito junto das chaves (parecer R37, B2). */}
+              <p className="mt-1 text-sm">{T.notaMapas}</p>
               <p className="mt-1 text-sm">{T.notaPersonalizacao}</p>
             </>
           ) : (
