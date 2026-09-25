@@ -125,4 +125,78 @@ describe("analytics", () => {
     expect(document.head.querySelector("script[data-gtm]")).not.toBeNull();
     w.requestIdleCallback = original;
   });
+
+  describe("GTM no primeiro entre ocioso e interação (spec §7 e §8)", () => {
+    const INTERACOES = ["pointerdown", "touchstart", "keydown", "scroll"];
+
+    it("a primeira interação carrega o GTM antes do ocioso, com ouvintes passivos que saem depois", async () => {
+      vi.useFakeTimers();
+      vi.stubEnv("VITE_GTM_ID", "GTM-TESTE01");
+      vi.stubGlobal("requestIdleCallback", vi.fn());
+      const adicionar = vi.spyOn(window, "addEventListener");
+      const remover = vi.spyOn(window, "removeEventListener");
+      try {
+        const { agendarGtm } = await import("./analytics");
+        agendarGtm();
+        for (const tipo of INTERACOES) {
+          expect(adicionar).toHaveBeenCalledWith(tipo, expect.any(Function), expect.objectContaining({ passive: true, once: true }));
+        }
+        expect(document.head.querySelector("script[data-gtm]")).toBeNull();
+        window.dispatchEvent(new Event("pointerdown"));
+        expect(document.head.querySelectorAll("script[data-gtm]")).toHaveLength(1);
+        for (const tipo of INTERACOES) expect(remover).toHaveBeenCalledWith(tipo, expect.any(Function), expect.anything());
+        window.dispatchEvent(new Event("keydown"));
+        vi.advanceTimersByTime(1500);
+        expect(document.head.querySelectorAll("script[data-gtm]")).toHaveLength(1);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
+    it("se o ocioso vier primeiro, os ouvintes de interação saem", async () => {
+      vi.useFakeTimers();
+      vi.stubEnv("VITE_GTM_ID", "GTM-TESTE01");
+      vi.stubGlobal("requestIdleCallback", (cb: () => void) => cb());
+      const remover = vi.spyOn(window, "removeEventListener");
+      try {
+        const { agendarGtm } = await import("./analytics");
+        agendarGtm();
+        expect(document.head.querySelectorAll("script[data-gtm]")).toHaveLength(1);
+        for (const tipo of INTERACOES) expect(remover).toHaveBeenCalledWith(tipo, expect.any(Function), expect.anything());
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+  });
+
+  describe("tempo-limite do clique_whatsapp (spec §7)", () => {
+    afterEach(() => {
+      delete (window as { google_tag_manager?: unknown }).google_tag_manager;
+    });
+
+    it("800 ms com o GTM já carregado no momento do clique", async () => {
+      (window as { google_tag_manager?: unknown }).google_tag_manager = {};
+      const { track } = await import("./analytics");
+      track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: () => {} });
+      expect(window.dataLayer!.find((e) => e.event === "clique_whatsapp")).toMatchObject({ eventTimeout: 800 });
+    });
+
+    it("2.000 ms se o GTM ainda não tinha carregado", async () => {
+      const { track } = await import("./analytics");
+      track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: () => {} });
+      expect(window.dataLayer!.find((e) => e.event === "clique_whatsapp")).toMatchObject({ eventTimeout: 2000 });
+    });
+
+    it("navega uma vez só quando o eventCallback e o tempo-limite chegam os dois", async () => {
+      vi.useFakeTimers();
+      const { track } = await import("./analytics");
+      const navegar = vi.fn();
+      track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: navegar });
+      const evento = window.dataLayer!.find((e) => e.event === "clique_whatsapp")!;
+      (evento.eventCallback as () => void)();
+      vi.advanceTimersByTime(2000);
+      (evento.eventCallback as () => void)();
+      expect(navegar).toHaveBeenCalledTimes(1);
+    });
+  });
 });

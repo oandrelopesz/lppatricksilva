@@ -63,7 +63,7 @@ describe("S6OndeAtende", () => {
       fireEvent.click(screen.getByRole("tab", { name: "Tuntum" }));
       fireEvent.click(screen.getByRole("button", { name: T.verTodas }));
       fireEvent.click(screen.getByRole("link", { name: T.rodapeCta }));
-      vi.advanceTimersByTime(800);
+      vi.advanceTimersByTime(2000);
       const texto = new URL(vi.mocked(navegacao.ir).mock.calls[0][0]).searchParams.get("text")!;
       expect(texto).toBe(MENSAGENS_WHATSAPP.duvida);
       expect(texto).not.toContain("Tuntum");

@@ -32,9 +32,11 @@ describe("iniciarMedicao", () => {
   it("chamada duas vezes, instala uma vez só (um listener de rolagem, um pagina_limpa)", async () => {
     const adicionar = vi.spyOn(window, "addEventListener");
     const { iniciarMedicao } = await import("./medicao");
+    const ouvintesDeRolagem = () => adicionar.mock.calls.filter(([tipo]) => tipo === "scroll").length;
     iniciarMedicao();
+    const depoisDaPrimeira = ouvintesDeRolagem();
     iniciarMedicao();
-    expect(adicionar.mock.calls.filter(([tipo]) => tipo === "scroll")).toHaveLength(1);
+    expect(ouvintesDeRolagem()).toBe(depoisDaPrimeira);
     expect(window.dataLayer!.filter((e) => "pagina_limpa" in e)).toHaveLength(1);
   });
 
