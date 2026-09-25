@@ -17,8 +17,6 @@ export const VERSAO_CONSENTIMENTO = "2026-09-25";
 /** Escolha antiga, de uma camada só ("aceito" ou "recusado"). */
 const CHAVE_ANTIGA = "lp_consentimento_v1";
 
-/** Disparado ao salvar uma escolha; os mapas passam a carregar sozinhos se houver aceite. */
-export const EVENTO_CONSENTIMENTO = "lp:consentimento";
 
 function valida(valor: unknown): valor is Escolha {
   const v = valor as Partial<Escolha> | null;
@@ -59,12 +57,8 @@ export function salvarConsentimento(escolha: Escolha, agora = new Date()): void 
   } catch {
     /* storage bloqueado: vale só nesta página */
   }
-  window.dispatchEvent(new CustomEvent<Escolha>(EVENTO_CONSENTIMENTO, { detail: escolha }));
 }
 
-export function aceitouAlguma(escolha: Escolha | null): boolean {
-  return Boolean(escolha && (escolha.visitas || escolha.anuncios));
-}
 
 /** Personalização de anúncios fica sempre negada. */
 export function sinaisDoConsentimento(escolha: Escolha) {

@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   CHAVE_CONSENTIMENTO,
   VERSAO_CONSENTIMENTO,
-  aceitouAlguma,
   aplicarConsentimento,
   lerConsentimento,
   salvarConsentimento,
@@ -94,10 +93,4 @@ describe("consentimento por categoria", () => {
     }
   });
 
-  it("aceitouAlguma: pelo menos uma categoria ligada", () => {
-    expect(aceitouAlguma(null)).toBe(false);
-    expect(aceitouAlguma({ visitas: false, anuncios: false })).toBe(false);
-    expect(aceitouAlguma({ visitas: true, anuncios: false })).toBe(true);
-    expect(aceitouAlguma({ visitas: false, anuncios: true })).toBe(true);
-  });
 });

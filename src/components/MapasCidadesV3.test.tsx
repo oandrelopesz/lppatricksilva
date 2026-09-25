@@ -39,8 +39,6 @@ describe("mapas e mapa ilustrado V3", () => {
     acionarIntersecao = undefined;
     desconectar.mockClear();
     vi.stubGlobal("IntersectionObserver", ObservadorFalso);
-    // Com aceite de uma categoria, os mapas carregam sozinhos (sem aceite: AbasCidades.test, parecer R36).
-    localStorage.setItem("lp_consentimento_v2", JSON.stringify({ visitas: true, anuncios: false, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" }));
   });
 
   it("abre Balsas só visualmente e espera a seção chegar a 400 px", () => {

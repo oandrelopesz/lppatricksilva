@@ -3,13 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CidadeProvider } from "@/context/CidadeContext";
 import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
 import { TEXTOS_ONDE_ATENDE as T } from "@/content/ondeAtende";
-import { salvarConsentimento } from "@/lib/consentimento";
 import { AbasCidades } from "./AbasCidades";
 
-/** Aceite de uma categoria: os mapas carregam sozinhos, como antes do parecer R36. */
-function comAceite() {
-  localStorage.setItem("lp_consentimento_v2", JSON.stringify({ visitas: true, anuncios: false, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" }));
-}
 
 function renderizar() {
   return render(
@@ -36,8 +31,6 @@ describe("AbasCidades", () => {
     window.dataLayer = [];
     mostrarSecao = undefined;
     vi.stubGlobal("IntersectionObserver", ObservadorFalso);
-    localStorage.clear();
-    comAceite();
   });
 
   it("mostra 11 abas em 2 listas por região, com Balsas aberta", () => {
@@ -197,8 +190,6 @@ describe("AbasCidades sem IntersectionObserver (parecer R15)", () => {
     vi.stubGlobal("IntersectionObserver", undefined);
     vi.useFakeTimers();
     topoDaSecao = 5000;
-    localStorage.clear();
-    comAceite();
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
       const topo = this.tagName === "SECTION" ? topoDaSecao : 0;
       return { top: topo, bottom: topo + 800, left: 0, right: 390, width: 390, height: 800, x: 0, y: topo, toJSON: () => ({}) } as DOMRect;
@@ -241,7 +232,7 @@ describe("AbasCidades sem IntersectionObserver (parecer R15)", () => {
   });
 });
 
-describe("mapas e consentimento (textos-lgpd, item D; parecer R36, item 8)", () => {
+describe("mapas sempre visíveis, com ou sem aceite (decisão do André, 25/09/2026)", () => {
   beforeEach(() => {
     reiniciarOrigemParaTestes();
     capturarOrigem("", null);
@@ -253,87 +244,51 @@ describe("mapas e consentimento (textos-lgpd, item D; parecer R36, item 8)", () 
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    localStorage.clear();
   });
 
-  const painel = (cidade: string) => screen.getByRole("tabpanel", { name: cidade });
+  const ACEITE = JSON.stringify({ visitas: true, anuncios: true, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" });
 
-  it("sem aceite, a seção perto não carrega mapa: cada painel mostra o aviso e Ver mapa", () => {
+  for (const [caso, preparar] of [
+    ["sem consentimento", () => {}],
+    ["recusado", () => localStorage.setItem("lp_consentimento_v2", JSON.stringify({ visitas: false, anuncios: false, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" }))],
+    ["com consentimento", () => localStorage.setItem("lp_consentimento_v2", ACEITE)],
+  ] as const) {
+    it(`${caso}: molduras reservadas antes, e os 3 iframes de Balsas montam ao chegar perto da seção`, () => {
+      preparar();
+      const { container } = renderizar();
+      const balsas = container.querySelector("#painel-balsas")!;
+      expect(balsas.querySelectorAll(".cartao-local__mapa")).toHaveLength(3);
+      expect(balsas.querySelector("iframe")).toBeNull();
+      act(() => mostrarSecao?.());
+      const iframes = balsas.querySelectorAll(".cartao-local__mapa iframe");
+      expect(iframes).toHaveLength(3);
+      for (const iframe of iframes) {
+        expect(iframe).toHaveAttribute("referrerpolicy", "no-referrer");
+        expect(iframe).toHaveAttribute("loading", "lazy");
+      }
+    });
+  }
+
+  it("trocar de aba carrega os mapas da cidade, sem aceite", () => {
+    const { container } = renderizar();
+    fireEvent.click(screen.getByRole("tab", { name: "Barra do Corda" }));
+    expect(container.querySelectorAll("#painel-barra-do-corda iframe")).toHaveLength(2);
+  });
+
+  it("não existe botão nem placeholder de Ver mapa", () => {
     const { container } = renderizar();
     act(() => mostrarSecao?.());
-    expect(container.querySelector("iframe")).toBeNull();
-    expect(within(painel("Balsas")).getByText(T.mapaSemConsentimento.texto)).toBeInTheDocument();
-    expect(within(painel("Balsas")).getByRole("button", { name: T.mapaSemConsentimento.botao })).toBeInTheDocument();
-    // Endereço e Como chegar aparecem sempre.
-    expect(within(painel("Balsas")).getAllByRole("link", { name: /como chegar/i })).toHaveLength(3);
+    expect(screen.queryByRole("button", { name: "Ver mapa" })).toBeNull();
+    expect(container.textContent).not.toContain("Ver mapa");
+    expect(container.querySelector(".abas-cidades__mapa-consentimento")).toBeNull();
   });
 
-  it("sem aceite, Balsas mostra o placeholder uma vez e os 3 cartões sem moldura vazia (parecer R38)", () => {
-    const { container } = renderizar();
-    act(() => mostrarSecao?.());
-    const balsas = container.querySelector("#painel-balsas")!;
-    expect(balsas.querySelectorAll(".abas-cidades__mapa-consentimento")).toHaveLength(1);
-    expect(balsas.querySelectorAll(".cartao-local")).toHaveLength(3);
-    expect(balsas.querySelectorAll(".cartao-local__mapa")).toHaveLength(0);
-    expect(within(painel("Balsas")).getAllByRole("link", { name: /como chegar/i })).toHaveLength(3);
-    expect(within(painel("Balsas")).getAllByRole("link", { name: /agendar em balsas/i })).toHaveLength(3);
-    fireEvent.click(within(painel("Balsas")).getByRole("button", { name: T.mapaSemConsentimento.botao }));
-    const molduras = balsas.querySelectorAll(".cartao-local__mapa");
-    expect(molduras).toHaveLength(3);
-    for (const moldura of molduras) expect(moldura.querySelector("iframe")).not.toBeNull();
-    expect(balsas.querySelectorAll(".abas-cidades__mapa-consentimento")).toHaveLength(0);
-  });
-
-  it("com aceite, a moldura já fica reservada antes do iframe (sem salto de layout) e recebe o mapa", () => {
-    localStorage.setItem("lp_consentimento_v2", JSON.stringify({ visitas: true, anuncios: false, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" }));
-    const { container } = renderizar();
-    const balsas = container.querySelector("#painel-balsas")!;
-    expect(balsas.querySelectorAll(".cartao-local__mapa")).toHaveLength(3);
-    expect(balsas.querySelector("iframe")).toBeNull();
-    act(() => mostrarSecao?.());
-    expect(balsas.querySelectorAll(".cartao-local__mapa iframe")).toHaveLength(3);
-  });
-
-  it("Ver mapa carrega só os mapas daquele painel", () => {
-    const { container } = renderizar();
-    act(() => mostrarSecao?.());
-    fireEvent.click(within(painel("Balsas")).getByRole("button", { name: T.mapaSemConsentimento.botao }));
-    expect(container.querySelectorAll("#painel-balsas iframe")).toHaveLength(3);
-    expect(within(painel("Balsas")).queryByRole("button", { name: T.mapaSemConsentimento.botao })).toBeNull();
-    fireEvent.click(screen.getByRole("tab", { name: "Loreto" }));
-    expect(container.querySelector("iframe")).toBeNull();
-    expect(within(painel("Loreto")).getByRole("button", { name: T.mapaSemConsentimento.botao })).toBeInTheDocument();
-  });
-
-  it("recusar tudo é o mesmo que não aceitar", () => {
-    localStorage.setItem("lp_consentimento_v2", JSON.stringify({ visitas: false, anuncios: false, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" }));
-    const { container } = renderizar();
-    act(() => mostrarSecao?.());
-    expect(container.querySelector("iframe")).toBeNull();
-    expect(screen.getByRole("button", { name: T.mapaSemConsentimento.botao })).toBeInTheDocument();
-  });
-
-  it("com aceite de uma categoria, os mapas carregam sozinhos, sem Ver mapa", () => {
-    localStorage.setItem("lp_consentimento_v2", JSON.stringify({ visitas: false, anuncios: true, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" }));
-    const { container } = renderizar();
-    act(() => mostrarSecao?.());
-    expect(container.querySelectorAll("iframe")).toHaveLength(3);
-    expect(screen.queryByRole("button", { name: T.mapaSemConsentimento.botao })).toBeNull();
-  });
-
-  it("aceitar depois faz os mapas carregarem sozinhos", () => {
-    const { container } = renderizar();
-    act(() => mostrarSecao?.());
-    expect(container.querySelector("iframe")).toBeNull();
-    act(() => salvarConsentimento({ visitas: true, anuncios: true }));
-    expect(container.querySelectorAll("iframe")).toHaveLength(3);
-    expect(screen.queryByRole("button", { name: T.mapaSemConsentimento.botao })).toBeNull();
-  });
-
-  it("antes de hidratar (HTML do servidor) não há botão Ver mapa", async () => {
+  it("no HTML do servidor não há iframe nem Ver mapa", async () => {
     const { renderToString } = await import("react-dom/server");
     const { CidadeProvider: Provedor } = await import("@/context/CidadeContext");
     const html = renderToString(<Provedor><AbasCidades /></Provedor>);
-    expect(html).not.toContain(T.mapaSemConsentimento.botao);
+    expect(html).not.toContain("Ver mapa");
     expect(html).not.toContain("<iframe");
   });
 });

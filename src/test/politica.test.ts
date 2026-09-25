@@ -33,7 +33,7 @@ describe("política de privacidade", () => {
         "Resumo da dor: o seu consentimento específico, dado ao marcar a opção (LGPD, art. 11, I).",
         "Parâmetros livres, como termos de busca ou dados colocados por terceiros, são apagados antes de as ferramentas do Google carregarem. Identificadores de anúncio do Google (gclid, gbraid, wbraid, gad_source e gad_campaignid), a cidade escolhida e os códigos de campanha permitidos podem permanecer no endereço.",
         "Antes disso, esta política fica no link Privacidade, logo acima do botão.",
-        "Se não aceitou, cada cidade mostra o botão Ver mapa",
+        "Google Maps. Os mapas das clínicas são do Google Maps e carregam quando você chega à seção de locais, com ou sem aceite de cookies. Ao carregar, o Google recebe dados técnicos da conexão, como o endereço IP, e pode usar cookies conforme as regras do Google Maps.",
         "A página é hospedada pela Vercel",
         "Google, Meta e Vercel têm sede no exterior",
         "Dados técnicos de hospedagem na Vercel e dados do Google Ads: seguem os prazos definidos por esses serviços.",
@@ -47,6 +47,7 @@ describe("política de privacidade", () => {
       expect(texto).not.toContain("Clínica parceira.");
       expect(texto).not.toContain("Outros parâmetros do endereço são apagados");
       expect(texto).not.toContain("logo abaixo do botão");
+      expect(texto).not.toContain("Ver mapa");
       expect(texto).not.toContain("Ela lida com três tipos de dado.");
       expect(texto).not.toContain("—");
     });

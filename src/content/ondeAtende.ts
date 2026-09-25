@@ -9,11 +9,6 @@ export const TEXTOS_ONDE_ATENDE = {
   verMapa: "Ver mapa",
   /** onde.ver_todas (C1f): botão que volta da cidade aberta para a lista de todas as cidades. */
   verTodas: "Ver todas as cidades",
-  /** Mapa sem consentimento, por cidade (nota textos-lgpd, item D). */
-  mapaSemConsentimento: {
-    texto: "O mapa é do Google. Ao abrir, o Google recebe dados técnicos da sua conexão e pode usar cookies.",
-    botao: "Ver mapa",
-  },
   clinica: {
     enderecoRotulo: "Endereço",
     /** Só aparece quando o local tiver dias de atendimento cadastrados. */

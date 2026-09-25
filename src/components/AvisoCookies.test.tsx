@@ -36,23 +36,19 @@ describe("AvisoCookies", () => {
     expect(ultimoUpdate()).toEqual({ analytics_storage: "denied", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
   });
 
-  it("a primeira camada avisa que aceitar também carrega os mapas (textos-lgpd, item B; parecer R37, B2)", () => {
+  it("a primeira camada tem o texto do item B, sem o trecho dos mapas (mapas sempre visíveis)", () => {
     render(<AvisoCookies />);
     expect(screen.getByRole("region", { name: T.rotulo })).toHaveTextContent(
-      "Esta página usa ferramentas do Google para medir as visitas e os resultados dos anúncios. Antes de você escolher, e também se recusar, o Google recebe sinais técnicos da visita e do clique no WhatsApp, como endereço IP, navegador, horário e página, sem cookies de medição. Se aceitar, as ferramentas usam cookies nas opções que você escolher, e os mapas do Google das clínicas passam a carregar sozinhos. Você pode mudar depois, no rodapé.",
+      "Esta página usa ferramentas do Google para medir as visitas e os resultados dos anúncios. Antes de você escolher, e também se recusar, o Google recebe sinais técnicos da visita e do clique no WhatsApp, como endereço IP, navegador, horário e página, sem cookies de medição. Se aceitar, as ferramentas usam cookies nas opções que você escolher. Você pode mudar depois, no rodapé.",
     );
   });
 
-  it("a segunda camada explica, junto das chaves, que qualquer opção ligada carrega os mapas (item C)", () => {
+  it("a segunda camada não fala mais de mapas nem de Ver mapa", () => {
     render(<AvisoCookies />);
     fireEvent.click(screen.getByRole("button", { name: T.escolher }));
-    const nota = screen.getByText(
-      "Com qualquer opção ligada, os mapas do Google das clínicas também carregam sozinhos na seção de locais. Sem nenhuma, cada mapa só abre se você tocar em Ver mapa.",
-    );
-    // Junto das chaves: logo depois da última, antes dos botões.
-    const chaves = screen.getAllByRole("switch");
-    expect(chaves[chaves.length - 1].compareDocumentPosition(nota) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(nota.compareDocumentPosition(screen.getByRole("button", { name: T.salvar })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const regiao = screen.getByRole("region", { name: T.rotulo });
+    expect(regiao.textContent).not.toMatch(/mapas|Ver mapa/);
+    expect(Object.keys(T)).not.toContain("notaMapas");
   });
 
   it("Escolher abre a segunda camada com as duas chaves desligadas; Salvar grava só o que foi ligado", () => {

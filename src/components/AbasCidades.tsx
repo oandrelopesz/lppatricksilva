@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import { CartaoLocal } from "@/components/CartaoLocal";
 import { CtaWhatsApp } from "@/components/CtaWhatsApp";
 import { MapaMaranhao } from "@/components/MapaMaranhao";
-import { useAceiteMedicao } from "@/components/useAceiteMedicao";
 import { Icone } from "@/components/icones/Icone";
 import { TEXTOS_ONDE_ATENDE as T } from "@/content/ondeAtende";
 import { useCidade } from "@/context/CidadeContext";
@@ -70,9 +69,6 @@ export function AbasCidades() {
   const [aberta, setAberta] = useState<Cidade>(CIDADES[0]);
   const [visaoGeral, setVisaoGeral] = useState(false);
   const [mapasVisiveis, setMapasVisiveis] = useState(false);
-  // Mapas automáticos só com aceite de pelo menos uma categoria; sem isso, "Ver mapa" por cidade (parecer R36, item 8).
-  const aceite = useAceiteMedicao();
-  const [mapasPedidos, setMapasPedidos] = useState<ReadonlySet<string>>(new Set());
   // Sem JavaScript (e no HTML do servidor), a lista geral fica visível; só some depois de montar.
   const [montado, setMontado] = useState(false);
   useEffect(() => setMontado(true), []);
@@ -199,18 +195,10 @@ export function AbasCidades() {
       </div>)}</div>
       {CIDADES.map((cidade) => {
         const estaAberta = !visaoGeral && cidade.id === aberta.id;
-        const pedido = mapasPedidos.has(cidade.id);
-        const mostrarMapa = (aceite && mapasVisiveis) || pedido;
         return <div key={cidade.id} role="tabpanel" id={`painel-${cidade.id}`} aria-labelledby={`aba-${cidade.id}`} hidden={!estaAberta} tabIndex={0}>
           {estaAberta ? <>
             {cidade.locais.length > 1 ? <p>{T.multiplas(cidade.locais.length)}</p> : null}
-            {/* Sem JavaScript não há botão: ficam endereço e Como chegar, como antes. */}
-            {montado && !aceite && !pedido ? <div className="abas-cidades__mapa-consentimento">
-              <Icone nome="mapa" className="abas-cidades__mapa-consentimento-icone h-9 w-9" />
-              <p>{T.mapaSemConsentimento.texto}</p>
-              <button type="button" onClick={() => setMapasPedidos((atual) => new Set(atual).add(cidade.id))}>{T.mapaSemConsentimento.botao}</button>
-            </div> : null}
-            <div className="abas-cidades__cartoes">{cidade.locais.map((local) => <CartaoLocal key={local.id} cidade={cidade} local={local} mostrarMapa={mostrarMapa} reservarMapa={aceite || pedido} />)}</div>
+            <div className="abas-cidades__cartoes">{cidade.locais.map((local) => <CartaoLocal key={local.id} cidade={cidade} local={local} mostrarMapa={mapasVisiveis} />)}</div>
             <button className="abas-cidades__ver-todas" type="button" onClick={() => setVisaoGeral(true)}>{T.verTodas}</button>
           </> : null}
         </div>;
