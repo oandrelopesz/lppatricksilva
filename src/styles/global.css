@@ -214,3 +214,7 @@
   animation: cta-girar .8s linear infinite;
 }
 @keyframes cta-girar { to { transform: rotate(360deg); } }
+/* Movimento reduzido: o indicador fica parado (a regra global só encurta a duração, parecer R29). */
+@media (prefers-reduced-motion: reduce) {
+  .cta-aguardando::after { animation: none; }
+}

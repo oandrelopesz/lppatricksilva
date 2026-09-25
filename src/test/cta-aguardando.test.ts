@@ -34,4 +34,10 @@ describe("CTA ocupado (cta-aguardando)", () => {
     const indicador = regras.find(({ seletor }) => seletor.includes("::after"));
     expect(indicador?.corpo).toMatch(/content:\s*""/);
   });
+
+  it("com prefers-reduced-motion, o indicador fica parado (animation: none no ::after, parecer R29)", () => {
+    const blocos = [...css.matchAll(/@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?\})\s*\}/g)].map((m) => m[1]);
+    const desliga = blocos.some((bloco) => /\.cta-aguardando::after[^{]*\{[^}]*animation:\s*none/.test(bloco));
+    expect(desliga).toBe(true);
+  });
 });
