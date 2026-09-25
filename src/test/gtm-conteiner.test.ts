@@ -84,8 +84,8 @@ describe("contêiner do GTM", () => {
   });
 
   it("Google tag do GA4 na inicialização com page_location = pagina_limpa", () => {
-    const google = tags.find((t) => t.type === "googtag")!;
-    expect(valor(google, "tagId")).toBe("{{GA4 - ID de medição}}");
+    const google = tags.find((t) => t.type === "googtag" && valor(t, "tagId") === "{{GA4 - ID de medição}}")!;
+    expect(google).toBeDefined();
     expect(google.firingTriggerId).toEqual([INICIALIZACAO]);
     expect(tabela(google, "configSettingsTable").page_location).toBe("{{DLV - pagina_limpa}}");
   });
@@ -118,6 +118,13 @@ describe("contêiner do GTM", () => {
     expect(conversoes[0].firingTriggerId).toEqual([idAcionador("clique_whatsapp")]);
     expect(valor(conversoes[0], "conversionId")).toBe("{{Ads - ID de conversão}}");
     expect(valor(conversoes[0], "conversionLabel")).toBe("{{Ads - rótulo de conversão}}");
+  });
+
+  it("Google tag do Ads na inicialização: a biblioteca do Ads já está carregada antes do clique", () => {
+    const ads = tags.filter((t) => t.type === "googtag" && valor(t, "tagId") === "AW-{{Ads - ID de conversão}}");
+    expect(ads).toHaveLength(1);
+    expect(ads[0].firingTriggerId).toEqual([INICIALIZACAO]);
+    expect(tags.filter((t) => t.type === "googtag")).toHaveLength(2);
   });
 
   it("vinculador de conversões na inicialização", () => {

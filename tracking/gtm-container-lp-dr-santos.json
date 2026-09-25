@@ -801,6 +801,30 @@
         "accountId": "0",
         "containerId": "0",
         "tagId": "35",
+        "name": "Ads - Google tag",
+        "type": "googtag",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "tagId",
+            "value": "AW-{{Ads - ID de conversão}}"
+          }
+        ],
+        "firingTriggerId": [
+          "2147479573"
+        ],
+        "tagFiringOption": "ONCE_PER_EVENT",
+        "monitoringMetadata": {
+          "type": "MAP"
+        },
+        "consentSettings": {
+          "consentStatus": "NOT_NEEDED"
+        }
+      },
+      {
+        "accountId": "0",
+        "containerId": "0",
+        "tagId": "36",
         "name": "Ads - Vinculador de conversões",
         "type": "gclidw",
         "parameter": [
@@ -834,7 +858,7 @@
       {
         "accountId": "0",
         "containerId": "0",
-        "tagId": "36",
+        "tagId": "37",
         "name": "Ads - Conversão - clique_whatsapp",
         "type": "awct",
         "parameter": [
