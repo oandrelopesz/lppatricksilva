@@ -195,4 +195,22 @@
 }
 
 /* CTA do WhatsApp esperando a conversão sair antes de navegar (sem texto novo). */
-.cta-aguardando { opacity: .75; cursor: progress; }
+.cta-aguardando { cursor: progress; }
+/* Sem opacidade no texto (parecer R28): nos CTAs verdes, o fundo escurece e o branco fica em cerca de 7,2:1. */
+.bg-cta.cta-aguardando,
+.cartao-local > a.cta-aguardando { background: var(--color-cta-escuro); }
+/* Indicador decorativo, sem texto: um anel girando na cor do texto (parado com prefers-reduced-motion). */
+.cta-aguardando::after {
+  content: "";
+  display: inline-block;
+  flex: none;
+  width: .9em;
+  height: .9em;
+  margin-left: .5em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -.1em;
+  animation: cta-girar .8s linear infinite;
+}
+@keyframes cta-girar { to { transform: rotate(360deg); } }
