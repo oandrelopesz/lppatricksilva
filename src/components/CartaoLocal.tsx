@@ -31,7 +31,7 @@ export function CartaoLocal({ cidade, local, mostrarMapa }: Props) {
             loading="lazy"
             referrerPolicy="no-referrer"
             width="100%"
-            height="180"
+            height="240"
           />
         ) : null}
       </div>
