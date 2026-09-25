@@ -107,6 +107,10 @@ for (const [evento, params] of Object.entries(EVENTOS)) {
   );
 }
 
+// Carrega a biblioteca do Ads na inicialização: sem isso ela só baixa no primeiro clique e a
+// conversão sai depois da navegação para o wa.me (validação de 24/09/2026).
+novaTag("Ads - Google tag", "googtag", [t("tagId", "AW-{{Ads - ID de conversão}}")], INICIALIZACAO);
+
 novaTag(
   "Ads - Vinculador de conversões",
   "gclidw",
