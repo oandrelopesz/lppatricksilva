@@ -2,7 +2,6 @@ import { buscarCidade } from "@/data/locais";
 
 /** Origem da visita. Só parâmetros permitidos e sanitizados; nenhum texto livre. */
 export interface Origem {
-  ref: string;
   gclid?: string;
   utm_source?: string;
   utm_medium?: string;
@@ -27,15 +26,8 @@ const REGRAS: Record<(typeof CAMPOS)[number], (valor: string) => boolean> = {
   utm_content: (v) => /^a\d{2,4}$/.test(v),
   gclid: (v) => /^[A-Za-z0-9_.-]{1,200}$/.test(v),
 };
-const ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 let emMemoria: Origem | null = null;
-
-export function gerarRef(aleatorio: () => number = Math.random): string {
-  let ref = "";
-  for (let i = 0; i < 6; i++) ref += ALFABETO[Math.floor(aleatorio() * ALFABETO.length)];
-  return ref;
-}
 
 export function sanitizar(chave: string, valor: string | null): string | undefined {
   if (!valor) return undefined;
@@ -72,10 +64,12 @@ function sessionStorageSeguro(): Storage | null {
   }
 }
 
-export function capturarOrigem(search: string, storage: Storage | null, aleatorio: () => number = Math.random): Origem {
+export function capturarOrigem(search: string, storage: Storage | null): Origem {
+  // Uma sessão antiga pode ter "ref" gravado: só os CAMPOS são copiados, então ele é ignorado
+  // e sai do storage na próxima gravação (spec §21, sem código de referência).
   const anterior = ler(storage) ?? emMemoria;
   const params = new URLSearchParams(search);
-  const origem: Origem = { ref: anterior?.ref ?? gerarRef(aleatorio) };
+  const origem: Origem = {};
 
   // Campanha nova (algum parâmetro válido na URL) substitui o conjunto; sem parâmetros, mantém o da sessão.
   const campanhaNova = CAMPOS.some((chave) => sanitizar(chave, params.get(chave)));
@@ -96,7 +90,7 @@ export function capturarOrigem(search: string, storage: Storage | null, aleatori
 /** Só no navegador (efeitos e cliques). No servidor devolve uma origem vazia. */
 export function obterOrigem(): Origem {
   if (emMemoria) return emMemoria;
-  if (typeof window === "undefined") return { ref: "" };
+  if (typeof window === "undefined") return {};
   return capturarOrigem(window.location.search, sessionStorageSeguro());
 }
 

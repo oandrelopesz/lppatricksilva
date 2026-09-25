@@ -65,8 +65,7 @@ describe("S6OndeAtende", () => {
       fireEvent.click(screen.getByRole("link", { name: T.rodapeCta }));
       vi.advanceTimersByTime(800);
       const texto = new URL(vi.mocked(navegacao.ir).mock.calls[0][0]).searchParams.get("text")!;
-      expect(texto.startsWith(`${MENSAGENS_WHATSAPP.duvida} (ref `)).toBe(true);
-      expect(texto).toMatch(/\(ref [A-HJ-NP-Z2-9]{6}\)$/);
+      expect(texto).toBe(MENSAGENS_WHATSAPP.duvida);
       expect(texto).not.toContain("Tuntum");
       const evento = window.dataLayer!.find((e) => e.event === "clique_whatsapp")!;
       expect(evento).toMatchObject({ intencao: "duvida" });

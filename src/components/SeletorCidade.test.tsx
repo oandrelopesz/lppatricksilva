@@ -127,7 +127,7 @@ describe("SeletorCidade com a opção vazia aplicada (parecer R13b)", () => {
     expect(textoDoCtaGeral()).toContain("Tuntum");
     aplicarOpcaoVazia();
     const texto = textoDoCtaGeral();
-    expect(texto.startsWith(`${MENSAGENS_WHATSAPP.base} (ref `)).toBe(true);
+    expect(texto).toBe(MENSAGENS_WHATSAPP.base);
     expect(texto).not.toContain("Tuntum");
   });
 
@@ -138,7 +138,7 @@ describe("SeletorCidade com a opção vazia aplicada (parecer R13b)", () => {
     expect(textoDoCtaGeral()).toContain("Loreto");
     aplicarOpcaoVazia();
     const texto = textoDoCtaGeral();
-    expect(texto.startsWith(`${MENSAGENS_WHATSAPP.base} (ref `)).toBe(true);
+    expect(texto).toBe(MENSAGENS_WHATSAPP.base);
     expect(texto).not.toContain("Loreto");
   });
 });
