@@ -19,6 +19,25 @@ describe("App", () => {
     localStorage.clear();
   });
 
+  it("não mostra CTA fixo quando o hero sai da tela", () => {
+    const callbacks: IntersectionObserverCallback[] = [];
+    class ObservadorFalso {
+      constructor(retorno: IntersectionObserverCallback) { callbacks.push(retorno); }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    vi.stubGlobal("IntersectionObserver", ObservadorFalso);
+    try {
+      const { container } = render(<App />);
+      act(() => callbacks.forEach((retorno) => retorno([{ isIntersecting: false } as IntersectionObserverEntry], {} as IntersectionObserver)));
+      expect(container.querySelector(".botao-flutuante")).toBeNull();
+      expect(container.querySelector("#cta-hero")).not.toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("renderiza a headline e a assinatura do médico", () => {
     render(<App />);
     expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
