@@ -138,11 +138,10 @@ export function AbasCidades() {
     const painel = document.getElementById(`painel-${cidade.id}`);
     const retangulo = painel?.getBoundingClientRect();
     const recuo = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
-    if (aba && (!retangulo || retangulo.bottom <= recuo || retangulo.top >= window.innerHeight)) {
-      const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
-      aba.scrollIntoView?.({ behavior: reduzir ? "auto" : "smooth", block: "start", inline: "nearest" });
-    }
     if (aba) {
+      const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+      const painelForaDaTela = !retangulo || retangulo.bottom <= recuo || retangulo.top >= window.innerHeight;
+      aba.scrollIntoView?.({ behavior: reduzir ? "auto" : "smooth", block: painelForaDaTela ? "start" : "nearest", inline: "start" });
       focoVindoDoMapa.current = true;
       aba.focus({ preventScroll: true });
       focoVindoDoMapa.current = false;
