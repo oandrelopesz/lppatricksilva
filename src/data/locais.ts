@@ -114,7 +114,8 @@ export const CIDADES: Cidade[] = [
         logradouro: "Praça do Mercado Central, nº 14",
         cep: "65840-000",
         linkComoChegar: "https://maps.google.com/?cid=9740273424993758535",
-        observacao: "Endereço confirmado no Instagram do médico (Praça do Mercado Central, nº 14); a ficha do Google Maps mostra R. Gonçalves Dias.",
+        observacao:
+          "Endereço confirmado no Instagram do médico (Praça do Mercado Central, nº 14); a ficha do Google Maps mostra R. Gonçalves Dias. Medido em 25/09/2026: o pino da ficha fica a cerca de 43 m da Praça Mercado (Supermercado Pires, Praca Mercado, 108) e a cerca de 70 m da Praça de Alimentação Central. O Google não acha a praça pelo nome, então o mapa e o Como chegar mantêm a ficha.",
       },
     ],
   },

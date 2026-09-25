@@ -148,6 +148,11 @@ describe("locais", () => {
         expect(l.linkComoChegar).toBe(`https://maps.google.com/?cid=${l.embed.cid}`);
       }
     });
+
+    it("Mendesclin mantém a ficha, com a distância até a praça anotada (achado A2)", () => {
+      expect(local("mendesclin").linkComoChegar).toBe("https://maps.google.com/?cid=9740273424993758535");
+      expect(local("mendesclin").observacao).toMatch(/43 m da Praça Mercado/);
+    });
   });
 
   describe("endereços confirmados no destaque Clínicas do Instagram", () => {
@@ -158,7 +163,7 @@ describe("locais", () => {
     });
 
     it("Mendesclin: endereço do Instagram, com a divergência da ficha do Maps anotada", () => {
-      expect(local("mendesclin").observacao).toBe(
+      expect(local("mendesclin").observacao).toContain(
         "Endereço confirmado no Instagram do médico (Praça do Mercado Central, nº 14); a ficha do Google Maps mostra R. Gonçalves Dias.",
       );
     });
