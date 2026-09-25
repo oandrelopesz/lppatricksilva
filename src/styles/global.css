@@ -2,7 +2,7 @@
 @import "./tokens.css";
 
 @layer base {
-  html { scroll-behavior: smooth; scroll-padding-top: 71px; }
+  html { scroll-behavior: smooth; scroll-padding-top: 71px; scrollbar-width: thin; scrollbar-color: #718b96 var(--color-creme); }
   body { margin: 0; background: var(--color-creme); color: var(--color-grafite); font-family: var(--font-corpo); font-size: 1.1875rem; line-height: 1.6; }
   p, li { max-width: 66ch; }
   h1, h2, h3, h4 { font-family: var(--font-titulo); font-optical-sizing: auto; font-weight: 600; line-height: 1.15; }
@@ -89,11 +89,17 @@
   .abas-cidades__lista-wrap::before { left: 0; background: linear-gradient(270deg, transparent, var(--color-grafite)); }
   .abas-cidades__lista-wrap::after { right: 0; background: linear-gradient(90deg, transparent, var(--color-grafite)); }
   .abas-cidades__lista-wrap[data-sombra-esquerda]::before, .abas-cidades__lista-wrap[data-sombra-direita]::after { opacity: 1; }
-  .abas-cidades__lista { display: flex; gap: 1.5rem; overflow-x: auto; padding: .25rem .125rem .75rem; scroll-snap-type: x proximity; scrollbar-width: thin; }
-  .abas-cidades__lista button { flex: none; min-height: 48px; padding: .6rem .15rem; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--color-creme); scroll-snap-align: start; font-weight: 600; transition: border-color .15s ease, color .15s ease; }
-  .abas-cidades__lista button:hover { color: #fff; border-color: var(--color-eco); }
-  .abas-cidades__lista button[aria-selected="true"] { color: #fff; border-color: var(--color-dourado-claro); }
+  .abas-cidades__lista { display: flex; gap: .75rem; overflow-x: auto; padding: .3rem .2rem .8rem; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: #8cabb8 transparent; }
+  .abas-cidades__lista::-webkit-scrollbar, .mapa-ma__rolagem::-webkit-scrollbar { height: 8px; }
+  .abas-cidades__lista::-webkit-scrollbar-track, .mapa-ma__rolagem::-webkit-scrollbar-track { background: transparent; }
+  .abas-cidades__lista::-webkit-scrollbar-thumb, .mapa-ma__rolagem::-webkit-scrollbar-thumb { border: 2px solid var(--color-grafite); border-radius: 999px; background: #8cabb8; }
+  .abas-cidades__lista button { display: inline-flex; flex: 0 0 min(62vw, 14rem); align-items: center; justify-content: center; gap: .6rem; min-height: 48px; padding: .55rem .85rem; border: 1.5px solid var(--color-dourado); border-radius: 8px; background: #252c31; color: var(--color-creme); cursor: pointer; scroll-snap-align: start; text-align: left; font-weight: 600; line-height: 1.2; transition: transform .15s ease, background-color .15s ease, border-color .15s ease; }
+  .abas-cidades__lista button:hover { transform: translateY(-2px); border-color: var(--color-dourado-claro); background: #35424b; }
+  .abas-cidades__lista button:active { transform: translateY(1px); }
+  .abas-cidades__lista button[aria-selected="true"] { border-color: var(--color-dourado-claro); background: var(--color-dourado-claro); color: var(--color-grafite); }
+  .abas-cidades__lista button[aria-selected="true"]:hover { background: #dfc58d; }
   .abas-cidades__lista button:focus-visible { outline-color: var(--color-dourado-claro); outline-offset: 2px; }
+  @media (min-width: 640px) { .abas-cidades__lista button { flex-basis: auto; } }
   .abas-cidades__geral { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: 1rem; margin-top: 2rem; }
   .abas-cidades__geral > div, .cartao-local { padding: 1.5rem; border: 1px solid var(--color-dourado); border-radius: 4px; background: #252c31; color: var(--color-creme); box-shadow: none; }
   .abas-cidades__geral h4, .cartao-local h4 { font-size: 1.4rem; }
@@ -112,7 +118,7 @@
   .abas-cidades__geral[hidden], [role="tabpanel"][hidden] { display: none; }
 
   .mapa-ma { margin: 2.5rem 0 0; padding: 1rem; border: 1px solid var(--color-dourado); border-radius: 4px; background: #20272c; }
-  .mapa-ma__rolagem { overflow-x: auto; overscroll-behavior-inline: contain; }
+  .mapa-ma__rolagem { overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: thin; scrollbar-color: #8cabb8 transparent; }
   .mapa-ma__quadro { position: relative; width: 600px; height: 700px; margin-inline: auto; background: transparent; }
   .mapa-ma__quadro svg { display: block; width: 100%; height: 100%; }
   .mapa-ma__contorno { fill: #283137; stroke: var(--color-dourado-claro); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
@@ -120,8 +126,11 @@
   .mapa-ma__guia { fill: none; stroke: #8cabb8; stroke-width: 1; }
   .mapa-ma__centroide { fill: var(--color-dourado-claro); }
   .mapa-ma__ponto { position: absolute; z-index: 1; display: grid; place-items: center; width: 48px; height: 48px; transform: translate(-50%, -50%); border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
-  .mapa-ma__ponto span { display: grid; place-items: center; width: 33px; height: 33px; border: 1.5px solid var(--color-dourado-claro); border-radius: 50%; background: var(--color-grafite); color: #fff; font-size: .75rem; font-weight: 600; }
-  .mapa-ma__ponto:hover span, .mapa-ma__ponto[aria-current="location"] span { background: #6e5631; box-shadow: 0 0 0 3px var(--color-dourado-claro); }
+  .mapa-ma__ponto span { display: grid; place-items: center; width: 38px; height: 38px; border: 1.5px solid var(--color-dourado-claro); border-radius: 50%; background: var(--color-grafite); color: #fff; font-size: .75rem; font-weight: 600; transition: transform .15s ease, background-color .15s ease, border-color .15s ease; }
+  .mapa-ma__ponto:hover span { transform: translateY(-2px); background: #35424b; border-color: #dfc58d; }
+  .mapa-ma__ponto:active span { transform: translateY(1px); }
+  .mapa-ma__ponto[aria-current="location"] span { background: var(--color-dourado-claro); color: var(--color-grafite); }
+  .mapa-ma__ponto[aria-current="location"]:hover span { background: #dfc58d; }
   .mapa-ma__ponto:focus-visible { outline: 3px solid var(--color-dourado-claro); outline-offset: 2px; }
   .mapa-ma__legenda { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: .4rem 1rem; margin: 1rem 0; padding: 0; list-style: none; font-size: .9rem; }
   .mapa-ma__legenda li { padding: .2rem .45rem; }
@@ -152,4 +161,7 @@
   .rodape-cidades a:focus-visible { outline-color: var(--color-dourado-claro); }
 
   @media (min-width: 768px) { #onde-atende { padding-block: 7rem; } .cartao-local__mapa iframe { height: 320px; } }
+  @media (prefers-reduced-motion: reduce) {
+    .abas-cidades__lista button, .mapa-ma__ponto span { transition: none; }
+  }
 }

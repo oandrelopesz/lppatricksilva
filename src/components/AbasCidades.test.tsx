@@ -39,6 +39,14 @@ describe("AbasCidades", () => {
     expect(screen.getAllByRole("tab").filter((aba) => aba.getAttribute("aria-selected") === "true")).toEqual([screen.getByRole("tab", { name: "Balsas" })]);
   });
 
+  it("mostra alfinete decorativo em cada botão de cidade sem alterar o nome acessível", () => {
+    renderizar();
+    for (const aba of screen.getAllByRole("tab")) {
+      expect(aba.querySelector('svg[aria-hidden="true"]')).toBeInTheDocument();
+    }
+    expect(screen.getByRole("tab", { name: "Balsas" })).toHaveAttribute("aria-selected", "true");
+  });
+
   it("estado inicial: 14 endereços no HTML, Balsas visível e nenhum iframe", () => {
     const { container } = renderizar();
     expect(container.querySelectorAll(".abas-cidades__geral li")).toHaveLength(14);
