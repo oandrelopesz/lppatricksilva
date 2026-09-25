@@ -31,7 +31,8 @@ export const CAMPOS_CLIQUE = [
 let gtmCarregado = false;
 
 /**
- * URL sem utm_term, texto livre, âncora e gclid, para o GTM usar como page_location do GA4.
+ * Põe na fila a URL corrente sem utm_term, texto livre, âncora e gclid, para o GTM usar como
+ * page_location do GA4. Chamada na carga e a cada troca de URL por seção (lp:secao).
  * O gclid nunca vai ao GA4 (parecer R17); o vinculador e a conversão do Ads o leem da URL de entrada.
  */
 export function registrarPagina(): void {

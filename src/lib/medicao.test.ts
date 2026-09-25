@@ -37,4 +37,30 @@ describe("iniciarMedicao", () => {
     expect(adicionar.mock.calls.filter(([tipo]) => tipo === "scroll")).toHaveLength(1);
     expect(window.dataLayer!.filter((e) => "pagina_limpa" in e)).toHaveLength(1);
   });
+
+  /** Modelo do GTM: cada push sobrescreve as chaves; devolve o modelo no momento do evento pedido. */
+  function modeloNoEvento(evento: string): Record<string, unknown> {
+    const modelo: Record<string, unknown> = {};
+    for (const push of window.dataLayer!) {
+      Object.assign(modelo, push);
+      if (push.event === evento) return modelo;
+    }
+    throw new Error(`evento ${evento} não encontrado`);
+  }
+
+  it("lp:secao atualiza o pagina_limpa sem evento nem page_view; o clique seguinte leva a URL nova (R20, decisão b)", async () => {
+    window.history.replaceState(null, "", "/?utm_source=google&gclid=abc.1");
+    const { iniciarMedicao } = await import("./medicao");
+    const { track } = await import("./analytics");
+    iniciarMedicao();
+    expect(window.dataLayer![0]).toEqual({ pagina_limpa: `${location.origin}/?utm_source=google` });
+    window.history.pushState(null, "", "/sobre?utm_source=google&gclid=abc.1&utm_term=dor+no+joelho#faq");
+    window.dispatchEvent(new CustomEvent("lp:secao", { detail: { slug: "sobre", caminho: "/sobre" } }));
+    const ultimo = window.dataLayer![window.dataLayer!.length - 1];
+    expect(ultimo).toEqual({ pagina_limpa: `${location.origin}/sobre?utm_source=google` });
+    expect(window.dataLayer!.some((e) => e.event === "page_view")).toBe(false);
+    track("clique_whatsapp", { local_cta: "sobre" });
+    expect(modeloNoEvento("clique_whatsapp").pagina_limpa).toBe(`${location.origin}/sobre?utm_source=google`);
+    window.history.replaceState(null, "", "/");
+  });
 });
