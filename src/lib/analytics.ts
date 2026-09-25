@@ -29,8 +29,6 @@ declare global {
 const TETO_COM_GTM_MS = 1500;
 const TETO_SEM_GTM_MS = 3000;
 const DEPOIS_DA_CONVERSAO_MS = 150;
-/** Clique antigo (segurado antes da hidratação) cujo teto já passou: espera ao menos isto depois do envio. */
-const MINIMO_DEPOIS_DO_ENVIO_MS = 300;
 
 /**
  * Só a conversão do Ads com o nosso ID (parecer R28): pagead/conversion/<ID> ou pagead/1p-conversion/<ID>
@@ -146,7 +144,13 @@ export function track(evento: string, params: ParametrosEvento = {}, opcoes: Opc
   window.dataLayer.push({ event: evento, ...limpo });
   const inicio = inicioMs ?? performance.now();
   const tetoMs = gtmPronto ? TETO_COM_GTM_MS : TETO_SEM_GTM_MS;
-  const restante = Math.max(tetoMs - (performance.now() - inicio), inicioMs === undefined ? 0 : MINIMO_DEPOIS_DO_ENVIO_MS);
+  // Prazo único, contado do clique original, que nunca passa do teto (parecer R28). Clique segurado
+  // cujo prazo já venceu na hidratação: o evento já foi para a fila e a navegação sai na hora.
+  const restante = tetoMs - (performance.now() - inicio);
+  if (restante <= 0) {
+    concluir();
+    return;
+  }
   const teto = window.setTimeout(concluir, restante);
   limpezas.push(() => window.clearTimeout(teto));
   if (typeof PerformanceObserver === "undefined") return;

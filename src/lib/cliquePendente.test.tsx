@@ -158,4 +158,69 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
     act(() => vi.advanceTimersByTime(5000));
     expect(navegacao.ir).toHaveBeenCalledTimes(1);
   });
+
+  describe("prazo único do clique segurado (R28, item 4)", () => {
+    /**
+     * window real (flags e relógio), mas com location falso para contar a navegação de segurança. O
+     * handler é capturado, não registrado: os seguradores dos testes anteriores continuam na window.
+     */
+    function instalarSeguradorContando() {
+      const assign = vi.fn();
+      let handler: ((e: unknown) => void) | undefined;
+      const janela = new Proxy(window, {
+        get: (alvo, chave) => {
+          if (chave === "location") return { assign };
+          if (chave === "addEventListener") return (_tipo: string, f: (e: unknown) => void) => void (handler = f);
+          const valor = Reflect.get(alvo, chave);
+          return typeof valor === "function" ? valor.bind(alvo) : valor;
+        },
+        set: (alvo, chave, valor) => Reflect.set(alvo, chave, valor),
+      });
+      new Function("w", corpo)(janela);
+      const clicar = (link: Element) => handler!({ target: link, button: 0, preventDefault: vi.fn(), stopPropagation: vi.fn() });
+      return { assign, clicar };
+    }
+
+    for (const hidratacaoMs of [2999, 3400, 3499]) {
+      it(`hidratação aos ${hidratacaoMs} ms: uma navegação só, nunca depois dos 3.000 ms (ou na hora)`, async () => {
+        const { assign, clicar } = instalarSeguradorContando();
+        const raiz = document.createElement("div");
+        raiz.innerHTML = renderToString(<Cta />);
+        document.body.append(raiz);
+        clicar(raiz.querySelector("a")!);
+        act(() => vi.advanceTimersByTime(hidratacaoMs));
+        await act(async () => {
+          hydrateRoot(raiz, <Cta />);
+        });
+        act(() => processarCliquePendente());
+        expect(window.dataLayer!.filter((e) => e.event === "clique_whatsapp")).toHaveLength(1);
+        const ate = Math.max(3000 - hidratacaoMs, 0);
+        if (ate > 0) {
+          expect(navegacao.ir).not.toHaveBeenCalled();
+          act(() => vi.advanceTimersByTime(ate));
+        }
+        expect(navegacao.ir).toHaveBeenCalledTimes(1);
+        act(() => vi.advanceTimersByTime(5000));
+        expect(navegacao.ir).toHaveBeenCalledTimes(1);
+        expect(assign).not.toHaveBeenCalled();
+      });
+    }
+
+    it("hidratação depois da navegação de segurança: não registra nem navega de novo", async () => {
+      const { assign, clicar } = instalarSeguradorContando();
+      const raiz = document.createElement("div");
+      raiz.innerHTML = renderToString(<Cta />);
+      document.body.append(raiz);
+      clicar(raiz.querySelector("a")!);
+      act(() => vi.advanceTimersByTime(3600));
+      expect(assign).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        hydrateRoot(raiz, <Cta />);
+      });
+      act(() => processarCliquePendente());
+      act(() => vi.advanceTimersByTime(5000));
+      expect(navegacao.ir).not.toHaveBeenCalled();
+      expect(assign).toHaveBeenCalledTimes(1);
+    });
+  });
 });

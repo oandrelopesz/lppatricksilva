@@ -304,7 +304,7 @@ describe("analytics", () => {
       expect(navegar).toHaveBeenCalledTimes(1);
     });
 
-    it("com inicioMs, o teto conta do clique original; se já passou, espera pelo menos 300 ms", async () => {
+    it("com inicioMs, o prazo conta do clique original e nunca passa do teto; vencido, navega na hora (R28, item 4)", async () => {
       vi.stubGlobal("PerformanceObserver", undefined);
       const { track } = await import("./analytics");
       const perto = vi.fn();
@@ -314,10 +314,10 @@ describe("analytics", () => {
       vi.advanceTimersByTime(1);
       expect(perto).toHaveBeenCalledTimes(1);
       const passou = vi.fn();
-      track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: passou, inicioMs: performance.now() - 5000 });
-      vi.advanceTimersByTime(299);
-      expect(passou).not.toHaveBeenCalled();
-      vi.advanceTimersByTime(1);
+      track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: passou, inicioMs: performance.now() - 3400 });
+      expect(window.dataLayer!.filter((e) => e.event === "clique_whatsapp").length).toBeGreaterThan(0);
+      expect(passou).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(3000);
       expect(passou).toHaveBeenCalledTimes(1);
     });
   });
