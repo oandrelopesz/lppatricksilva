@@ -80,6 +80,25 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
     expect(navegacao.ir).toHaveBeenCalledTimes(1);
   });
 
+  it("com o React já ouvindo e o efeito da Raiz pendente, o clique tem um só responsável (R28, item 2)", async () => {
+    new Function("w", corpo)(window);
+    const raiz = document.createElement("div");
+    raiz.innerHTML = renderToString(<Cta />);
+    document.body.append(raiz);
+    await act(async () => {
+      hydrateRoot(raiz, <Cta />);
+    });
+    // React hidratado e ouvindo, mas __lpHidratado ainda não foi marcado pelo efeito da Raiz.
+    expect(w.__lpHidratado).toBeUndefined();
+    fireEvent.click(raiz.querySelector("a")!);
+    expect(window.dataLayer!.filter((e) => e.event === "clique_whatsapp")).toHaveLength(0);
+    expect(w.__lpCliquePendente).toBeDefined();
+    act(() => processarCliquePendente());
+    expect(window.dataLayer!.filter((e) => e.event === "clique_whatsapp")).toHaveLength(1);
+    act(() => vi.advanceTimersByTime(5000));
+    expect(navegacao.ir).toHaveBeenCalledTimes(1);
+  });
+
   it("se a app não hidratar, a navegação de segurança vai para o href em 3.500 ms", () => {
     let aoClicar: ((e: unknown) => void) | undefined;
     const assign = vi.fn();
@@ -94,9 +113,10 @@ describe("segurador de clique antes da hidratação (validação do Tracking, ac
     link.href = LINK_WHATSAPP_BASE;
     link.dataset.localCta = "faq";
     document.body.append(link);
-    const evento = { target: link, button: 0, preventDefault: vi.fn() };
+    const evento = { target: link, button: 0, preventDefault: vi.fn(), stopPropagation: vi.fn() };
     aoClicar!(evento);
     expect(evento.preventDefault).toHaveBeenCalled();
+    expect(evento.stopPropagation).toHaveBeenCalled();
     expect(janela.__lpCliquePendente).toMatchObject({ href: LINK_WHATSAPP_BASE, localCta: "faq" });
     vi.advanceTimersByTime(3499);
     expect(assign).not.toHaveBeenCalled();
