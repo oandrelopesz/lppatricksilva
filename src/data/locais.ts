@@ -18,6 +18,11 @@ export interface Local {
   linkComoChegar: string;
   /** Nome da ficha no Google Maps, quando difere do nome exibido. Usado só no embed. */
   nomeNoMaps?: string;
+  /**
+   * Mapa incorporado, quando a busca por nome e endereço erra (conferido no navegador): pela ficha (cid)
+   * ou por outra busca (q). Sem o campo, o embed busca o nome e o endereço.
+   */
+  embed?: { cid: string } | { q: string };
   /** Divergência a reportar ao André. Não é exibida. */
   observacao?: string;
   /** Dias de atendimento. O dossiê não traz; fica ausente. */
@@ -68,6 +73,7 @@ export const CIDADES: Cidade[] = [
         logradouro: "Av. Seis, nº 10, QD 03, Cohab I, próximo à UPA",
         cep: "65800-000",
         linkComoChegar: "https://maps.google.com/?cid=6068533600021052492",
+        embed: { cid: "6068533600021052492" },
       },
     ],
   },
@@ -117,6 +123,8 @@ export const CIDADES: Cidade[] = [
         logradouro: "Rua 28 de Julho, Centro",
         cep: "65895-000",
         linkComoChegar: "https://www.google.com/maps/search/?api=1&query=Clinimed+Rua+28+de+Julho+Centro+Loreto+MA",
+        // Com o nome, a busca mostra outra clínica da mesma rua.
+        embed: { q: "Rua 28 de Julho, Loreto - MA" },
         observacao: "Sem número (confirmado no Instagram) e sem ficha no Google Maps.",
       },
     ],
@@ -182,6 +190,7 @@ export const CIDADES: Cidade[] = [
         logradouro: "R. Quinze de Novembro, 49B, Centro",
         cep: "65790-000",
         linkComoChegar: "https://maps.google.com/?cid=8715891456907011906",
+        embed: { cid: "8715891456907011906" },
       },
     ],
   },
@@ -215,6 +224,8 @@ export const CIDADES: Cidade[] = [
         logradouro: "Rua São Francisco, s/n, Centro",
         cep: "65785-000",
         linkComoChegar: "https://www.google.com/maps/search/?api=1&query=CM+LAB+Rua+Sao+Francisco+Centro+Graca+Aranha+MA",
+        // Com "CM LAB", a busca leva a um laboratório de outra cidade.
+        embed: { q: "R. São Francisco, Graça Aranha - MA, 65785-000" },
         observacao: "Sem número (confirmado no Instagram) e sem ficha no Google Maps.",
       },
     ],
@@ -232,6 +243,7 @@ export const CIDADES: Cidade[] = [
         logradouro: "R. Gerôncio Falcão, 263-A, Centro",
         cep: "65950-000",
         linkComoChegar: "https://maps.google.com/?cid=492768669301912196",
+        embed: { cid: "492768669301912196" },
         observacao: "Sem ficha própria no Google Maps; o link aponta para o endereço.",
       },
       {
@@ -261,6 +273,7 @@ export function cidadesDaRegiao(regiaoId: RegiaoId): Cidade[] {
 }
 
 export function urlEmbedMapa(local: Local): string {
-  const params = new URLSearchParams({ q: `${local.nomeNoMaps ?? local.nome} ${local.endereco}`, output: "embed" });
+  const busca = local.embed ?? { q: `${local.nomeNoMaps ?? local.nome} ${local.endereco}` };
+  const params = new URLSearchParams({ ...busca, output: "embed" });
   return `https://www.google.com/maps?${params.toString()}`;
 }

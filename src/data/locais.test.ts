@@ -75,7 +75,52 @@ describe("locais", () => {
     const local = buscarCidade("tuntum")!.locais[0];
     expect(new URL(urlEmbedMapa(local)).searchParams.get("q")).toContain("CMT Centro Médico de Tuntum e Laboratório");
   });
-describe("endereços confirmados no destaque Clínicas do Instagram", () => {
+  describe("embed do mapa por local (conferido no navegador)", () => {
+    const local = (id: string) => todosOsLocais().find(({ local }) => local.id === id)!.local;
+    const CORRIGIDOS: Record<string, string> = {
+      "clinica-mais-saude": "https://www.google.com/maps?cid=6068533600021052492&output=embed",
+      clinimed: `https://www.google.com/maps?${new URLSearchParams({ q: "Rua 28 de Julho, Loreto - MA", output: "embed" })}`,
+      "sd-med": "https://www.google.com/maps?cid=8715891456907011906&output=embed",
+      "cm-lab-graca-aranha": `https://www.google.com/maps?${new URLSearchParams({ q: "R. São Francisco, Graça Aranha - MA, 65785-000", output: "embed" })}`,
+      "clinica-mais-familia": "https://www.google.com/maps?cid=492768669301912196&output=embed",
+    };
+
+    for (const [id, esperado] of Object.entries(CORRIGIDOS)) {
+      it(`${id}: embed próprio`, () => {
+        expect(urlEmbedMapa(local(id))).toBe(esperado);
+      });
+    }
+
+    it("os outros 9 seguem o padrão (nome da ficha ou nome, mais o endereço)", () => {
+      const outros = todosOsLocais().filter(({ local }) => !(local.id in CORRIGIDOS));
+      expect(outros.map(({ local }) => local.id)).toEqual([
+        "mais-centro-medico",
+        "hospital-sao-jose",
+        "clinica-santa-maria",
+        "mendesclin",
+        "clinica-levive",
+        "clinica-risalva-carvalho",
+        "begmed",
+        "cm-lab-tuntum",
+        "hospital-florencio-brandes",
+      ]);
+      for (const { local } of outros) {
+        const url = new URL(urlEmbedMapa(local));
+        expect(url.origin + url.pathname).toBe("https://www.google.com/maps");
+        expect(url.searchParams.get("output")).toBe("embed");
+        expect(url.searchParams.get("q")).toBe(`${local.nomeNoMaps ?? local.nome} ${local.endereco}`);
+      }
+    });
+
+    it("nenhuma busca de embed leva (filial) ou (matriz)", () => {
+      for (const { local } of todosOsLocais()) {
+        const q = new URL(urlEmbedMapa(local)).searchParams.get("q") ?? "";
+        expect(q).not.toMatch(/\((filial|matriz)\)/);
+      }
+    });
+  });
+
+  describe("endereços confirmados no destaque Clínicas do Instagram", () => {
     const local = (id: string) => todosOsLocais().find(({ local }) => local.id === id)!.local;
 
     it("Levive confirmada: sem a observação sobre a Pró Saúde", () => {
