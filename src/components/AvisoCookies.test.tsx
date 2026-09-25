@@ -76,6 +76,22 @@ describe("AvisoCookies", () => {
     expect(chave(T.opcaoAnuncios).checked).toBe(true);
   });
 
+  it("revogar pelo rodapé apaga os cookies da categoria e manda o update na hora", () => {
+    localStorage.setItem("lp_consentimento_v2", JSON.stringify({ visitas: true, anuncios: true, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" }));
+    document.cookie = "_ga=GA1.1.1; path=/";
+    document.cookie = "_gcl_au=1.1; path=/";
+    render(<AvisoCookies />);
+    act(() => {
+      window.dispatchEvent(new Event("abrir-preferencias-cookies"));
+    });
+    fireEvent.click(chave(T.opcaoVisitas));
+    fireEvent.click(screen.getByRole("button", { name: T.salvar }));
+    expect(ultimoUpdate()).toEqual({ analytics_storage: "denied", ad_storage: "granted", ad_user_data: "granted", ad_personalization: "denied" });
+    expect(document.cookie).not.toContain("_ga=");
+    expect(document.cookie).toContain("_gcl_au=");
+    document.cookie = "_gcl_au=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+  });
+
   it("mostra o texto inteiro, sem limite de altura nem rolagem interna (parecer R32), e a política fora dele", () => {
     render(<AvisoCookies />);
     const texto = screen.getByText(T.texto);

@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from "react";
 import { useExibicaoAviso } from "@/components/useExibicaoAviso";
 import { TEXTOS_COOKIES as T } from "@/content/cookies";
 import { aplicarConsentimento, lerConsentimento, salvarConsentimento, type Escolha } from "@/lib/consentimento";
+import { apagarCookiesRevogados } from "@/lib/cookiesMedicao";
 
 const BOTAO =
   "inline-flex h-12 min-h-12 flex-1 items-center justify-center rounded-full border border-creme px-3 py-2 text-base font-semibold sm:flex-none sm:px-5 sm:py-3";
@@ -23,6 +24,7 @@ export function AvisoCookies() {
   function escolher(escolha: Escolha) {
     salvarConsentimento(escolha);
     aplicarConsentimento(escolha);
+    apagarCookiesRevogados(escolha);
     concluir();
   }
 
