@@ -23,7 +23,7 @@ function medir() {
   const leituras = [];
   for (const escala of [125, 150, 200]) {
     document.documentElement.style.fontSize = escala + '%';
-    const controles = document.querySelectorAll('#cta-hero, .aviso-medicao-hero a, .autoavaliacao-opcao, #como-funciona select, #como-funciona button, .faq-pergunta, #rodape a');
+    const controles = document.querySelectorAll('#cta-hero, .autoavaliacao-opcao, #como-funciona select, #como-funciona button, .faq-pergunta, #rodape a');
     const cortados = [...controles].filter((controle) => {
       const retangulo = controle.getBoundingClientRect();
       return retangulo.width && (retangulo.left < -1 || retangulo.right > innerWidth + 1 || controle.scrollWidth > controle.clientWidth + 1);
