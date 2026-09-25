@@ -21,7 +21,8 @@ const EXIGIDOS = [
     return !!m && Buffer.byteLength(m[1]) < 1024;
   }],
   ["CTA com data-local-cta no HTML", /data-local-cta="hero"/],
-  ["um canonical para a raiz do site", (h) => (h.match(/<link rel="canonical" href="https:\/\/[^"/]+\/">/g) || []).length === 1],
+  ["um canonical para a raiz do domínio principal", (h) => (h.match(/<link rel="canonical" href="[^"]*">/g) || []).join() === '<link rel="canonical" href="https://drpatricksantos.com.br/">'],
+  ["nenhuma URL do endereço antigo (vercel.app)", (h) => !h.includes("lp-dr-santos.vercel.app")],
   ["JSON-LD no HTML inicial", /<script type="application\/ld\+json">/],
   ["14 locais ligados ao médico no JSON-LD", (h) => (h.match(/#local-/g) || []).length === 28],
   ["aviso de particular", /particular/i],

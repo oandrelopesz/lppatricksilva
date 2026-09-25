@@ -13,8 +13,8 @@ export const ASSINATURA = `${MEDICO.nome} · ${MEDICO.profissao} · CRM-${MEDICO
 export const WHATSAPP_NUMERO = "5513996822680";
 export const WHATSAPP_EXIBICAO = "(13) 99682-2680";
 
-/** Muda quando o domínio definitivo chegar. */
-export const SITE_URL = "https://lp-dr-santos.vercel.app";
+/** Domínio principal (aprovado pelo André em 25/09/2026). www e lp-dr-santos.vercel.app redirecionam para ele (vercel.json). */
+export const SITE_URL = "https://drpatricksantos.com.br";
 
 export const GTM_ID: string = import.meta.env.VITE_GTM_ID ?? "";
 
