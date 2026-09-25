@@ -5,6 +5,7 @@ import { PENDENCIAS, ASSINATURA } from "@/config";
 import { TEXTOS_COMO_FUNCIONA } from "@/content/comoFunciona";
 import { TEXTOS_FAQ } from "@/content/faq";
 import { TEXTOS_COOKIES } from "@/content/cookies";
+import { TEXTOS_RODAPE } from "@/content/rodape";
 import { TEXTOS_SOBRE } from "@/content/sobre";
 import { S4ComoFunciona } from "./S4ComoFunciona";
 import { S5Sobre } from "./S5Sobre";
@@ -75,5 +76,19 @@ describe("seções finais", () => {
     fireEvent.click(botao);
     window.removeEventListener("abrir-preferencias-cookies", reabrir);
     expect(reabrir).toHaveBeenCalledTimes(1);
+  });
+
+  it("rodapé tem Política de privacidade e Termos de uso lado a lado, com alvo de 48 px, e mantém o texto LGPD e o botão de cookies", () => {
+    const { container } = renderizar(<S8Rodape />);
+    const politica = screen.getByRole("link", { name: "Política de privacidade" });
+    const termos = screen.getByRole("link", { name: TEXTOS_RODAPE.termosLink });
+    expect(TEXTOS_RODAPE.termosLink).toBe("Termos de uso");
+    expect(termos).toHaveAttribute("href", "/termos-de-uso.html");
+    const grupo = container.querySelector(".rodape-legal")!;
+    expect(grupo.contains(politica) && grupo.contains(termos)).toBe(true);
+    expect(grupo).toHaveClass("flex", "flex-wrap");
+    for (const link of [politica, termos]) expect(link).toHaveClass("min-h-12");
+    expect(screen.getByText(TEXTOS_RODAPE.lgpd)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: TEXTOS_COOKIES.preferencias })).toBeInTheDocument();
   });
 });

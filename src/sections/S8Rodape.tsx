@@ -74,7 +74,11 @@ export function S8Rodape() {
           </div>
           <p className="mt-8">{T.avisoMedico}</p>
           <p className="mt-3">{T.lgpd}</p>
-          <a className="mt-3 inline-block min-h-12 py-2 font-semibold underline underline-offset-4" href="/politica-de-privacidade.html">{T.politicaLink}</a>
+          {/* Política e termos lado a lado, com alvo de 48 px; a 320 px quebram limpo em duas linhas. */}
+          <p className="rodape-legal mt-3 flex flex-wrap gap-x-6">
+            <a className="inline-flex min-h-12 items-center font-semibold underline underline-offset-4" href="/politica-de-privacidade.html">{T.politicaLink}</a>
+            <a className="inline-flex min-h-12 items-center font-semibold underline underline-offset-4" href="/termos-de-uso.html">{T.termosLink}</a>
+          </p>
           <div id="rodape-extra">
             {/* Sem JavaScript o botão não teria ação: entra só depois da hidratação (parecer R18). */}
             {montado ? (
