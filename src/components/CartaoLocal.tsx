@@ -6,7 +6,7 @@ import { track } from "@/lib/analytics";
 interface Props {
   cidade: Cidade;
   local: Local;
-  /** true só no painel aberto e depois de ação real do usuário. */
+  /** true no painel aberto, quando a seção se aproxima da viewport. */
   mostrarMapa: boolean;
 }
 
@@ -23,7 +23,7 @@ export function CartaoLocal({ cidade, local, mostrarMapa }: Props) {
         </p>
       ) : null}
       <p>{T.clinica.disponibilidade}</p>
-      <div className="cartao-local__mapa" style={{ minHeight: 240 }}>
+      <div className="cartao-local__mapa">
         {mostrarMapa ? (
           <iframe
             src={urlEmbedMapa(local)}
@@ -31,7 +31,7 @@ export function CartaoLocal({ cidade, local, mostrarMapa }: Props) {
             loading="lazy"
             referrerPolicy="no-referrer"
             width="100%"
-            height="240"
+            height="180"
           />
         ) : null}
       </div>
@@ -44,7 +44,7 @@ export function CartaoLocal({ cidade, local, mostrarMapa }: Props) {
         {T.clinica.comoChegar}
       </a>
       <CtaWhatsApp localCta="onde_atende" cidadeFixa={cidade.nome} local={local.nome}>
-        {T.clinica.cta(cidade.nome)}
+        {T.clinica.ctaCurto(cidade.nome)}
       </CtaWhatsApp>
     </article>
   );

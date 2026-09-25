@@ -12,10 +12,10 @@ const destino = path.join(raiz, "public", "img");
 const LARGURAS = [480, 720, 960, 1280];
 
 const FOTOS = [
-  { nome: "hero", arquivo: "_DSC2060.jpg", y: 600 },
-  { nome: "sobre", arquivo: "_DSC2069.jpg", y: 1000 },
+  { nome: "hero", arquivo: "_DSC2069.jpg", y: 760 },
+  { nome: "sobre", arquivo: "_DSC1992.jpg", y: 900 },
   { nome: "consulta", arquivo: "_DSC2001.jpg", y: 1000, webpQualidade: 72 },
-  { nome: "cta-final", arquivo: "_DSC1992.jpg", y: 900 },
+  { nome: "cta-final", arquivo: "_DSC2011.jpg", y: 600 },
 ];
 
 fs.mkdirSync(destino, { recursive: true });

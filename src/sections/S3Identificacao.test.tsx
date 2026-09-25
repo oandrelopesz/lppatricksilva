@@ -14,4 +14,33 @@ describe("S3Identificacao", () => {
     }
     expect(screen.getAllByRole("link", { name: T.cta })).toHaveLength(2);
   });
+
+  it("mantém três cartões equivalentes com ícone e CTA em cada lado do interativo", () => {
+    const { container } = render(<CidadeProvider><S3Identificacao /></CidadeProvider>);
+    const cartoes = container.querySelectorAll("#para-quem article");
+    expect(cartoes).toHaveLength(3);
+    for (const cartao of cartoes) {
+      expect(cartao.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+      expect(cartao.querySelectorAll("li")).toHaveLength(5);
+    }
+    const [antes, depois] = screen.getAllByRole("link", { name: T.cta });
+    const interativo = container.querySelector(".autoavaliacao")!;
+    expect(interativo).not.toBeNull();
+    expect(antes.compareDocumentPosition(interativo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(interativo.compareDocumentPosition(depois) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("usa joelho, coluna e ombro como desenhos decorativos visíveis nos três cartões", () => {
+    const { container } = render(<CidadeProvider><S3Identificacao /></CidadeProvider>);
+    const cartoes = [...container.querySelectorAll("#para-quem article")];
+    expect(cartoes).toHaveLength(3);
+    for (const [indice, nome] of ["joelho", "coluna", "ombro"].entries()) {
+      const arte = cartoes[indice].querySelector(`img[src="/prancha-${nome}.webp"]`);
+      expect(arte).not.toBeNull();
+      expect(arte).toHaveAttribute("alt", "");
+      expect(arte).toHaveAttribute("aria-hidden", "true");
+      expect(arte).toHaveAttribute("width", "400");
+      expect(arte).toHaveAttribute("height", "400");
+    }
+  });
 });

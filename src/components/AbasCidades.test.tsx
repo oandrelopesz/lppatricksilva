@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CidadeProvider } from "@/context/CidadeContext";
 import { capturarOrigem, reiniciarOrigemParaTestes } from "@/lib/origem";
 import { TEXTOS_ONDE_ATENDE as T } from "@/content/ondeAtende";
@@ -13,23 +13,44 @@ function renderizar() {
   );
 }
 
+let mostrarSecao: (() => void) | undefined;
+class ObservadorFalso {
+  constructor(retorno: IntersectionObserverCallback) {
+    mostrarSecao = () => retorno([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+  }
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
 describe("AbasCidades", () => {
   beforeEach(() => {
     reiniciarOrigemParaTestes();
     capturarOrigem("", null);
     window.dataLayer = [];
+    mostrarSecao = undefined;
+    vi.stubGlobal("IntersectionObserver", ObservadorFalso);
   });
 
-  it("mostra 11 abas em 2 listas por região, nenhuma aberta", () => {
+  it("mostra 11 abas em 2 listas por região, com Balsas aberta", () => {
     renderizar();
     expect(screen.getAllByRole("tablist")).toHaveLength(2);
     expect(screen.getAllByRole("tab")).toHaveLength(11);
-    expect(screen.getAllByRole("tab").some((aba) => aba.getAttribute("aria-selected") === "true")).toBe(false);
+    expect(screen.getAllByRole("tab").filter((aba) => aba.getAttribute("aria-selected") === "true")).toEqual([screen.getByRole("tab", { name: "Balsas" })]);
   });
 
-  it("estado inicial: visão geral com 14 'Como chegar' e nenhum iframe", () => {
+  it("mostra alfinete decorativo em cada botão de cidade sem alterar o nome acessível", () => {
+    renderizar();
+    for (const aba of screen.getAllByRole("tab")) {
+      expect(aba.querySelector('svg[aria-hidden="true"]')).toBeInTheDocument();
+    }
+    expect(screen.getByRole("tab", { name: "Balsas" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("estado inicial: 14 endereços no HTML, Balsas visível e nenhum iframe", () => {
     const { container } = renderizar();
-    expect(screen.getAllByRole("link", { name: /como chegar/i })).toHaveLength(14);
+    expect(container.querySelectorAll(".abas-cidades__geral li")).toHaveLength(14);
+    expect(screen.getAllByRole("link", { name: /como chegar/i })).toHaveLength(3);
     expect(container.querySelector("iframe")).toBeNull();
   });
 
@@ -84,13 +105,13 @@ describe("AbasCidades", () => {
     expect(window.dataLayer).toContainEqual({ event: "como_chegar", local: "Clínica Risalva Carvalho", cidade: "Fortuna" });
   });
 
-  it("cidade do anúncio (?cidade=) abre o painel sem carregar mapa até o clique em 'Ver mapa'", () => {
+  it("cidade do anúncio (?cidade=) abre o painel e espera a seção entrar na viewport", () => {
     reiniciarOrigemParaTestes();
     capturarOrigem("?cidade=loreto", null);
     const { container } = renderizar();
     expect(screen.getByRole("tab", { name: "Loreto" })).toHaveAttribute("aria-selected", "true");
     expect(container.querySelector("iframe")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /ver mapa/i }));
+    act(() => mostrarSecao?.());
     expect(container.querySelectorAll("iframe")).toHaveLength(1);
   });
 
@@ -145,7 +166,7 @@ describe("AbasCidades", () => {
       const painel = screen.getByRole("tabpanel", { name: "Tuntum" });
       expect(within(painel).getByText(T.clinica.enderecoRotulo)).toBeInTheDocument();
       expect(within(painel).getByText(T.clinica.disponibilidade)).toBeInTheDocument();
-      expect(within(painel).getByRole("link", { name: T.clinica.cta("Tuntum") })).toBeInTheDocument();
+      expect(within(painel).getByRole("link", { name: T.clinica.ctaCurto("Tuntum") })).toBeInTheDocument();
     });
 
     it("cidade com mais de um local mostra o aviso de múltiplos locais; com um só, não", () => {
@@ -155,5 +176,115 @@ describe("AbasCidades", () => {
       fireEvent.click(screen.getByRole("tab", { name: "Tuntum" }));
       expect(within(screen.getByRole("tabpanel", { name: "Tuntum" })).queryByText(/locais nesta cidade/)).toBeNull();
     });
+  });
+});
+
+describe("AbasCidades sem IntersectionObserver (parecer R15)", () => {
+  let topoDaSecao = 5000;
+
+  beforeEach(() => {
+    reiniciarOrigemParaTestes();
+    capturarOrigem("", null);
+    window.dataLayer = [];
+    vi.stubGlobal("IntersectionObserver", undefined);
+    vi.useFakeTimers();
+    topoDaSecao = 5000;
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const topo = this.tagName === "SECTION" ? topoDaSecao : 0;
+      return { top: topo, bottom: topo + 800, left: 0, right: 390, width: 390, height: 800, x: 0, y: topo, toJSON: () => ({}) } as DOMRect;
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  function renderizarNaSecao() {
+    return render(
+      <CidadeProvider>
+        <section id="onde-atende">
+          <AbasCidades />
+        </section>
+      </CidadeProvider>,
+    );
+  }
+
+  it("com a seção longe, não monta mapa; ao rolar até 400 px dela, monta depois do throttle", () => {
+    const { container } = renderizarNaSecao();
+    expect(container.querySelector("iframe")).toBeNull();
+    topoDaSecao = window.innerHeight + 300;
+    fireEvent.scroll(window);
+    fireEvent.scroll(window);
+    expect(container.querySelector("iframe")).toBeNull();
+    act(() => vi.advanceTimersByTime(250));
+    expect(container.querySelectorAll("iframe")).toHaveLength(3);
+  });
+
+  it("rolar sem chegar a 400 px da seção não monta mapa", () => {
+    const { container } = renderizarNaSecao();
+    topoDaSecao = window.innerHeight + 600;
+    fireEvent.scroll(window);
+    act(() => vi.advanceTimersByTime(250));
+    expect(container.querySelector("iframe")).toBeNull();
+  });
+});
+
+describe("sombra das bordas da barra de abas (parecer R15)", () => {
+  let larguraRolavel = 800;
+
+  beforeEach(() => {
+    reiniciarOrigemParaTestes();
+    capturarOrigem("", null);
+    larguraRolavel = 800;
+    vi.stubGlobal("IntersectionObserver", ObservadorFalso);
+    vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockImplementation(function (this: HTMLElement) {
+      return this.getAttribute("role") === "tablist" ? larguraRolavel : 0;
+    });
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(function (this: HTMLElement) {
+      return this.getAttribute("role") === "tablist" ? 300 : 0;
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  const listaDoSul = () => screen.getByRole("tablist", { name: "Sul Maranhense" });
+  const moldura = () => listaDoSul().parentElement!;
+  function rolarPara(posicao: number) {
+    listaDoSul().scrollLeft = posicao;
+    fireEvent.scroll(listaDoSul());
+  }
+
+  it("no início só a borda direita tem sombra; no meio, as duas; no fim, só a esquerda", () => {
+    renderizar();
+    expect(moldura()).toHaveAttribute("data-sombra-direita");
+    expect(moldura()).not.toHaveAttribute("data-sombra-esquerda");
+    rolarPara(250);
+    expect(moldura()).toHaveAttribute("data-sombra-direita");
+    expect(moldura()).toHaveAttribute("data-sombra-esquerda");
+    rolarPara(500);
+    expect(moldura()).not.toHaveAttribute("data-sombra-direita");
+    expect(moldura()).toHaveAttribute("data-sombra-esquerda");
+  });
+
+  it("o foco por teclado que rola a lista atualiza a sombra", () => {
+    renderizar();
+    const balsas = screen.getByRole("tab", { name: "Balsas" });
+    balsas.focus();
+    fireEvent.keyDown(balsas, { key: "End" });
+    rolarPara(500);
+    expect(moldura()).not.toHaveAttribute("data-sombra-direita");
+    expect(moldura()).toHaveAttribute("data-sombra-esquerda");
+  });
+
+  it("sem largura rolável, nenhuma sombra", () => {
+    larguraRolavel = 300;
+    renderizar();
+    expect(moldura()).not.toHaveAttribute("data-sombra-direita");
+    expect(moldura()).not.toHaveAttribute("data-sombra-esquerda");
   });
 });

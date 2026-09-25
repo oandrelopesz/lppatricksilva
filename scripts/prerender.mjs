@@ -14,7 +14,7 @@ const distSsr = path.join(raiz, "dist-ssr");
 const entrada = fs.readdirSync(distSsr).find((f) => f.startsWith("entry-server") && f.endsWith(".js"));
 if (!entrada) throw new Error("entry-server não encontrado em dist-ssr");
 
-const { render } = await import(pathToFileURL(path.join(distSsr, entrada)).href);
+const { render, SITE_URL } = await import(pathToFileURL(path.join(distSsr, entrada)).href);
 const html = render();
 
 const indexPath = path.join(dist, "index.html");
@@ -48,6 +48,17 @@ if (i0 >= 0) {
 if (!index.includes('<div id="root"></div>')) throw new Error("#root não encontrado no index.html");
 index = index.replace('<div id="root"></div>', `<div id="root">${html}</div>`);
 
+// 4. Canonical: a raiz e as URLs por seção apontam para a raiz do site.
+index = index.replace("</head>", `  <link rel="canonical" href="${SITE_URL}/">
+  </head>`);
+
 fs.writeFileSync(indexPath, index);
+
+// 5. URLs por seção (sitelinks): dist/<slug>/index.html é cópia exata do HTML da raiz.
+const secoes = JSON.parse(fs.readFileSync(path.join(raiz, "src/data/secoes.json"), "utf8"));
+for (const slug of secoes) {
+  fs.mkdirSync(path.join(dist, slug), { recursive: true });
+  fs.writeFileSync(path.join(dist, slug, "index.html"), index);
+}
 fs.rmSync(distSsr, { recursive: true, force: true });
-console.log(`prerender: ${Math.round(html.length / 1024)} KB de HTML injetados em dist/index.html`);
+console.log(`prerender: ${Math.round(html.length / 1024)} KB de HTML injetados em dist/index.html e em ${secoes.length} URLs por seção`);
