@@ -147,7 +147,47 @@ describe("origem", () => {
     it("ignora a caixa: UTM_TERM, Utm_Term e UTM_CONTENT com texto livre saem (R24, importante)", () => {
       window.history.replaceState(null, "", "/?UTM_TERM=dor+no+joelho&Utm_Term=artrose&UTM_CONTENT=dor+no+ombro&gclid=abc.1&GAD_SOURCE=1&gbraid=0AAA");
       limparEndereco();
-      expect(window.location.search).toBe("?gclid=abc.1&GAD_SOURCE=1&gbraid=0AAA");
+      expect(window.location.search).toBe("?gclid=abc.1&gbraid=0AAA");
+    });
+
+    describe("só o permitido fica na barra (parecer R36, item 3)", () => {
+      const GCLID = "Cj0KCQjw-_%2Babc%3D%3D.1";
+
+      it("parâmetros livres saem; gclid, gbraid, wbraid, gad_source, cidade válida e UTMs válidas ficam", () => {
+        window.history.replaceState(null, "", `/?sintoma=dor+no+joelho&gclid=${GCLID}&fbclid=IwAR1&gbraid=0AAA&msclkid=x&wbraid=Cj0B&gad_source=1&cidade=tuntum&utm_source=google&ref=abc#x`);
+        limparEndereco();
+        expect(window.location.search + window.location.hash).toBe(`?gclid=${GCLID}&gbraid=0AAA&wbraid=Cj0B&gad_source=1&cidade=tuntum&utm_source=google#x`);
+      });
+
+      it("cidade fora da lista sai, inclusive com a caixa diferente", () => {
+        window.history.replaceState(null, "", `/?cidade=dor+no+joelho&gclid=${GCLID}&cidade=TUNTUM&Cidade=tuntum`);
+        limparEndereco();
+        expect(window.location.search).toBe(`?gclid=${GCLID}`);
+      });
+
+      it("repetidos: cada ocorrência é validada; o gclid fica intacto", () => {
+        window.history.replaceState(null, "", `/?cidade=balsas&cidade=joelho&utm_source=google&utm_source=dor&sintoma=a&sintoma=b&gclid=${GCLID}`);
+        limparEndereco();
+        expect(window.location.search).toBe(`?cidade=balsas&utm_source=google&gclid=${GCLID}`);
+      });
+
+      it("chaves codificadas são lidas decodificadas: %73intoma sai, %63idade válida fica como veio", () => {
+        window.history.replaceState(null, "", `/?%73intoma=dor&%63idade=balsas&gclid=${GCLID}&%75tm_term=artrose`);
+        limparEndereco();
+        expect(window.location.search).toBe(`?%63idade=balsas&gclid=${GCLID}`);
+      });
+
+      it("identificadores do Ads em maiúsculas saem (o Google só lê minúsculo); o valor do gclid não muda de caixa", () => {
+        window.history.replaceState(null, "", "/?GCLID=abc&Gbraid=1&WBRAID=2&gclid=AbC.XyZ-1");
+        limparEndereco();
+        expect(window.location.search).toBe("?gclid=AbC.XyZ-1");
+      });
+
+      it("só parâmetros livres: a barra fica sem query", () => {
+        window.history.replaceState(null, "", "/onde-atende?sintoma=dor+no+joelho&nome=maria");
+        limparEndereco();
+        expect(window.location.pathname + window.location.search).toBe("/onde-atende");
+      });
     });
 
     it("utm_* em maiúsculas sai mesmo com valor da convenção (só o nome minúsculo é aprovado)", () => {
