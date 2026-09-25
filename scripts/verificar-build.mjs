@@ -11,6 +11,16 @@ const SECOES = JSON.parse(fs.readFileSync(new URL("../src/data/secoes.json", imp
 const EXIGIDOS = [
   ["HTML pré-renderizado dentro do #root", /<div id="root"><[a-z]/],
   ["CSS embutido no head", /<style>/],
+  ["segurador de clique antes do bundle", (h) => {
+    const i = h.indexOf('<script id="segurador-clique">');
+    const j = h.indexOf('<link rel="modulepreload"');
+    return i >= 0 && j > i;
+  }],
+  ["segurador de clique com menos de 1 KB", (h) => {
+    const m = h.match(/<script id="segurador-clique">([\s\S]*?)<\/script>/);
+    return !!m && Buffer.byteLength(m[1]) < 1024;
+  }],
+  ["CTA com data-local-cta no HTML", /data-local-cta="hero"/],
   ["um canonical para a raiz do site", (h) => (h.match(/<link rel="canonical" href="https:\/\/[^"/]+\/">/g) || []).length === 1],
   ["JSON-LD no HTML inicial", /<script type="application\/ld\+json">/],
   ["14 locais ligados ao médico no JSON-LD", (h) => (h.match(/#local-/g) || []).length === 28],

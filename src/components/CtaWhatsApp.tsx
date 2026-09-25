@@ -103,6 +103,28 @@ export function CtaWhatsApp({
    * Botão do meio dispara auxclick, não click: o navegador abre a nova aba e aqui só registra.
    * Com resumo, a nova aba abre o link base (spec §20, R5).
    */
+  // Clique segurado antes da hidratação (script inline do index.html): segue o caminho normal, com o
+  // teto de navegação contado do clique original. O efeito sem dependências usa sempre as props atuais.
+  useEffect(() => {
+    const elemento = refLink.current;
+    if (!elemento) return;
+    const aoSegurado = (evento: Event) => {
+      evento.preventDefault();
+      const { t } = (evento as CustomEvent<{ t: number }>).detail;
+      const { url, params } = preparar(elemento);
+      setAguardando(true);
+      track("clique_whatsapp", params, {
+        inicioMs: t,
+        aoConcluir: () => {
+          setAguardando(false);
+          navegacao.ir(url);
+        },
+      });
+    };
+    elemento.addEventListener("lp:clique-segurado", aoSegurado);
+    return () => elemento.removeEventListener("lp:clique-segurado", aoSegurado);
+  });
+
   function aoClicarAuxiliar(evento: MouseEvent<HTMLAnchorElement>) {
     if (evento.button !== 1) return;
     track("clique_whatsapp", preparar(evento.currentTarget).params);
@@ -114,6 +136,7 @@ export function CtaWhatsApp({
       href={linkBase}
       onClick={aoClicar}
       onAuxClick={aoClicarAuxiliar}
+      data-local-cta={localCta}
       {...resto}
       className={[resto.className, aguardando ? "cta-aguardando" : ""].filter(Boolean).join(" ") || undefined}
       aria-busy={aguardando || undefined}

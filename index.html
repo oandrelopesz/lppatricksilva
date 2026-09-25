@@ -9,6 +9,20 @@
       gtag('set', 'ads_data_redaction', true);
       try { if (localStorage.getItem('lp_consentimento_v1') === 'aceito') gtag('consent', 'update', { ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted', analytics_storage: 'granted' }); } catch (e) {}
     </script>
+    <script id="segurador-clique">
+      (function (w) {
+        w.addEventListener("click", function (e) {
+          if (w.__lpHidratado || e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+          var a = e.target && e.target.closest && e.target.closest('a[href*="wa.me/"]');
+          if (!a) return;
+          e.preventDefault();
+          if (w.__lpCliquePendente) return;
+          var h = a.href;
+          w.__lpCliquePendente = { href: h, localCta: a.dataset.localCta, t: w.performance.now(), alvo: a };
+          w.__lpSeguranca = w.setTimeout(function () { w.location.assign(h); }, 3500);
+        }, true);
+      })(window);
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dr. Patrick Santos, CRM-MA 16520 | Ortopedista no Maranhão</title>
     <meta name="description" content="MÉDICO, CRM-MA 16520, Ortopedia e Traumatologia, RQE 7389. Dor no joelho, quadril, ombro, coluna e lesão de treino. 11 cidades do Maranhão. Só particular." />

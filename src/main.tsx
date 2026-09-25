@@ -3,11 +3,16 @@ import { createRoot, hydrateRoot } from "react-dom/client";
 import "./styles/global.css";
 import App from "./App";
 import { iniciarMedicao } from "@/lib/medicao";
+import { processarCliquePendente } from "./lib/cliquePendente";
 import { iniciarNavegacaoPorSecoes } from "./lib/navegacaoSecoes";
 
 /** Liga as URLs por seção depois da hidratação (o efeito só roda com a página montada). */
 function Raiz() {
-  useEffect(() => iniciarNavegacaoPorSecoes(), []);
+  useEffect(() => {
+    // Hidratado: o React passa a tratar os cliques; um clique segurado antes é registrado e navegado agora.
+    processarCliquePendente();
+    return iniciarNavegacaoPorSecoes();
+  }, []);
   return <App />;
 }
 
