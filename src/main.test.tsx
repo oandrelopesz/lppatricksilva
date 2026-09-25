@@ -12,7 +12,8 @@ const estado = vi.hoisted(() => ({
   interacoes: [] as string[],
 }));
 
-vi.mock("@/lib/navegacaoSecoes", () => ({
+vi.mock("@/lib/navegacaoSecoes", async (original) => ({
+  ...(await original<typeof import("@/lib/navegacaoSecoes")>()),
   iniciarNavegacaoPorSecoes: () => {
     estado.chamadas++;
     estado.noMomento ??= {

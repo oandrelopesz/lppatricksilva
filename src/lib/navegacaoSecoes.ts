@@ -17,8 +17,14 @@ const FAIXA = 0.45;
 let suspensa = false;
 let cancelarTrocaPendente: () => void = () => {};
 let encerrarSuspensao: () => void = () => {};
+/** Ao retomar, confere a seção uma vez: durante a pausa o observador descartou as interseções. */
+let conferirAoRetomar: () => void = () => {};
 
-function suspenderAtualizacaoPassiva(): void {
+/**
+ * Pausa a atualização passiva enquanto uma rolagem programada acontece. Usada pelas navegações
+ * explícitas daqui e pelos componentes que rolam até as abas (mapa, rodapé, seletor).
+ */
+export function suspenderAtualizacaoPassiva(): void {
   cancelarTrocaPendente();
   encerrarSuspensao();
   suspensa = true;
@@ -26,6 +32,7 @@ function suspenderAtualizacaoPassiva(): void {
   const retomar = () => {
     suspensa = false;
     encerrarSuspensao();
+    conferirAoRetomar();
   };
   const limite = setTimeout(retomar, temScrollend ? RETOMAR_COM_SCROLLEND_MS : RETOMAR_SEM_SCROLLEND_MS);
   if (temScrollend) window.addEventListener("scrollend", retomar, { once: true });
@@ -132,6 +139,9 @@ export function acompanharRolagem(): () => void {
     if (espera !== undefined) clearTimeout(espera);
     espera = undefined;
   };
+  conferirAoRetomar = () => {
+    if (espera === undefined) espera = setTimeout(aplicar, INTERVALO_URL_MS);
+  };
 
   const observador = new IntersectionObserver(
     (entradas) => {
@@ -148,6 +158,7 @@ export function acompanharRolagem(): () => void {
     observador.disconnect();
     cancelarTrocaPendente();
     cancelarTrocaPendente = () => {};
+    conferirAoRetomar = () => {};
     retomarAtualizacaoPassiva();
   };
 }

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent } from "@testing-library/react";
-import { acompanharRolagem, iniciarNavegacaoPorSecoes, interceptarLinksDeSecao, rolarParaSecaoDaUrl } from "./navegacaoSecoes";
+import { acompanharRolagem, iniciarNavegacaoPorSecoes, interceptarLinksDeSecao, rolarParaSecaoDaUrl, suspenderAtualizacaoPassiva } from "./navegacaoSecoes";
 import { SECOES } from "./secoes";
 
 describe("navegação por seções", () => {
@@ -207,6 +207,32 @@ describe("navegação por seções", () => {
       vi.stubGlobal("IntersectionObserver", undefined);
       desligar = acompanharRolagem();
       expect(window.location.pathname).toBe("/");
+    });
+
+    describe("rolagem explícita de componentes (mapa, rodapé, seletor)", () => {
+      it("suspenderAtualizacaoPassiva ignora o observador durante a rolagem e, ao retomar, confere a seção uma vez", () => {
+        cruzar("sobre");
+        vi.advanceTimersByTime(300);
+        expect(window.location.pathname).toBe("/sobre");
+        suspenderAtualizacaoPassiva();
+        cruzar("duvidas");
+        vi.advanceTimersByTime(300);
+        expect(window.location.pathname).toBe("/sobre");
+        posicionar("onde-atende");
+        window.dispatchEvent(new Event("scrollend"));
+        vi.advanceTimersByTime(300);
+        expect(window.location.pathname).toBe("/onde-atende");
+      });
+
+      it("sem acompanhamento da rolagem ligado, suspender não troca a URL", () => {
+        desligar();
+        desligar = () => {};
+        posicionar("onde-atende");
+        suspenderAtualizacaoPassiva();
+        window.dispatchEvent(new Event("scrollend"));
+        vi.advanceTimersByTime(3000);
+        expect(window.location.pathname).toBe("/");
+      });
     });
 
     describe("disputa com a navegação explícita (R20, item 2)", () => {

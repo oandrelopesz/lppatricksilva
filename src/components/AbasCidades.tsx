@@ -7,6 +7,7 @@ import { TEXTOS_ONDE_ATENDE as T } from "@/content/ondeAtende";
 import { useCidade } from "@/context/CidadeContext";
 import { CIDADES, REGIOES, cidadesDaRegiao, type Cidade, type RegiaoId } from "@/data/locais";
 import { track } from "@/lib/analytics";
+import { suspenderAtualizacaoPassiva } from "@/lib/navegacaoSecoes";
 
 /** Os mapas carregam quando a seção chega a esta distância da viewport (spec §21). */
 const MARGEM_MAPAS_PX = 400;
@@ -140,6 +141,8 @@ export function AbasCidades() {
     const recuo = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
     if (aba && (!retangulo || retangulo.bottom <= recuo || retangulo.top >= window.innerHeight)) {
       const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+      // Navegação explícita: a URL da seção não muda no meio desta rolagem (parecer R20, item 2).
+      suspenderAtualizacaoPassiva();
       aba.scrollIntoView?.({ behavior: reduzir ? "auto" : "smooth", block: "start", inline: "nearest" });
     }
     if (aba) {

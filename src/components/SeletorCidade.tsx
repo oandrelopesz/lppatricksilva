@@ -3,9 +3,11 @@ import { TEXTOS_COMO_FUNCIONA as T } from "@/content/comoFunciona";
 import { useCidade } from "@/context/CidadeContext";
 import { REGIOES, buscarCidade, cidadesDaRegiao } from "@/data/locais";
 import { track } from "@/lib/analytics";
+import { suspenderAtualizacaoPassiva } from "@/lib/navegacaoSecoes";
 
 function rolarParaLocais(): void {
   const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+  suspenderAtualizacaoPassiva();
   document.getElementById("onde-atende")?.scrollIntoView({ behavior: reduzir ? "auto" : "smooth" });
 }
 

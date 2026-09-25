@@ -7,6 +7,7 @@ import { TEXTOS_RODAPE as T } from "@/content/rodape";
 import { TEXTOS_COOKIES } from "@/content/cookies";
 import { useCidade } from "@/context/CidadeContext";
 import { REGIOES, buscarCidade, cidadesDaRegiao } from "@/data/locais";
+import { suspenderAtualizacaoPassiva } from "@/lib/navegacaoSecoes";
 
 export function S8Rodape() {
   const { escolherCidade } = useCidade();
@@ -28,6 +29,7 @@ export function S8Rodape() {
     escolherCidade(cidade.id, "aba");
     registrarTrocaAba(cidade);
     const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+    suspenderAtualizacaoPassiva();
     aba.scrollIntoView?.({ behavior: reduzir ? "auto" : "smooth", block: "center" });
     aba.focus({ preventScroll: true });
   }
