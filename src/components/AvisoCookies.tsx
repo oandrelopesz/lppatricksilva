@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useExibicaoAviso } from "@/components/useExibicaoAviso";
 import { TEXTOS_COOKIES as T } from "@/content/cookies";
 import { aplicarConsentimento, lerConsentimento, salvarConsentimento, type Escolha } from "@/lib/consentimento";
@@ -16,9 +16,18 @@ export function AvisoCookies() {
   /** Chaves da segunda camada: a escolha atual, ou as duas desligadas. */
   const [rascunho, setRascunho] = useState<Escolha>(NENHUMA);
   const id = useId();
+  const refConteudo = useRef<HTMLDivElement>(null);
+  /** Escolher some ao abrir a segunda camada: o foco passa para a área dela, não se perde. */
+  const focarConteudo = useRef(false);
 
   useEffect(() => {
     if (escolhendo) setRascunho(lerConsentimento() ?? NENHUMA);
+  }, [escolhendo]);
+
+  useEffect(() => {
+    if (!escolhendo || !focarConteudo.current) return;
+    focarConteudo.current = false;
+    refConteudo.current?.focus();
   }, [escolhendo]);
 
   function escolher(escolha: Escolha) {
@@ -43,10 +52,16 @@ export function AvisoCookies() {
       className="aviso-cookies fixed inset-x-0 bottom-0 z-50 border-t border-dourado bg-grafite px-3 py-[7px] text-creme shadow-lg sm:px-4 sm:py-4"
     >
       <div className="mx-auto flex max-w-5xl flex-col gap-1 sm:flex-row sm:items-center sm:gap-6">
-        <div className="min-w-0 flex-1">
+        {/* Na segunda camada, título, texto e chaves rolam aqui dentro e os botões ficam fixos no pé
+            (parecer R38); a área é focável para rolar pelo teclado. A primeira camada não rola. */}
+        <div
+          ref={refConteudo}
+          className="aviso-cookies__conteudo min-w-0 flex-1"
+          {...(escolhendo ? { role: "group", "aria-labelledby": `${id}-titulo`, tabIndex: 0 } : {})}
+        >
           {escolhendo ? (
             <>
-              <p className="aviso-cookies__titulo text-base font-semibold">{T.titulo}</p>
+              <p id={`${id}-titulo`} className="aviso-cookies__titulo text-base font-semibold">{T.titulo}</p>
               {(
                 [
                   ["visitas", T.opcaoVisitas, T.opcaoVisitasDescricao],
@@ -92,7 +107,14 @@ export function AvisoCookies() {
               {T.salvar}
             </button>
           ) : (
-            <button type="button" onClick={abrirEscolha} className={BOTAO}>
+            <button
+              type="button"
+              onClick={() => {
+                focarConteudo.current = true;
+                abrirEscolha();
+              }}
+              className={BOTAO}
+            >
               {T.escolher}
             </button>
           )}

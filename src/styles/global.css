@@ -59,6 +59,11 @@
   .aviso-cookies__acoes button { transition: background-color .15s ease, border-color .15s ease; }
   .aviso-cookies__acoes button:active { background: var(--color-dourado-claro); border-color: var(--color-dourado-claro); color: var(--color-grafite); transition: none; }
   @media (min-width: 640px) { .aviso-cookies[data-escolhendo] > div { align-items: end; } }
+  /* Segunda camada: nunca maior que a viewport; o conteúdo rola e os botões ficam no pé (parecer R38). */
+  .aviso-cookies[data-escolhendo] { display: flex; flex-direction: column; max-height: 100vh; max-height: 100dvh; }
+  .aviso-cookies[data-escolhendo] > div { flex: 1 1 auto; min-height: 0; }
+  .aviso-cookies[data-escolhendo] .aviso-cookies__conteudo { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .aviso-cookies[data-escolhendo] .aviso-cookies__acoes { flex: none; }
 
   #para-quem { background: var(--color-creme); }
   #para-quem > div > p:first-of-type { max-width: 58ch; }

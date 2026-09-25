@@ -95,6 +95,41 @@ describe("AvisoCookies", () => {
     expect(chave(T.opcaoAnuncios).checked).toBe(true);
   });
 
+  describe("segunda camada com altura limitada (parecer R38)", () => {
+    it("título, texto e chaves ficam numa área rolável, focável e nomeada; os botões ficam fora dela", () => {
+      render(<AvisoCookies />);
+      fireEvent.click(screen.getByRole("button", { name: T.escolher }));
+      const area = screen.getByRole("group", { name: T.titulo });
+      expect(area).toHaveClass("aviso-cookies__conteudo");
+      expect(area).toHaveAttribute("tabindex", "0");
+      for (const s of screen.getAllByRole("switch")) expect(area.contains(s)).toBe(true);
+      for (const nome of [T.recusarTudo, T.salvar, T.aceitarTudo]) expect(area.contains(screen.getByRole("button", { name: nome }))).toBe(false);
+    });
+
+    it("ao sair de Escolher, o foco vai para a área da segunda camada (o botão Escolher some)", () => {
+      render(<AvisoCookies />);
+      const escolher = screen.getByRole("button", { name: T.escolher });
+      escolher.focus();
+      fireEvent.click(escolher);
+      expect(screen.getByRole("group", { name: T.titulo })).toHaveFocus();
+    });
+
+    it("a primeira camada continua sem área rolável nem tabindex", () => {
+      render(<AvisoCookies />);
+      expect(screen.queryByRole("group")).toBeNull();
+      expect(document.querySelector(".aviso-cookies__conteudo")).not.toHaveAttribute("tabindex");
+    });
+
+    it("o CSS limita a segunda camada à viewport (dvh com fallback em vh) e rola só o conteúdo", async () => {
+      const { readFileSync } = await import("node:fs");
+      const css = readFileSync(`${process.cwd()}/src/styles/global.css`, "utf8").replace(/\s+/g, " ");
+      const regra = css.match(/\.aviso-cookies\[data-escolhendo\] \{([^}]*)\}/)![1];
+      expect(regra).toMatch(/max-height: 100vh;.*max-height: 100dvh;/);
+      expect(css).toMatch(/\.aviso-cookies\[data-escolhendo\] \.aviso-cookies__conteudo \{[^}]*overflow-y: auto;/);
+      expect(css).toMatch(/\.aviso-cookies\[data-escolhendo\] \.aviso-cookies__acoes \{[^}]*flex: none;/);
+    });
+  });
+
   it("revogar pelo rodapé apaga os cookies da categoria e manda o update na hora", () => {
     localStorage.setItem("lp_consentimento_v2", JSON.stringify({ visitas: true, anuncios: true, versao: "2026-09-25", data: "2026-09-25T10:00:00.000Z" }));
     document.cookie = "_ga=GA1.1.1; path=/";
