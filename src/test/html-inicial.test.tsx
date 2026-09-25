@@ -6,6 +6,7 @@ import { ASSINATURA } from "@/config";
 import { todosOsLocais } from "@/data/locais";
 import { render } from "@/entry-server";
 import { TEXTOS_FAQ } from "@/content/faq";
+import { TEXTOS_HERO } from "@/content/hero";
 import { TEXTOS_COOKIES } from "@/content/cookies";
 import { TEXTOS_ONDE_ATENDE } from "@/content/ondeAtende";
 import { LINK_WHATSAPP_BASE } from "@/lib/whatsapp";
@@ -47,6 +48,13 @@ describe("HTML inicial (sem JavaScript)", () => {
     }
     expect((html.match(/role="region"/g) || [])).toHaveLength(11);
     expect(html).toContain('href="/politica-de-privacidade.html"');
+  });
+
+  it("tem o aviso curto de medição logo depois do CTA do hero, com o link Privacidade", () => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const aviso = doc.getElementById("cta-hero")!.nextElementSibling!;
+    expect(aviso.textContent).toBe(`${TEXTOS_HERO.avisoMedicao} ${TEXTOS_HERO.linkPrivacidade}`);
+    expect(aviso.querySelector("a")!.getAttribute("href")).toBe("/politica-de-privacidade.html");
   });
 
   it("sem JavaScript: nem aviso nem botão de cookies (controle sem ação), só o link da política (parecer R18)", () => {

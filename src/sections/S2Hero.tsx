@@ -31,6 +31,11 @@ export function S2Hero() {
             <Icone nome="conversa" className="h-5 w-5 shrink-0" />
             {T.cta}
           </CtaWhatsApp>
+          {/* Antes do primeiro clique: no celular, o aviso de cookies só aparece depois que o CTA sai da tela (parecer R36, item 4). */}
+          <p className="aviso-medicao-hero mt-2 text-sm leading-5">
+            {T.avisoMedicao}{" "}
+            <a className="font-semibold underline underline-offset-2" href="/politica-de-privacidade.html">{T.linkPrivacidade}</a>
+          </p>
           <p className="mt-5 max-w-xl border-t border-dourado/40 pt-4 text-[18px] leading-snug text-grafite">{ASSINATURA}</p>
         </div>
         <figure className="hero-media md:col-start-2 md:row-start-1">
