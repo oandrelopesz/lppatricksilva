@@ -24,6 +24,8 @@ export function AvisoCookies() {
       aria-hidden={!visivel || undefined}
       data-oculto={!visivel || undefined}
       data-medindo={medindo || undefined}
+      // Oculta, a barra fica inerte no mesmo render: sem toque nem foco durante a saída (parecer R33).
+      {...(visivel ? {} : { inert: "" })}
       className="aviso-cookies fixed inset-x-0 bottom-0 z-50 border-t border-dourado bg-grafite px-3 py-[7px] text-creme shadow-lg sm:px-4 sm:py-4"
     >
       <div className="mx-auto flex max-w-5xl flex-col gap-1 sm:flex-row sm:items-center sm:gap-6">
