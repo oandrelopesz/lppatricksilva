@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent } from "@testing-library/react";
 import { acompanharRolagem, iniciarNavegacaoPorSecoes, interceptarLinksDeSecao, rolarParaSecaoDaUrl, suspenderAtualizacaoPassiva } from "./navegacaoSecoes";
-import { SECOES } from "./secoes";
+import { SECOES, atualizarUrl } from "./secoes";
 
 describe("navegação por seções", () => {
   beforeEach(() => {
@@ -411,6 +411,37 @@ describe("navegação por seções", () => {
       expect(document.activeElement).toBe(botao);
       vi.useRealTimers();
       vi.restoreAllMocks();
+    });
+  });
+
+  describe("popstate de âncora não rola sozinho (achado 4 do Tracking)", () => {
+    it("com a URL em /duvidas, uma navegação só de âncora (mesmo caminho) não rola até a seção nem anuncia", () => {
+      const desligar = interceptarLinksDeSecao();
+      const eventos: unknown[] = [];
+      const ouvir = (e: Event) => eventos.push((e as CustomEvent).detail);
+      try {
+        atualizarUrl("duvidas", { substituir: true });
+        window.addEventListener("lp:secao", ouvir);
+        window.history.replaceState(null, "", "/duvidas#x");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+        expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+        expect(eventos).toEqual([]);
+      } finally {
+        window.removeEventListener("lp:secao", ouvir);
+        desligar();
+      }
+    });
+
+    it("Voltar para outro caminho continua rolando até a seção", () => {
+      const desligar = interceptarLinksDeSecao();
+      try {
+        atualizarUrl("duvidas");
+        window.history.replaceState(null, "", "/sobre");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+        expect(document.getElementById("sobre")!.scrollIntoView).toHaveBeenCalled();
+      } finally {
+        desligar();
+      }
     });
   });
 

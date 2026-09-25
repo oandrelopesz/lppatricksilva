@@ -1,4 +1,4 @@
-import { SECOES, anunciarSecao, atualizarUrl, ehSecao, irParaSecao, secaoDaUrl } from "@/lib/secoes";
+import { EVENTO_SECAO, SECOES, anunciarSecao, atualizarUrl, ehSecao, irParaSecao, secaoDaUrl, type DetalheSecao } from "@/lib/secoes";
 
 /** Intervalo mínimo entre trocas de URL durante a rolagem. */
 const INTERVALO_URL_MS = 300;
@@ -106,7 +106,17 @@ export function interceptarLinksDeSecao(): () => void {
     atualizarUrl(slug);
   }
 
+  // Caminho que a página conhece (carga e cada troca por lp:secao). Uma navegação só de âncora
+  // (location.hash, Navigation API no mesmo caminho) também dispara popstate, mas não troca o caminho:
+  // rolar até a seção do caminho aí faria a página pular sozinha (achado 4 do Tracking).
+  let caminhoConhecido = window.location.pathname;
+  function aoTrocarSecao(evento: Event) {
+    caminhoConhecido = (evento as CustomEvent<DetalheSecao>).detail.caminho;
+  }
+
   function aoNavegarNoHistorico() {
+    if (window.location.pathname === caminhoConhecido) return;
+    caminhoConhecido = window.location.pathname;
     const slug = secaoDaUrl(window.location.pathname) ?? "inicio";
     anunciarSecao(slug, window.location.pathname);
     if (!navegarExplicitamente(slug, false)) window.scrollTo({ top: 0, behavior: "instant" });
@@ -114,9 +124,11 @@ export function interceptarLinksDeSecao(): () => void {
 
   document.addEventListener("click", aoClicar);
   window.addEventListener("popstate", aoNavegarNoHistorico);
+  window.addEventListener(EVENTO_SECAO, aoTrocarSecao);
   return () => {
     document.removeEventListener("click", aoClicar);
     window.removeEventListener("popstate", aoNavegarNoHistorico);
+    window.removeEventListener(EVENTO_SECAO, aoTrocarSecao);
     retomarAtualizacaoPassiva();
   };
 }
