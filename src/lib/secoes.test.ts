@@ -31,9 +31,14 @@ describe("secoes", () => {
     expect(secaoDaUrl("/onde-atende/tuntum")).toBeUndefined();
   });
 
-  it("caminhoDaSecao usa a raiz para inicio", () => {
+  it("decisão (a) do R20: a navegação gera / para inicio, nunca /inicio; /inicio segue reconhecido", () => {
     expect(caminhoDaSecao("inicio")).toBe("/");
     expect(caminhoDaSecao("duvidas")).toBe("/duvidas");
+    expect(secaoDaUrl("/inicio")).toBe("inicio");
+    atualizarUrl("inicio");
+    expect(window.location.pathname).toBe("/");
+    atualizarUrl("inicio", { substituir: true });
+    expect(window.location.pathname).toBe("/");
   });
 
   it("irParaSecao rola sem animação por padrão e suave quando pedido", () => {

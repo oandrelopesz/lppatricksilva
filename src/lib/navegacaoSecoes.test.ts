@@ -25,6 +25,13 @@ describe("navegação por seções", () => {
       expect(alvo.scrollIntoView).toHaveBeenCalledWith({ behavior: "instant", block: "start" });
     });
 
+    it("/inicio (sitelink publicado) abre no topo e a carga não troca a URL (decisão (a) do R20)", () => {
+      window.history.replaceState(null, "", "/inicio");
+      rolarParaSecaoDaUrl();
+      expect(document.getElementById("inicio")!.scrollIntoView).toHaveBeenCalledWith({ behavior: "instant", block: "start" });
+      expect(window.location.pathname).toBe("/inicio");
+    });
+
     it("na raiz não rola", () => {
       window.history.replaceState(null, "", "/?utm_source=google");
       rolarParaSecaoDaUrl();

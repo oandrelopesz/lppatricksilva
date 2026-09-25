@@ -16,7 +16,10 @@ export function secaoDaUrl(pathname: string): string | undefined {
   return ehSecao(slug) ? slug : undefined;
 }
 
-/** A seção inicio é a raiz do site. */
+/**
+ * Decisão (a) do parecer R20: quando a URL muda por clique ou rolagem, a primeira seção usa a raiz /.
+ * /inicio continua publicado (sitelink) e abre no topo, mas a navegação nunca gera /inicio.
+ */
 export function caminhoDaSecao(slug: string): string {
   return slug === "inicio" ? "/" : `/${slug}`;
 }
