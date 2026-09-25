@@ -6,7 +6,6 @@ export const TEXTOS_ONDE_ATENDE = {
   /** onde.dica_rolagem: só mobile (uso visual da Tarefa 7). */
   dicaRolagem: "Deslize para ver mais cidades",
   abasAria: "Cidades onde o Dr. Patrick atende",
-  verMapa: "Ver mapa",
   /** onde.ver_todas (C1f): botão que volta da cidade aberta para a lista de todas as cidades. */
   verTodas: "Ver todas as cidades",
   clinica: {

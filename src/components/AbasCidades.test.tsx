@@ -282,6 +282,8 @@ describe("mapas sempre visíveis, com ou sem aceite (decisão do André, 25/09/2
     expect(screen.queryByRole("button", { name: "Ver mapa" })).toBeNull();
     expect(container.textContent).not.toContain("Ver mapa");
     expect(container.querySelector(".abas-cidades__mapa-consentimento")).toBeNull();
+    // Nem texto de "Ver mapa" sobrando no conteúdo (parecer R40).
+    expect(Object.keys(T)).not.toContain("verMapa");
   });
 
   it("no HTML do servidor não há iframe nem Ver mapa", async () => {
