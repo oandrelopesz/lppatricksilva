@@ -24,7 +24,7 @@ export function S4ComoFunciona() {
           ))}
         </ol>
         <figure className="mx-auto w-full max-w-md self-start lg:sticky lg:top-28">
-          <Foto nome="consulta" alt={T.altFoto} sizes="(min-width: 1024px) 352px, 100vw" className="premium-photo aspect-[4/5] h-auto w-full object-cover" />
+          <Foto nome="consulta" alt={T.altFoto} sizes="(min-width: 1024px) 352px, (min-width: 480px) 448px, calc(100vw - 32px)" className="premium-photo aspect-[4/5] h-auto w-full object-cover" />
           <figcaption className="mt-2">{T.legendaFoto}</figcaption>
         </figure>
       </div>

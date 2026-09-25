@@ -52,6 +52,8 @@ describe("mapas e mapa ilustrado V3", () => {
     expect(iframes).toHaveLength(3);
     expect(iframes[0]).toHaveAttribute("loading", "lazy");
     expect(iframes[0]).toHaveAttribute("referrerpolicy", "no-referrer");
+    expect(iframes[0]).toHaveAttribute("height", "180");
+    expect(iframes[0].parentElement).toHaveClass("cartao-local__mapa");
     expect(desconectar).toHaveBeenCalled();
   });
 
@@ -62,6 +64,21 @@ describe("mapas e mapa ilustrado V3", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Loreto" }));
     expect(container.querySelectorAll("iframe")).toHaveLength(1);
     expect(within(screen.getByRole("tabpanel", { name: "Loreto" })).getByRole("link", { name: /agendar em loreto/i })).toBeInTheDocument();
+  });
+
+  it("separa as áreas de toque dos pontos do mapa por pelo menos 8 px", () => {
+    renderizar();
+    const pontos = screen.getAllByRole("button", { name: /no mapa/ }).map((botao) => ({
+      x: parseFloat(botao.style.left),
+      y: parseFloat(botao.style.top),
+    }));
+    for (let i = 0; i < pontos.length; i++) {
+      for (let j = i + 1; j < pontos.length; j++) {
+        const dx = Math.max(Math.abs(pontos[i].x - pontos[j].x) - 48, 0);
+        const dy = Math.max(Math.abs(pontos[i].y - pontos[j].y) - 48, 0);
+        expect(Math.hypot(dx, dy)).toBeGreaterThanOrEqual(8);
+      }
+    }
   });
 
   it("ponto do mapa abre a aba e registra a mesma fonte aba", () => {

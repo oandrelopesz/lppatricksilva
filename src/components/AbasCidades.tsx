@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import { CartaoLocal } from "@/components/CartaoLocal";
 import { CtaWhatsApp } from "@/components/CtaWhatsApp";
 import { MapaMaranhao } from "@/components/MapaMaranhao";
+import { Icone } from "@/components/icones/Icone";
 import { TEXTOS_ONDE_ATENDE as T } from "@/content/ondeAtende";
 import { useCidade } from "@/context/CidadeContext";
 import { CIDADES, REGIOES, cidadesDaRegiao, type Cidade, type RegiaoId } from "@/data/locais";
@@ -158,7 +159,9 @@ export function AbasCidades() {
                 type="button" role="tab" id={`aba-${cidade.id}`} aria-selected={selecionada} aria-controls={`painel-${cidade.id}`}
                 tabIndex={focavel ? 0 : -1} onClick={() => abrir(cidade)} onKeyDown={(evento) => aoTeclar(evento, lista, indice)}
                 onFocus={(evento) => { setFocadaPorRegiao((atual) => ({ ...atual, [regiao.id]: cidade.id })); evento.currentTarget.scrollIntoView?.({ block: "nearest", inline: "nearest" }); }}>
-                {cidade.nome}</button>;
+                <Icone nome="mapa" className="h-5 w-5 shrink-0" />
+                <span>{cidade.nome}</span>
+              </button>;
             })}
           </ListaComSombra>
         </div>;

@@ -46,7 +46,7 @@ export function S8Rodape() {
           <p className="mt-3">{T.whatsapp}</p>
         </div>
         <figure className="mx-auto w-full max-w-sm">
-          <Foto nome="cta-final" alt={T.altFoto} sizes="(min-width: 768px) 384px, 100vw" className="premium-photo aspect-[4/5] h-auto w-full object-cover" />
+          <Foto nome="cta-final" alt={T.altFoto} sizes="(min-width: 416px) 384px, calc(100vw - 32px)" className="premium-photo aspect-[4/5] h-auto w-full object-cover" />
         </figure>
         <div className="rodape-cidades md:col-span-2">
           <img src="/favicon.svg" alt="" aria-hidden="true" width="56" height="56" className="rodape-monograma" />
@@ -55,7 +55,7 @@ export function S8Rodape() {
             {REGIOES.map((regiao) => (
               <div key={regiao.id}>
                 <h4 className="font-semibold">{regiao.nome}</h4>
-                <ul className="mt-2 space-y-1">
+                <ul className="mt-2 space-y-2">
                   {cidadesDaRegiao(regiao.id).map((cidade) => (
                     <li key={cidade.id}>
                       <a className="inline-flex min-h-12 items-center underline underline-offset-4" href={`#aba-${cidade.id}`} onClick={(e) => abrirAba(e, cidade.id)}>

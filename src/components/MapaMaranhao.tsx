@@ -19,7 +19,11 @@ for (let indice = 0; indice < marcadores.length; indice++) {
       const x = atual.ponto.x + raio * Math.cos(angulo * Math.PI / 180);
       const y = atual.ponto.y + raio * Math.sin(angulo * Math.PI / 180);
       if (x < 26 || x > 574 || y < 26 || y > 674) continue;
-      if (marcadores.slice(0, indice).some((outro) => Math.hypot(outro.x - x, outro.y - y) < 56)) continue;
+      if (marcadores.slice(0, indice).some((outro) => {
+        const dx = Math.max(Math.abs(outro.x - x) - 48, 0);
+        const dy = Math.max(Math.abs(outro.y - y) - 48, 0);
+        return Math.hypot(dx, dy) < 8;
+      })) continue;
       atual.x = x;
       atual.y = y;
       achou = true;
