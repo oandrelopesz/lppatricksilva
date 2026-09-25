@@ -14,6 +14,21 @@ import { LINK_WHATSAPP_BASE } from "@/lib/whatsapp";
 describe("HTML inicial (sem JavaScript)", () => {
   const html = render();
 
+  it("sem JavaScript, o Como chegar da lista leva à mesma rua do mapa (parecer R37, achado A1)", () => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const busca = (q: string) => `https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", query: q })}`;
+    const esperados: Record<string, string> = {
+      Clinimed: busca("Rua 28 de Julho, Loreto - MA"),
+      "CM LAB (filial)": busca("R. São Francisco, Graça Aranha - MA, 65785-000"),
+      "SD MED": busca("R. Quinze de Novembro, 49B, São Domingos do Maranhão - MA"),
+    };
+    const itens = [...doc.querySelectorAll(".abas-cidades__geral li")];
+    for (const [nome, link] of Object.entries(esperados)) {
+      const item = itens.find((li) => li.querySelector("strong")?.textContent === nome)!;
+      expect([...item.querySelectorAll("a")].find((a) => a.textContent === "Como chegar")!.getAttribute("href")).toBe(link);
+    }
+  });
+
   it("tem os 14 locais com nome, endereço e link 'Como chegar'", () => {
     for (const { local } of todosOsLocais()) {
       expect(html).toContain(local.nome);
