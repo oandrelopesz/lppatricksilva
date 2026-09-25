@@ -83,12 +83,12 @@ describe("Autoavaliacao", () => {
     fireEvent.click(screen.getByRole("button", { name: tentativa.opcoes[0] }));
     const cta = screen.getByRole("link", { name: T.cta });
     fireEvent.click(cta);
-    act(() => vi.advanceTimersByTime(3000));
+    act(() => vi.advanceTimersByTime(4000));
     expect(vi.mocked(navegacao.ir).mock.lastCall?.[0]).not.toContain(regiao.opcoes[0]);
     fireEvent.click(screen.getByRole("checkbox", { name: T.incluirResumo }));
     expect(cta.getAttribute("href")).not.toContain(regiao.opcoes[0]);
     fireEvent.click(cta);
-    act(() => vi.advanceTimersByTime(3000));
+    act(() => vi.advanceTimersByTime(4000));
     expect(new URL(vi.mocked(navegacao.ir).mock.lastCall![0]).searchParams.get("text")).toContain(T.resumo.regiao(regiao.opcoes[0]));
     expect(JSON.stringify(window.dataLayer)).not.toContain(regiao.opcoes[0]);
     vi.useRealTimers();

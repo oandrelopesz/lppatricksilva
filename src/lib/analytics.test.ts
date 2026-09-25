@@ -195,7 +195,7 @@ describe("analytics", () => {
       expect(navegar).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
       expect(navegar).toHaveBeenCalledTimes(1);
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(4000);
       expect(navegar).toHaveBeenCalledTimes(1);
     });
 
@@ -245,7 +245,7 @@ describe("analytics", () => {
       vi.advanceTimersByTime(1);
       expect(navegar).toHaveBeenCalledTimes(1);
       expect(desconectar).toHaveBeenCalled();
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(4000);
       expect(navegar).toHaveBeenCalledTimes(1);
     });
 
@@ -282,35 +282,35 @@ describe("analytics", () => {
       }
     });
 
-    it("GTM não pronto sem a requisição de conversão: teto de 3.000 ms", async () => {
+    it("GTM não pronto sem a requisição de conversão: teto de 4.000 ms", async () => {
       vi.stubGlobal("PerformanceObserver", ObservadorDeRecursos);
       const { track } = await import("./analytics");
       const navegar = vi.fn();
       track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: navegar });
-      vi.advanceTimersByTime(2999);
+      vi.advanceTimersByTime(3999);
       expect(navegar).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
       expect(navegar).toHaveBeenCalledTimes(1);
     });
 
-    it("sem PerformanceObserver, usa só o teto de 3.000 ms", async () => {
+    it("sem PerformanceObserver, usa só o teto de 4.000 ms", async () => {
       vi.stubGlobal("PerformanceObserver", undefined);
       const { track } = await import("./analytics");
       const navegar = vi.fn();
       track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: navegar });
-      vi.advanceTimersByTime(2999);
+      vi.advanceTimersByTime(3999);
       expect(navegar).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
       expect(navegar).toHaveBeenCalledTimes(1);
     });
 
-    it("gtmProntoNoClique vale sobre o estado de agora: GTM presente, mas ausente no clique, teto de 3.000 ms (R29)", async () => {
+    it("gtmProntoNoClique vale sobre o estado de agora: GTM presente, mas ausente no clique, teto de 4.000 ms (R29)", async () => {
       vi.stubGlobal("PerformanceObserver", undefined);
       (window as { google_tag_manager?: unknown }).google_tag_manager = {};
       const { track } = await import("./analytics");
       const navegar = vi.fn();
       track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: navegar, inicioMs: performance.now() - 1600, gtmProntoNoClique: false });
-      vi.advanceTimersByTime(1399);
+      vi.advanceTimersByTime(2399);
       expect(navegar).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
       expect(navegar).toHaveBeenCalledTimes(1);
@@ -321,15 +321,15 @@ describe("analytics", () => {
       const { track } = await import("./analytics");
       const perto = vi.fn();
       track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: perto, inicioMs: performance.now() - 2500 });
-      vi.advanceTimersByTime(499);
+      vi.advanceTimersByTime(1499);
       expect(perto).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
       expect(perto).toHaveBeenCalledTimes(1);
       const passou = vi.fn();
-      track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: passou, inicioMs: performance.now() - 3400 });
+      track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: passou, inicioMs: performance.now() - 4400 });
       expect(window.dataLayer!.filter((e) => e.event === "clique_whatsapp").length).toBeGreaterThan(0);
       expect(passou).toHaveBeenCalledTimes(1);
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(4000);
       expect(passou).toHaveBeenCalledTimes(1);
     });
   });
@@ -392,7 +392,7 @@ describe("analytics", () => {
       expect(navegar).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
       expect(navegar).toHaveBeenCalledTimes(1);
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(4000);
       expect(navegar).toHaveBeenCalledTimes(1);
     });
   });
