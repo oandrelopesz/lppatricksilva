@@ -55,10 +55,18 @@ export function carregarGtm(): void {
   document.head.appendChild(script);
 }
 
-/** Depois do primeiro frame, sem esperar gesto. */
+/** Limite para o GTM carregar mesmo sem tempo ocioso (parecer R18). */
+const LIMITE_OCIOSO_MS = 1500;
+
+/**
+ * Depois do primeiro frame, sem esperar gesto: no primeiro tempo ocioso, com limite de 1,5 s
+ * (requestIdleCallback com timeout). O setTimeout garante o limite também sem a API ou se o
+ * navegador não honrar o timeout; carregarGtm só roda uma vez.
+ */
 export function agendarGtm(): void {
-  const agendar = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
-  agendar(() => carregarGtm());
+  const carregar = () => carregarGtm();
+  window.requestIdleCallback?.(carregar, { timeout: LIMITE_OCIOSO_MS });
+  window.setTimeout(carregar, LIMITE_OCIOSO_MS);
 }
 
 export function track(evento: string, params: ParametrosEvento = {}, opcoes: OpcoesEvento = {}): void {

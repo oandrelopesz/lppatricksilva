@@ -89,6 +89,26 @@ describe("analytics", () => {
     expect(aoConcluir).toHaveBeenCalledTimes(1);
   });
 
+  it("com requestIdleCallback presente mas que nunca chama, o GTM carrega até 1,5 s (parecer R18)", async () => {
+    vi.useFakeTimers();
+    vi.stubEnv("VITE_GTM_ID", "GTM-TESTE01");
+    const { agendarGtm } = await import("./analytics");
+    const ocioso = vi.fn();
+    vi.stubGlobal("requestIdleCallback", ocioso);
+    try {
+      agendarGtm();
+      expect(ocioso).toHaveBeenCalledWith(expect.any(Function), { timeout: 1500 });
+      vi.advanceTimersByTime(1499);
+      expect(document.head.querySelector("script[data-gtm]")).toBeNull();
+      vi.advanceTimersByTime(1);
+      expect(document.head.querySelectorAll("script[data-gtm]")).toHaveLength(1);
+      (ocioso.mock.calls[0][0] as () => void)();
+      expect(document.head.querySelectorAll("script[data-gtm]")).toHaveLength(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("agendarGtm carrega o GTM depois, não na hora", async () => {
     vi.useFakeTimers();
     vi.stubEnv("VITE_GTM_ID", "GTM-TESTE01");
