@@ -4,9 +4,11 @@ import { urlLimpa } from "@/lib/origem";
 export type ParametrosEvento = Record<string, string | number | undefined>;
 
 export interface OpcoesEvento {
-  /** Chamado uma vez: pelo GTM (eventCallback) ou pelo tempo-limite, o que vier primeiro. */
+  /**
+   * Chamado uma vez: 150 ms depois de a requisição de conversão do Ads sair ou no teto (1.500 ms com o
+   * GTM pronto no clique, 3.000 ms sem ele), o que vier primeiro.
+   */
   aoConcluir?: () => void;
-  tempoLimiteMs?: number;
   /** performance.now() do clique original (clique segurado antes da hidratação); o teto conta dele. */
   inicioMs?: number;
 }
@@ -19,9 +21,12 @@ declare global {
   }
 }
 
-/** Tempo-limite do clique_whatsapp: 800 ms com o GTM já carregado; 2.000 ms se ainda não (spec §7). */
-const LIMITE_CLIQUE_COM_GTM_MS = 800;
-/** GTM não pronto: navega 150 ms depois da requisição de conversão, com teto de 3.000 ms do clique. */
+/**
+ * O eventCallback do GTM volta assim que as tags são despachadas, antes de a conversão sair (validações
+ * do Tracking), então não decide a navegação: ela sai 150 ms depois de a requisição de conversão ser
+ * vista ou no teto, contado do clique (spec §8).
+ */
+const TETO_COM_GTM_MS = 1500;
 const TETO_SEM_GTM_MS = 3000;
 const DEPOIS_DA_CONVERSAO_MS = 150;
 /** Clique antigo (segurado antes da hidratação) cujo teto já passou: espera ao menos isto depois do envio. */
@@ -101,7 +106,7 @@ export function track(evento: string, params: ParametrosEvento = {}, opcoes: Opc
   if (typeof window === "undefined") return;
   const limpo = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ""));
   window.dataLayer = window.dataLayer || [];
-  // O GTM já carregado confirma a tag rápido; carregando agora, o limite maior dá tempo à conversão.
+  // Com o GTM já na página, a conversão sai mais cedo (teto de 1.500 ms); carregando agora, 3.000 ms.
   const gtmPronto = Boolean(window.google_tag_manager);
   if (evento === "clique_whatsapp") {
     // O clique pode vir antes do carregamento agendado: carrega o GTM na hora.
@@ -109,7 +114,7 @@ export function track(evento: string, params: ParametrosEvento = {}, opcoes: Opc
     // O modelo do GTM guarda o último valor de cada chave: sem zerar, cidade e local de um clique vazariam para o próximo.
     window.dataLayer.push(Object.fromEntries(CAMPOS_CLIQUE.map((campo) => [campo, undefined])));
   }
-  const { aoConcluir, tempoLimiteMs = LIMITE_CLIQUE_COM_GTM_MS, inicioMs } = opcoes;
+  const { aoConcluir, inicioMs } = opcoes;
   if (!aoConcluir) {
     window.dataLayer.push({ event: evento, ...limpo });
     return;
@@ -123,18 +128,10 @@ export function track(evento: string, params: ParametrosEvento = {}, opcoes: Opc
     aoConcluir();
   };
 
-  // GTM pronto: o eventCallback confirma as tags; tempo-limite de 800 ms.
-  if (gtmPronto) {
-    window.dataLayer.push({ event: evento, ...limpo, eventCallback: concluir, eventTimeout: tempoLimiteMs });
-    window.setTimeout(concluir, tempoLimiteMs);
-    return;
-  }
-
-  // GTM não pronto: o eventCallback volta antes de as bibliotecas do GA4 e do Ads enviarem (validação
-  // do Tracking), então é ignorado. Navega 150 ms depois da requisição de conversão ou no teto.
   window.dataLayer.push({ event: evento, ...limpo });
   const inicio = inicioMs ?? performance.now();
-  const restante = Math.max(TETO_SEM_GTM_MS - (performance.now() - inicio), inicioMs === undefined ? 0 : MINIMO_DEPOIS_DO_ENVIO_MS);
+  const tetoMs = gtmPronto ? TETO_COM_GTM_MS : TETO_SEM_GTM_MS;
+  const restante = Math.max(tetoMs - (performance.now() - inicio), inicioMs === undefined ? 0 : MINIMO_DEPOIS_DO_ENVIO_MS);
   const teto = window.setTimeout(concluir, restante);
   limpezas.push(() => window.clearTimeout(teto));
   if (typeof PerformanceObserver === "undefined") return;

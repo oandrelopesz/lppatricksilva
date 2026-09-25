@@ -80,19 +80,6 @@ describe("analytics", () => {
     expect(window.dataLayer).toEqual([{ event: "faq_aberta", pergunta: "valor" }]);
   });
 
-  it("track com aoConcluir chama uma vez só (callback do GTM e tempo-limite)", async () => {
-    vi.useFakeTimers();
-    (window as { google_tag_manager?: unknown }).google_tag_manager = {};
-    const { track } = await import("./analytics");
-    const aoConcluir = vi.fn();
-    track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir });
-    const item = window.dataLayer!.find((e) => e.event === "clique_whatsapp")!;
-    (item.eventCallback as () => void)();
-    vi.advanceTimersByTime(1000);
-    expect(aoConcluir).toHaveBeenCalledTimes(1);
-    delete (window as { google_tag_manager?: unknown }).google_tag_manager;
-  });
-
   it("com requestIdleCallback presente mas que nunca chama, o GTM carrega até 1,5 s (parecer R18)", async () => {
     vi.useFakeTimers();
     vi.stubEnv("VITE_GTM_ID", "GTM-TESTE01");
@@ -196,17 +183,44 @@ describe("analytics", () => {
       vi.unstubAllGlobals();
     });
 
-    it("GTM pronto: usa o eventCallback (800 ms) e navega uma vez só", async () => {
+    it("GTM pronto e requisição de conversão aos 300 ms: navega aos 450 ms (validação 2 do Tracking)", async () => {
       (window as { google_tag_manager?: unknown }).google_tag_manager = {};
+      vi.stubGlobal("PerformanceObserver", ObservadorDeRecursos);
+      const { track } = await import("./analytics");
+      const navegar = vi.fn();
+      track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: navegar });
+      vi.advanceTimersByTime(300);
+      entregar!([{ name: CONVERSAO, startTime: performance.now() }]);
+      vi.advanceTimersByTime(149);
+      expect(navegar).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(navegar).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(3000);
+      expect(navegar).toHaveBeenCalledTimes(1);
+    });
+
+    it("GTM pronto sem requisição de conversão: navega no teto de 1.500 ms", async () => {
+      (window as { google_tag_manager?: unknown }).google_tag_manager = {};
+      vi.stubGlobal("PerformanceObserver", ObservadorDeRecursos);
+      const { track } = await import("./analytics");
+      const navegar = vi.fn();
+      track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: navegar });
+      vi.advanceTimersByTime(1499);
+      expect(navegar).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(navegar).toHaveBeenCalledTimes(1);
+    });
+
+    it("o eventCallback do GTM, mesmo cedo, não decide a navegação", async () => {
+      (window as { google_tag_manager?: unknown }).google_tag_manager = {};
+      vi.stubGlobal("PerformanceObserver", ObservadorDeRecursos);
       const { track } = await import("./analytics");
       const navegar = vi.fn();
       track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: navegar });
       const evento = window.dataLayer!.find((e) => e.event === "clique_whatsapp")!;
-      expect(evento).toMatchObject({ eventTimeout: 800 });
-      (evento.eventCallback as () => void)();
-      expect(navegar).toHaveBeenCalledTimes(1);
-      vi.advanceTimersByTime(800);
-      expect(navegar).toHaveBeenCalledTimes(1);
+      (evento.eventCallback as (() => void) | undefined)?.();
+      vi.advanceTimersByTime(22);
+      expect(navegar).not.toHaveBeenCalled();
     });
 
     it("GTM não pronto: ignora o eventCallback e navega 150 ms depois da requisição de conversão", async () => {

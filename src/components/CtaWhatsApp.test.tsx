@@ -38,7 +38,7 @@ describe("CtaWhatsApp", () => {
     expect(screen.getByRole("link", { name: "Agendar" }).getAttribute("href")).toMatch(/^https:\/\/wa\.me\/5513996822680\?text=/);
   });
 
-  it("GTM pronto: clique simples registra o evento e navega uma vez quando o GTM confirma", () => {
+  it("GTM pronto: clique simples registra o evento e, sem ver a conversão, navega uma vez no teto de 1.500 ms", () => {
     (window as { google_tag_manager?: unknown }).google_tag_manager = {};
     render(
       <CidadeProvider>
@@ -47,10 +47,14 @@ describe("CtaWhatsApp", () => {
     );
     fireEvent.click(screen.getByRole("link", { name: "Agendar" }));
     const evento = window.dataLayer!.find((e) => e.event === "clique_whatsapp")!;
-    expect(evento).toMatchObject({ local_cta: "hero", eventTimeout: 800 });
+    expect(evento).toMatchObject({ local_cta: "hero" });
     expect(navegacao.ir).not.toHaveBeenCalled();
-    (evento.eventCallback as () => void)();
-    vi.advanceTimersByTime(3000);
+    // GTM pronto: sem a requisição de conversão (jsdom não a faz), navega no teto de 1.500 ms.
+    act(() => vi.advanceTimersByTime(1499));
+    expect(navegacao.ir).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(1));
+    expect(navegacao.ir).toHaveBeenCalledTimes(1);
+    act(() => vi.advanceTimersByTime(3000));
     expect(navegacao.ir).toHaveBeenCalledTimes(1);
     const url = vi.mocked(navegacao.ir).mock.calls[0][0];
     expect(textoDe(url)).toBe(MENSAGENS_WHATSAPP.base);
@@ -125,7 +129,7 @@ describe("CtaWhatsApp", () => {
     expect(link).toHaveClass("cta");
   });
 
-  it("com o GTM já carregado, navega depois de 800 ms sem confirmação", () => {
+  it("com o GTM já carregado, o eventCallback não navega: sem a conversão, navega no teto de 1.500 ms", () => {
     (window as { google_tag_manager?: unknown }).google_tag_manager = {};
     try {
       render(
@@ -134,10 +138,11 @@ describe("CtaWhatsApp", () => {
         </CidadeProvider>,
       );
       fireEvent.click(screen.getByRole("link", { name: "Agendar" }));
-      expect(window.dataLayer!.find((e) => e.event === "clique_whatsapp")).toMatchObject({ eventTimeout: 800 });
-      vi.advanceTimersByTime(799);
+      const evento = window.dataLayer!.find((e) => e.event === "clique_whatsapp")!;
+      act(() => (evento.eventCallback as (() => void) | undefined)?.());
+      act(() => vi.advanceTimersByTime(1499));
       expect(navegacao.ir).not.toHaveBeenCalled();
-      vi.advanceTimersByTime(1);
+      act(() => vi.advanceTimersByTime(1));
       expect(navegacao.ir).toHaveBeenCalledTimes(1);
     } finally {
       delete (window as { google_tag_manager?: unknown }).google_tag_manager;
