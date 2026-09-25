@@ -122,9 +122,9 @@
   .mapa-ma__quadro { position: relative; width: 100%; max-width: 600px; aspect-ratio: 600 / 700; margin-inline: auto; background: transparent; cursor: pointer; }
   .mapa-ma__quadro svg { display: block; width: 100%; height: 100%; }
   .mapa-ma__contorno { fill: #283137; stroke: var(--color-dourado-claro); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
-  .mapa-ma__rota { fill: none; stroke: #8cabb8; stroke-width: 1.5; stroke-dasharray: 5 6; vector-effect: non-scaling-stroke; }
+  .mapa-ma__rota { display: none; fill: none; stroke: #8cabb8; stroke-width: 1.5; stroke-dasharray: 5 6; vector-effect: non-scaling-stroke; }
   .mapa-ma__rotas, .mapa-ma__guia--ampla { display: none; }
-  .mapa-ma__guia { fill: none; stroke: #8cabb8; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+  .mapa-ma__guia { fill: none; stroke: #d4dcd9; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
   .mapa-ma__guia[data-ativa] { stroke: var(--color-dourado-claro); stroke-width: 2; }
   .mapa-ma__centroide { fill: #8cabb8; stroke: #171b20; stroke-width: 2; vector-effect: non-scaling-stroke; }
   .mapa-ma__centroide[data-ativa] { fill: var(--color-dourado-claro); }
@@ -168,7 +168,7 @@
   @media (min-width: 640px) {
     .mapa-ma { padding: 1rem; }
     .mapa-ma__rolagem { width: 100%; }
-    .mapa-ma__rotas, .mapa-ma__guia--ampla { display: initial; }
+    .mapa-ma__rotas, .mapa-ma__rota, .mapa-ma__guia--ampla { display: initial; }
     .mapa-ma__guia--compacta { display: none; }
     .mapa-ma__ponto { left: var(--x-amplo); top: var(--y-amplo); }
     .mapa-ma__numero { width: 38px; height: 38px; }

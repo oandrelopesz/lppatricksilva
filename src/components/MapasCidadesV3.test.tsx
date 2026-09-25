@@ -105,12 +105,12 @@ describe("mapas e mapa ilustrado V3", () => {
       const guia = container.querySelector<SVGPathElement>(`.mapa-ma__guia--compacta[data-cidade="${cidade.id}"]`);
       if (Math.hypot(inicio.x - fim.x, inicio.y - fim.y) > 6) {
         expect(guia).not.toBeNull();
+        expect(guia).toHaveAttribute("marker-end", cidade.id === "balsas" ? "url(#mapa-ma-seta-ouro)" : "url(#mapa-ma-seta)");
         const coordenadas = guia?.getAttribute("d")?.match(/-?\d+(?:\.\d+)?/g)?.map(Number);
         expect(coordenadas).toHaveLength(4);
         expect(coordenadas?.[0]).toBeCloseTo(inicio.x);
         expect(coordenadas?.[1]).toBeCloseTo(inicio.y);
-        expect(coordenadas?.[2]).toBeCloseTo(fim.x);
-        expect(coordenadas?.[3]).toBeCloseTo(fim.y);
+        expect(Math.hypot((coordenadas?.[2] ?? 0) - fim.x, (coordenadas?.[3] ?? 0) - fim.y)).toBeCloseTo(10);
         expect(guia).not.toHaveAttribute("hidden");
       }
       expect(container.querySelector(`.mapa-ma__centroide[data-cidade="${cidade.id}"]`)).not.toBeNull();
@@ -126,6 +126,8 @@ describe("mapas e mapa ilustrado V3", () => {
     }
     expect(container.querySelector('.mapa-ma__guia--compacta[data-cidade="balsas"]')).toHaveAttribute("data-ativa");
     expect(container.querySelector('.mapa-ma__centroide[data-cidade="balsas"]')).toHaveAttribute("data-ativa");
+    expect(container.querySelector('#mapa-ma-seta')).toHaveAttribute("markerWidth", "12");
+    expect(container.querySelector('#mapa-ma-seta-ouro')).toHaveAttribute("markerWidth", "12");
   });
 
   it("toque na posição real da cidade escolhe sua aba", () => {

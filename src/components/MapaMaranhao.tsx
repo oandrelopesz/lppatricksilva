@@ -86,12 +86,22 @@ function distribuir(largura: number, altura: number, passo: number, anguloPasso:
 
 const posicoesCompactas = distribuirCompacto();
 const posicoesAmplas = distribuir(600, 700, 12, 30);
+function linhaCompacta(ponto: Posicao, compacto: Posicao) {
+  const x = compacto.x * 600 / LARGURA_COMPACTA;
+  const y = compacto.y * 700 / ALTURA_COMPACTA;
+  const dx = ponto.x - x, dy = ponto.y - y;
+  const comprimento = Math.hypot(dx, dy);
+  const distanciaNaTela = Math.hypot(dx * LARGURA_COMPACTA / 600, dy * ALTURA_COMPACTA / 700);
+  if (distanciaNaTela < 12) return undefined;
+  return `M ${x} ${y} L ${ponto.x - dx * 10 / comprimento} ${ponto.y - dy * 10 / comprimento}`;
+}
 const marcadores = CIDADES.map((cidade, indice) => ({
   cidade,
   ponto: PONTOS_CIDADES[cidade.id],
   numero: indice + 1,
   compacto: posicoesCompactas[indice],
   amplo: posicoesAmplas[indice],
+  guiaCompacta: linhaCompacta(PONTOS_CIDADES[cidade.id], posicoesCompactas[indice]),
 }));
 
 export function MapaMaranhao({ cidadeAberta, aoEscolher }: Props) {
@@ -120,15 +130,23 @@ export function MapaMaranhao({ cidadeAberta, aoEscolher }: Props) {
     <div className="mapa-ma__rolagem">
       <div className="mapa-ma__quadro" role="group" aria-label="Cidades no mapa ilustrado do Maranhão" onClick={escolherPeloQuadro}>
         <svg viewBox={MAPA_MA.viewBox} aria-hidden="true" focusable="false">
+          <defs>
+            <marker id="mapa-ma-seta" markerWidth="12" markerHeight="12" viewBox="0 0 12 12" refX="11" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M 1 1 L 11 6 L 1 11 Z" fill="#d4dcd9" />
+            </marker>
+            <marker id="mapa-ma-seta-ouro" markerWidth="12" markerHeight="12" viewBox="0 0 12 12" refX="11" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M 1 1 L 11 6 L 1 11 Z" fill="#c9a96c" />
+            </marker>
+          </defs>
           <path className="mapa-ma__contorno" d={MAPA_MA.contorno} />
           <g className="mapa-ma__rotas">
             <path className="mapa-ma__rota" d={`M ${marcadores.slice(0, 4).map(({ ponto }) => `${ponto.x} ${ponto.y}`).join(" L ")}`} />
             <path className="mapa-ma__rota" d={`M ${marcadores.slice(4).map(({ ponto }) => `${ponto.x} ${ponto.y}`).join(" L ")}`} />
           </g>
-          {[...marcadores].sort((a, b) => Number(a.cidade.id === cidadeAberta) - Number(b.cidade.id === cidadeAberta)).map(({ cidade, ponto, compacto, amplo }) => <g key={cidade.id}>
-            {Math.hypot(ponto.x - compacto.x * 600 / LARGURA_COMPACTA, ponto.y - compacto.y * 700 / ALTURA_COMPACTA) > 6 ?
+          {[...marcadores].sort((a, b) => Number(a.cidade.id === cidadeAberta) - Number(b.cidade.id === cidadeAberta)).map(({ cidade, ponto, guiaCompacta, amplo }) => <g key={cidade.id}>
+            {guiaCompacta ?
               <path className="mapa-ma__guia mapa-ma__guia--compacta" data-cidade={cidade.id} data-ativa={cidade.id === cidadeAberta ? "" : undefined}
-                d={`M ${compacto.x * 600 / LARGURA_COMPACTA} ${compacto.y * 700 / ALTURA_COMPACTA} L ${ponto.x} ${ponto.y}`} /> : null}
+                d={guiaCompacta} markerEnd={cidade.id === cidadeAberta ? "url(#mapa-ma-seta-ouro)" : "url(#mapa-ma-seta)"} /> : null}
             {Math.hypot(ponto.x - amplo.x, ponto.y - amplo.y) > 6 ?
               <path className="mapa-ma__guia mapa-ma__guia--ampla" data-ativa={cidade.id === cidadeAberta ? "" : undefined}
                 d={`M ${ponto.x} ${ponto.y} L ${amplo.x} ${amplo.y}`} /> : null}
