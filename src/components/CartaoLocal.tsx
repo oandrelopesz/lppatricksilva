@@ -23,7 +23,7 @@ export function CartaoLocal({ cidade, local, mostrarMapa }: Props) {
         </p>
       ) : null}
       <p>{T.clinica.disponibilidade}</p>
-      <div className="cartao-local__mapa" style={{ minHeight: 240 }}>
+      <div className="cartao-local__mapa">
         {mostrarMapa ? (
           <iframe
             src={urlEmbedMapa(local)}
@@ -31,7 +31,7 @@ export function CartaoLocal({ cidade, local, mostrarMapa }: Props) {
             loading="lazy"
             referrerPolicy="no-referrer"
             width="100%"
-            height="240"
+            height="180"
           />
         ) : null}
       </div>

@@ -18,7 +18,7 @@ export function BotaoFlutuante() {
     <CtaWhatsApp
       localCta="flutuante"
       aria-label={T.flutuanteAria}
-      className="fixed bottom-4 right-4 z-40 inline-flex min-h-12 min-w-12 items-center justify-center rounded bg-cta px-5 py-3 text-base font-semibold text-white md:hidden"
+      className="premium-cta fixed bottom-4 right-4 z-40 inline-flex min-h-12 min-w-12 items-center justify-center rounded bg-cta px-5 py-3 text-base font-semibold text-white md:hidden"
     >
       {T.flutuante}
     </CtaWhatsApp>

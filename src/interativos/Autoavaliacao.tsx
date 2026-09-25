@@ -82,7 +82,7 @@ export function Autoavaliacao() {
         <CtaWhatsApp
           localCta="autoavaliacao"
           resumo={haRespostas && incluir ? resumo : undefined}
-          className={`${classeAcao} premium-cta mt-6 w-full bg-cta text-center text-white hover:bg-cta-escuro sm:w-auto`}
+          className={`${classeAcao} premium-cta mt-6 w-full bg-cta text-center text-white sm:w-auto`}
         >
           {T.cta}
         </CtaWhatsApp>

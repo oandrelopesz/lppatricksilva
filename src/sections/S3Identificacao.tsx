@@ -5,7 +5,7 @@ import { TEXTOS_IDENTIFICACAO as T } from "@/content/identificacao";
 import { Autoavaliacao } from "@/interativos/Autoavaliacao";
 
 export function S3Identificacao() {
-  const classeCta = "inline-flex min-h-12 w-full items-center justify-center rounded bg-cta px-5 py-3 text-center text-lg font-semibold text-white hover:bg-cta-escuro sm:w-auto";
+  const classeCta = "inline-flex min-h-12 w-full items-center justify-center rounded bg-cta px-5 py-3 text-center text-lg font-semibold text-white sm:w-auto";
   return (
     <Secao id="para-quem" tituloId="titulo-para-quem" fundo="creme">
       <h2 id="titulo-para-quem">{T.titulo}</h2>

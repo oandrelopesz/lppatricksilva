@@ -48,7 +48,7 @@ export function Accordion({ itens }: { itens: ItemAccordion[] }) {
               hidden={!expandido}
             >
               <p>{item.resposta}</p>
-              {item.link ? <a className="mt-3 inline-block font-semibold underline underline-offset-4" href="#onde-atende">{item.link}</a> : null}
+              {item.link ? <a className="mt-3 inline-flex min-h-12 items-center font-semibold underline underline-offset-4" href="#onde-atende">{item.link}</a> : null}
             </div>
           </div>
         );
