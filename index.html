@@ -7,7 +7,11 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'denied', wait_for_update: 500 });
       gtag('set', 'ads_data_redaction', true);
-      try { if (localStorage.getItem('lp_consentimento_v1') === 'aceito') gtag('consent', 'update', { ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted', analytics_storage: 'granted' }); } catch (e) {}
+      try {
+        var c = JSON.parse(localStorage.getItem('lp_consentimento_v2') || 'null');
+        if (!c && localStorage.getItem('lp_consentimento_v1') === 'aceito') c = { visitas: true, anuncios: true };
+        if (c && (c.visitas === true || c.anuncios === true)) gtag('consent', 'update', { analytics_storage: c.visitas === true ? 'granted' : 'denied', ad_storage: c.anuncios === true ? 'granted' : 'denied', ad_user_data: c.anuncios === true ? 'granted' : 'denied', ad_personalization: 'denied' });
+      } catch (e) {}
     </script>
     <script id="segurador-clique">
       (function (w) {
