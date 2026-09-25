@@ -89,15 +89,16 @@ describe("CtaWhatsApp", () => {
     const modelo: Record<string, unknown> = {};
     const noSegundoClique: Record<string, unknown>[] = [];
     for (const item of window.dataLayer!) {
-      if (!("event" in item) && !("local_cta" in item) && !("ref" in item)) continue;
+      if (!("event" in item) && !("local_cta" in item)) continue;
       Object.assign(modelo, item);
       if (item.event === "clique_whatsapp") noSegundoClique.push({ ...modelo });
     }
     expect(noSegundoClique).toHaveLength(2);
     expect(noSegundoClique[0]).toMatchObject({ local: "Hospital São José", cidade: "Balsas" });
-    expect(noSegundoClique[0].ref).toBeUndefined();
+    // Sem código de referência (spec §21): a chave ref não existe no modelo, nem zerada.
+    expect("ref" in noSegundoClique[0]).toBe(false);
+    expect("ref" in noSegundoClique[1]).toBe(false);
     expect(noSegundoClique[1].local_cta).toBe("autoavaliacao");
-    expect(noSegundoClique[1].ref).toBeUndefined();
     expect(noSegundoClique[1].local).toBeUndefined();
     expect(noSegundoClique[1].cidade).toBeUndefined();
   });

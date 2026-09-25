@@ -21,7 +21,6 @@ export const CAMPOS_CLIQUE = [
   "intencao",
   "cidade",
   "local",
-  "ref",
   "utm_source",
   "utm_medium",
   "utm_campaign",
@@ -77,7 +76,7 @@ export function track(evento: string, params: ParametrosEvento = {}, opcoes: Opc
   if (evento === "clique_whatsapp") {
     // O clique pode vir antes do carregamento agendado: carrega o GTM na hora.
     carregarGtm();
-    // O modelo do GTM guarda o último valor de cada chave: sem zerar, ref e local de um clique vazariam para o próximo.
+    // O modelo do GTM guarda o último valor de cada chave: sem zerar, cidade e local de um clique vazariam para o próximo.
     window.dataLayer.push(Object.fromEntries(CAMPOS_CLIQUE.map((campo) => [campo, undefined])));
   }
   const { aoConcluir, tempoLimiteMs = 800 } = opcoes;

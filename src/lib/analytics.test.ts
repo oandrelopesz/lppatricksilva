@@ -62,14 +62,16 @@ describe("analytics", () => {
 
   it("antes de cada clique_whatsapp zera todos os campos opcionais no dataLayer", async () => {
     const { CAMPOS_CLIQUE, track } = await import("./analytics");
-    track("clique_whatsapp", { local_cta: "hero", ref: "ABC234" });
+    track("clique_whatsapp", { local_cta: "hero" });
     const i = window.dataLayer!.findIndex((e) => e.event === "clique_whatsapp");
     const zerado = window.dataLayer![i - 1];
     expect(Object.keys(zerado).sort()).toEqual([...CAMPOS_CLIQUE].sort());
     expect(Object.values(zerado).every((v) => v === undefined)).toBe(true);
     expect(CAMPOS_CLIQUE).toEqual(
-      expect.arrayContaining(["local_cta", "intencao", "cidade", "local", "ref", "utm_source", "utm_medium", "utm_campaign", "utm_content"]),
+      expect.arrayContaining(["local_cta", "intencao", "cidade", "local", "utm_source", "utm_medium", "utm_campaign", "utm_content"]),
     );
+    // Sem código de referência (spec §21): o ref nem aparece zerado no modelo do GTM.
+    expect(CAMPOS_CLIQUE).not.toContain("ref");
   });
 
   it("outros eventos não zeram nada", async () => {
