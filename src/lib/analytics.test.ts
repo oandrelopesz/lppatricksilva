@@ -333,4 +333,67 @@ describe("analytics", () => {
       expect(passou).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("detector no clique tardio (validação 3 do Tracking, observação 1)", () => {
+    let entradas: Array<{ name: string; startTime: number; entryType: string }> = [];
+    let relogio = 1000;
+    const CONV = "https://www.googleadservices.com/pagead/conversion/18460652540/?en=conversion";
+
+    beforeEach(() => {
+      entradas = [];
+      relogio = 1000;
+      vi.useFakeTimers();
+      // Relógio que anda a cada leitura: distingue "antes do push" de "depois do push".
+      vi.spyOn(performance, "now").mockImplementation(() => ++relogio);
+      (window as { google_tag_manager?: unknown }).google_tag_manager = {};
+      // A tag do Ads começa a conversão de forma síncrona, dentro do push do clique_whatsapp.
+      const fila: Record<string, unknown>[] = [];
+      fila.push = function (...itens: Record<string, unknown>[]) {
+        if (itens.some((item) => item.event === "clique_whatsapp")) entradas.push({ name: CONV, startTime: performance.now(), entryType: "resource" });
+        return Array.prototype.push.apply(this, itens);
+      };
+      window.dataLayer = fila;
+    });
+    afterEach(() => {
+      delete (window as { google_tag_manager?: unknown }).google_tag_manager;
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    });
+
+    it("entrada iniciada dentro do push, antes de o observador existir, chega pelo buffered e libera a navegação", async () => {
+      class ObservadorComBuffer {
+        constructor(private retorno: (lista: { getEntries: () => unknown[] }) => void) {}
+        observe(opcoes: { buffered?: boolean }) {
+          if (opcoes.buffered) setTimeout(() => this.retorno({ getEntries: () => [...entradas] }), 20);
+        }
+        disconnect() {}
+      }
+      vi.stubGlobal("PerformanceObserver", ObservadorComBuffer);
+      vi.spyOn(performance, "getEntriesByType").mockImplementation(() => []);
+      const { track } = await import("./analytics");
+      const navegar = vi.fn();
+      track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: navegar });
+      expect(entradas).toHaveLength(1);
+      vi.advanceTimersByTime(20 + 150);
+      expect(navegar).toHaveBeenCalledTimes(1);
+    });
+
+    it("buffer cheio (observador não entrega): a varredura de getEntriesByType a cada 50 ms acha a conversão", async () => {
+      class ObservadorMudo {
+        observe() {}
+        disconnect() {}
+      }
+      vi.stubGlobal("PerformanceObserver", ObservadorMudo);
+      vi.spyOn(performance, "getEntriesByType").mockImplementation(() => [...entradas] as unknown as PerformanceEntryList);
+      const { track } = await import("./analytics");
+      const navegar = vi.fn();
+      track("clique_whatsapp", { local_cta: "hero" }, { aoConcluir: navegar });
+      vi.advanceTimersByTime(50 + 149);
+      expect(navegar).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(navegar).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(3000);
+      expect(navegar).toHaveBeenCalledTimes(1);
+    });
+  });
 });

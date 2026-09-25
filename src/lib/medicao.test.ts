@@ -83,4 +83,18 @@ describe("iniciarMedicao", () => {
     expect(document.head.querySelector("script[data-gtm]")).not.toBeNull();
     window.history.replaceState(null, "", "/");
   });
+
+  it("aumenta o buffer de resource timing na carga, para a conversão não ficar fora dele", async () => {
+    const aumentar = vi.fn();
+    const original = (performance as { setResourceTimingBufferSize?: unknown }).setResourceTimingBufferSize;
+    (performance as { setResourceTimingBufferSize?: unknown }).setResourceTimingBufferSize = aumentar;
+    try {
+      const { iniciarMedicao } = await import("./medicao");
+      iniciarMedicao();
+      expect(aumentar).toHaveBeenCalledTimes(1);
+      expect(aumentar.mock.calls[0][0]).toBeGreaterThanOrEqual(1000);
+    } finally {
+      (performance as { setResourceTimingBufferSize?: unknown }).setResourceTimingBufferSize = original;
+    }
+  });
 });
