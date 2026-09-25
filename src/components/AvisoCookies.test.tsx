@@ -290,6 +290,19 @@ describe("AvisoCookies com mudança de viewport, saída e teardown (parecer R33)
     expect(barra()).toHaveAttribute("data-oculto");
   });
 
+  it("voltar ao hero oculta já no scroll, sem esperar a entrega do observador (que vem depois da pintura)", () => {
+    mudarTela(568, 691, 68, 295);
+    renderizarComHero();
+    act(() => entregar!({ isIntersecting: false, boundingClientRect: { top: -108, bottom: -40 } as DOMRectReadOnly }));
+    expect(aviso()).toBeInTheDocument();
+    Object.assign(tela, { topoCta: 250 }); // salto de volta: o CTA já está na faixa da barra (273..568)
+    act(() => {
+      window.dispatchEvent(new Event("scroll"));
+    });
+    expect(barra()).toHaveAttribute("inert");
+    expect(aviso()).toBeNull();
+  });
+
   it("depois da escolha, o observador desconecta; o rodapé reabre sem religar a observação", () => {
     mudarTela(568, 691, 68, 295);
     renderizarComHero();

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { flushSync } from "react-dom";
 import { lerConsentimento } from "@/lib/consentimento";
 
 /**
@@ -114,6 +115,20 @@ export function useExibicaoAviso(): ExibicaoAviso {
     observador.observe(cta);
     return () => observador.disconnect();
   }, [observar]);
+
+  // Na volta ao hero, o observador só entrega depois da pintura: um salto de rolagem mostraria um quadro
+  // com a barra sobre o CTA. Enquanto ela está à mostra por causa disso, o próprio scroll oculta antes de pintar.
+  const ocultarNaVolta = observar && ctaAcima;
+  useEffect(() => {
+    if (!ocultarNaVolta) return;
+    const cta = ctaDoHero();
+    if (!cta) return;
+    const conferir = () => {
+      if (cta.getBoundingClientRect().bottom > 0) flushSync(() => setCtaAcima(false));
+    };
+    window.addEventListener("scroll", conferir, { passive: true });
+    return () => window.removeEventListener("scroll", conferir);
+  }, [ocultarNaVolta]);
 
   const concluir = useCallback(() => {
     setPendente(false);
