@@ -2,7 +2,7 @@
 @import "./tokens.css";
 
 @layer base {
-  html { scroll-behavior: smooth; scroll-padding-top: 4rem; }
+  html { scroll-behavior: smooth; scroll-padding-top: 71px; }
   body { margin: 0; background: var(--color-creme); color: var(--color-grafite); font-family: var(--font-corpo); font-size: 1.1875rem; line-height: 1.6; }
   p, li { max-width: 66ch; }
   h1, h2, h3, h4 { font-family: var(--font-titulo); font-optical-sizing: auto; font-weight: 600; line-height: 1.15; }
@@ -12,6 +12,7 @@
   section h3 { line-height: 1.2; }
   :focus-visible { outline: 3px solid var(--color-dourado); outline-offset: 4px; }
   a, button { -webkit-tap-highlight-color: transparent; }
+  @media (min-width: 640px) { html { scroll-padding-top: 51px; } }
   @media (min-width: 768px) { body { font-size: 1.125rem; } }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 }
@@ -24,7 +25,8 @@
   a.premium-cta:hover { background: var(--color-cta-escuro); transform: translateY(-1px); }
   a.premium-cta:focus-visible { outline: 3px solid var(--color-dourado); outline-offset: 4px; }
 
-  .premium-topbar { border-bottom: 1px solid var(--color-dourado); box-shadow: none; }
+  .premium-topbar { padding-block: 11px; border-bottom: 1px solid var(--color-dourado); box-shadow: none; }
+  .premium-topbar p { line-height: 24px; }
   .atlas-hero { position: relative; overflow: clip; border-bottom: 1px solid rgb(23 27 32 / 18%); }
   .atlas-hero > div { position: relative; }
   .atlas-hero h1 { font-size: clamp(2.42rem, 7.5vw, 4.9rem); line-height: 1.04; max-width: 17ch; }

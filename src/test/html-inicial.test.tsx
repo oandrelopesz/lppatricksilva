@@ -38,7 +38,7 @@ describe("HTML inicial (sem JavaScript)", () => {
   });
 
   it("tem as âncoras de todas as seções e as 11 respostas do FAQ", () => {
-    for (const id of ["para-quem", "como-funciona", "sobre", "onde-atende", "duvidas", "rodape"]) {
+    for (const id of ["inicio", "para-quem", "como-funciona", "sobre", "onde-atende", "duvidas", "agendar", "rodape"]) {
       expect(html).toContain(`id="${id}"`);
     }
     for (const item of TEXTOS_FAQ.itens) {

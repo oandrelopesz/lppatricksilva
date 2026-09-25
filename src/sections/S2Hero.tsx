@@ -6,7 +6,7 @@ import { TEXTOS_HERO as T } from "@/content/hero";
 
 export function S2Hero() {
   return (
-    <header className="atlas-hero bg-creme px-4 pb-16 pt-8 text-grafite md:py-20">
+    <header id="inicio" className="atlas-hero bg-creme px-4 pb-16 pt-8 text-grafite md:py-20">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-x-16 gap-y-6 md:grid-cols-2 md:items-center">
         <div className="min-w-0">
           <p className="mb-5 inline-block rounded-full border border-dourado/50 bg-bege px-4 py-2 text-sm font-semibold leading-snug tracking-wide">
